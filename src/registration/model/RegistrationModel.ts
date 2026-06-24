@@ -6,24 +6,25 @@
  * Students align a series of CCD images (taken at different epochs) to a
  * reference image by shifting the "working" images in X/Y.
  */
-import { BooleanProperty, NumberProperty } from 'scenerystack/axon';
-import { Range } from 'scenerystack/dot';
-import type { Tandem } from 'scenerystack/tandem';
-import type { VSPPreferencesModel } from '../../preferences/VSPPreferencesModel.js';
-import VSPNamespace from '../../VSPNamespace.js';
+import { BooleanProperty, NumberProperty } from "scenerystack/axon";
+import { Range } from "scenerystack/dot";
+import type { Tandem } from "scenerystack/tandem";
+import type { VSPPreferencesModel } from "../../preferences/VSPPreferencesModel.js";
+import VSPNamespace from "../../VSPNamespace.js";
 
 // Fixed observation indices chosen to sample early, mid, and late epochs.
 // index 0  → epoch  1.7215 d  (reference)
 // index 36 → epoch  8.7525 d  (working A)
 // index 63 → epoch 12.9682 d  (working B)
-export const REG_OBS_INDICES = [ 0, 36, 63 ] as const;
+export const REG_OBS_INDICES = [0, 36, 63] as const;
 
-const OFFSET_RANGE = new Range( -100, 100 );
+const OFFSET_RANGE = new Range(-100, 100);
+const clampOffset = (value: number) => Math.round(Math.max(OFFSET_RANGE.min, Math.min(OFFSET_RANGE.max, value)));
 
 export class RegistrationModel {
-  public readonly obsIndex1 = REG_OBS_INDICES[ 0 ];
-  public readonly obsIndex2 = REG_OBS_INDICES[ 1 ];
-  public readonly obsIndex3 = REG_OBS_INDICES[ 2 ];
+  public readonly obsIndex1 = REG_OBS_INDICES[0];
+  public readonly obsIndex2 = REG_OBS_INDICES[1];
+  public readonly obsIndex3 = REG_OBS_INDICES[2];
 
   public readonly shown2Property: BooleanProperty;
   public readonly shown3Property: BooleanProperty;
@@ -43,47 +44,64 @@ export class RegistrationModel {
   public readonly invertColorsProperty: BooleanProperty;
   public readonly showGridProperty: BooleanProperty;
 
-  public constructor( preferences: VSPPreferencesModel, tandem?: Tandem ) {
-    const t = ( name: string ) => tandem ? { tandem: tandem.createTandem( name ) } : {};
+  public constructor(preferences: VSPPreferencesModel, tandem?: Tandem) {
+    const t = (name: string) => (tandem ? { tandem: tandem.createTandem(name) } : {});
 
-    this.shown2Property = new BooleanProperty( true, t( 'shown2Property' ) );
-    this.shown3Property = new BooleanProperty( false, t( 'shown3Property' ) );
+    this.shown2Property = new BooleanProperty(true, t("shown2Property"));
+    this.shown3Property = new BooleanProperty(false, t("shown3Property"));
 
-    this.onTopIndexProperty = new NumberProperty( 2, {
-      numberType: 'Integer',
-      validValues: [ 2, 3 ],
-      ...t( 'onTopIndexProperty' ),
-    } );
+    this.onTopIndexProperty = new NumberProperty(2, {
+      numberType: "Integer",
+      validValues: [2, 3],
+      ...t("onTopIndexProperty"),
+    });
 
-    this.xOffset2Property = new NumberProperty( 0, {
-      numberType: 'Integer', range: OFFSET_RANGE, ...t( 'xOffset2Property' ),
-    } );
-    this.yOffset2Property = new NumberProperty( 0, {
-      numberType: 'Integer', range: OFFSET_RANGE, ...t( 'yOffset2Property' ),
-    } );
-    this.xOffset3Property = new NumberProperty( 0, {
-      numberType: 'Integer', range: OFFSET_RANGE, ...t( 'xOffset3Property' ),
-    } );
-    this.yOffset3Property = new NumberProperty( 0, {
-      numberType: 'Integer', range: OFFSET_RANGE, ...t( 'yOffset3Property' ),
-    } );
+    this.xOffset2Property = new NumberProperty(0, {
+      numberType: "Integer",
+      range: OFFSET_RANGE,
+      ...t("xOffset2Property"),
+    });
+    this.yOffset2Property = new NumberProperty(0, {
+      numberType: "Integer",
+      range: OFFSET_RANGE,
+      ...t("yOffset2Property"),
+    });
+    this.xOffset3Property = new NumberProperty(0, {
+      numberType: "Integer",
+      range: OFFSET_RANGE,
+      ...t("xOffset3Property"),
+    });
+    this.yOffset3Property = new NumberProperty(0, {
+      numberType: "Integer",
+      range: OFFSET_RANGE,
+      ...t("yOffset3Property"),
+    });
 
-    this.topFieldTransparentProperty = new BooleanProperty( false, t( 'topFieldTransparentProperty' ) );
-    this.invertColorsProperty = new BooleanProperty( false, t( 'invertColorsProperty' ) );
+    this.topFieldTransparentProperty = new BooleanProperty(false, t("topFieldTransparentProperty"));
+    this.invertColorsProperty = new BooleanProperty(false, t("invertColorsProperty"));
 
-    this.showGridProperty = new BooleanProperty( preferences.showGridProperty.value, t( 'showGridProperty' ) );
-    preferences.showGridProperty.link( show => { this.showGridProperty.value = show; } );
+    this.showGridProperty = new BooleanProperty(preferences.showGridProperty.value, t("showGridProperty"));
+    preferences.showGridProperty.link((show) => {
+      this.showGridProperty.value = show;
+    });
+  }
+
+  public setFieldOffset(fieldIndex: 2 | 3, xOffset: number, yOffset: number): void {
+    if (fieldIndex === 2) {
+      this.xOffset2Property.value = clampOffset(xOffset);
+      this.yOffset2Property.value = clampOffset(yOffset);
+    } else {
+      this.xOffset3Property.value = clampOffset(xOffset);
+      this.yOffset3Property.value = clampOffset(yOffset);
+    }
   }
 
   /** Move the currently-on-top working field by (dx, dy) pixels (arrow keys). */
-  public nudgeOnTopField( dx: number, dy: number ): void {
-    const clamp = ( v: number ) => Math.round( Math.max( OFFSET_RANGE.min, Math.min( OFFSET_RANGE.max, v ) ) );
-    if ( this.onTopIndexProperty.value === 2 ) {
-      this.xOffset2Property.value = clamp( this.xOffset2Property.value + dx );
-      this.yOffset2Property.value = clamp( this.yOffset2Property.value + dy );
+  public nudgeOnTopField(dx: number, dy: number): void {
+    if (this.onTopIndexProperty.value === 2) {
+      this.setFieldOffset(2, this.xOffset2Property.value + dx, this.yOffset2Property.value + dy);
     } else {
-      this.xOffset3Property.value = clamp( this.xOffset3Property.value + dx );
-      this.yOffset3Property.value = clamp( this.yOffset3Property.value + dy );
+      this.setFieldOffset(3, this.xOffset3Property.value + dx, this.yOffset3Property.value + dy);
     }
   }
 
@@ -91,7 +109,9 @@ export class RegistrationModel {
     this.onTopIndexProperty.value = this.onTopIndexProperty.value === 2 ? 3 : 2;
   }
 
-  public step( _dt: number ): void { /* no time-dependent state */ }
+  public step(_dt: number): void {
+    /* no time-dependent state */
+  }
 
   public reset(): void {
     this.shown2Property.reset();
@@ -106,4 +126,4 @@ export class RegistrationModel {
   }
 }
 
-VSPNamespace.register( 'RegistrationModel', RegistrationModel );
+VSPNamespace.register("RegistrationModel", RegistrationModel);

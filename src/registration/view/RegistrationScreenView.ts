@@ -20,278 +20,498 @@
  * └─────────────────────┴──────────────────────────────┘
  *                                            [Reset All]
  */
-import { Multilink } from 'scenerystack/axon';
-import { Shape } from 'scenerystack/kite';
-import {
-  HBox,
-  KeyboardListener,
-  Node,
-  Rectangle,
-  Text,
-  VBox,
-} from 'scenerystack/scenery';
-import {
-  PhetFont,
-  ResetAllButton,
-} from 'scenerystack/scenery-phet';
-import type { ScreenViewOptions } from 'scenerystack/sim';
-import { ScreenView } from 'scenerystack/sim';
-import {
-  AquaRadioButton,
-  Checkbox,
-  Panel,
-  TextPushButton,
-  NumberPicker,
-} from 'scenerystack/sun';
-import { Tandem } from 'scenerystack/tandem';
-import { StarFieldNode } from '../../common/view/StarFieldNode.js';
-import type { RegistrationModel } from '../model/RegistrationModel.js';
+import { Multilink } from "scenerystack/axon";
+import { Shape } from "scenerystack/kite";
+import type { SceneryEvent } from "scenerystack/scenery";
+import { DragListener, KeyboardListener, Node, Rectangle, Text, VBox } from "scenerystack/scenery";
+import { PhetFont, ResetAllButton } from "scenerystack/scenery-phet";
+import type { ScreenViewOptions } from "scenerystack/sim";
+import { ScreenView } from "scenerystack/sim";
+import { AquaRadioButton, Checkbox, NumberPicker, Panel, TextPushButton } from "scenerystack/sun";
+import { Tandem } from "scenerystack/tandem";
+import { StarFieldNode } from "../../common/view/StarFieldNode.js";
+import type { RegistrationModel } from "../model/RegistrationModel.js";
 
 const FIELD_W = 380;
 const FIELD_H = 290;
 
-const LABEL_FONT  = new PhetFont( 13 );
-const HEADER_FONT = new PhetFont( { size: 14, weight: 'bold' } );
+const LABEL_FONT = new PhetFont(13);
+const SMALL_FONT = new PhetFont(11);
+const HEADER_FONT = new PhetFont({ size: 14, weight: "bold" });
 
 // Colours matching the Flash reference
-const COLOR_ON_TOP = '#ff9090';
-const COLOR_NORMAL = '#909090';
+const COLOR_ON_TOP = "#ff9090";
+const COLOR_NORMAL = "#909090";
+const PANEL_FILL = "#f5f5f5";
+const PANEL_STROKE = "#888";
+const SECTION_FILL = "#ffffff";
+const TEXT_FILL = "#222";
+const MUTED_TEXT_FILL = "#555";
+const WORK_PANEL_MARGIN = 12;
+const WORK_PANEL_TITLE_HEIGHT = 26;
+const CONTROL_TABLE_W = 286;
+const CONTROL_ROW_H = 34;
+const CONTROL_HEADER_H = 24;
 
 export class RegistrationScreenView extends ScreenView {
+  public constructor(model: RegistrationModel, options?: ScreenViewOptions) {
+    super(options);
 
-  public constructor( model: RegistrationModel, options?: ScreenViewOptions ) {
-    super( options );
-
-    const tandem = ( options?.tandem instanceof Tandem ) ? options.tandem : Tandem.OPT_OUT;
+    const tandem = options?.tandem instanceof Tandem ? options.tandem : Tandem.OPT_OUT;
 
     // -----------------------------------------------------------------------
     // Work Area — three overlaid star fields
     // -----------------------------------------------------------------------
-    const field1Node = new StarFieldNode( model.obsIndex1 );
-    const field2Node = new StarFieldNode( model.obsIndex2 );
-    const field3Node = new StarFieldNode( model.obsIndex3 );
+    const field1Node = new StarFieldNode(model.obsIndex1);
+    const field2Node = new StarFieldNode(model.obsIndex2);
+    const field3Node = new StarFieldNode(model.obsIndex3);
 
     // Each field group: star image + coloured border
     function makeBorderRect(): Rectangle {
-      return new Rectangle( 0, 0, FIELD_W, FIELD_H, {
-        stroke: COLOR_NORMAL, lineWidth: 2, fill: null, pickable: false,
-      } );
+      return new Rectangle(0, 0, FIELD_W, FIELD_H, {
+        stroke: COLOR_NORMAL,
+        lineWidth: 2,
+        fill: null,
+        pickable: false,
+      });
     }
 
     const border1 = makeBorderRect();
     const border2 = makeBorderRect();
     const border3 = makeBorderRect();
 
-    const group1 = new Node( { children: [ field1Node, border1 ] } );
-    const group2 = new Node( { children: [ field2Node, border2 ] } );
-    const group3 = new Node( { children: [ field3Node, border3 ] } );
+    const group1 = new Node({ children: [field1Node, border1] });
+    const group2 = new Node({ children: [field2Node, border2] });
+    const group3 = new Node({ children: [field3Node, border3] });
 
     // workLayer holds the three groups; clipped to field bounds
-    const workLayer = new Node( {
-      clipArea: Shape.rectangle( 0, 0, FIELD_W, FIELD_H ),
-      children: [ group1, group2, group3 ],
-    } );
+    const workLayer = new Node({
+      clipArea: Shape.rectangle(0, 0, FIELD_W, FIELD_H),
+      children: [group1, group2, group3],
+    });
 
-    // Outer frame for the work area
-    const workFrame = new Rectangle( 0, 0, FIELD_W, FIELD_H, {
-      stroke: '#555', lineWidth: 1, fill: null,
-    } );
+    // Outer frame for the movable star fields.
+    const workFrame = new Rectangle(0, 0, FIELD_W, FIELD_H, {
+      stroke: "#555",
+      lineWidth: 1,
+      fill: null,
+    });
 
-    const workArea = new Node( {
-      children: [ workLayer, workFrame ],
+    // Transparent interaction layer for dragging the selected on-top star field.
+    const dragHitArea = new Rectangle(0, 0, FIELD_W, FIELD_H, {
+      fill: "transparent",
+      cursor: "move",
+    });
+
+    const workPanelW = FIELD_W + 2 * WORK_PANEL_MARGIN;
+    const workPanelH = FIELD_H + WORK_PANEL_TITLE_HEIGHT + WORK_PANEL_MARGIN;
+    const workPanelFrame = new Rectangle(0, 0, workPanelW, workPanelH, {
+      fill: PANEL_FILL,
+      stroke: PANEL_STROKE,
+      lineWidth: 1,
+    });
+    const workTitle = new Text("Work Area", {
+      font: HEADER_FONT,
+      fill: TEXT_FILL,
+      left: WORK_PANEL_MARGIN,
+      centerY: WORK_PANEL_TITLE_HEIGHT / 2,
+    });
+    const fieldContainer = new Node({
+      children: [workLayer, workFrame, dragHitArea],
+      left: WORK_PANEL_MARGIN,
+      top: WORK_PANEL_TITLE_HEIGHT,
+    });
+
+    const workArea = new Node({
+      children: [workPanelFrame, workTitle, fieldContainer],
       left: 20,
-      top: this.layoutBounds.centerY - FIELD_H / 2,
-    } );
-    this.addChild( workArea );
+      top: this.layoutBounds.centerY - workPanelH / 2,
+    });
+    this.addChild(workArea);
 
     // -----------------------------------------------------------------------
     // Link work-area properties
     // -----------------------------------------------------------------------
 
     // Positions
-    model.xOffset2Property.link( dx => { group2.x = dx; } );
-    model.yOffset2Property.link( dy => { group2.y = dy; } );
-    model.xOffset3Property.link( dx => { group3.x = dx; } );
-    model.yOffset3Property.link( dy => { group3.y = dy; } );
+    model.xOffset2Property.link((dx) => {
+      group2.x = dx;
+    });
+    model.yOffset2Property.link((dy) => {
+      group2.y = dy;
+    });
+    model.xOffset3Property.link((dx) => {
+      group3.x = dx;
+    });
+    model.yOffset3Property.link((dy) => {
+      group3.y = dy;
+    });
 
     // Visibility
-    model.shown2Property.link( v => { group2.visible = v; } );
-    model.shown3Property.link( v => { group3.visible = v; } );
+    model.shown2Property.link((v) => {
+      group2.visible = v;
+    });
+    model.shown3Property.link((v) => {
+      group3.visible = v;
+    });
 
     // "On top" → border colour + z-order
-    model.onTopIndexProperty.link( idx => {
+    model.onTopIndexProperty.link((idx) => {
       border2.stroke = idx === 2 ? COLOR_ON_TOP : COLOR_NORMAL;
       border2.lineWidth = idx === 2 ? 3 : 2;
       border3.stroke = idx === 3 ? COLOR_ON_TOP : COLOR_NORMAL;
       border3.lineWidth = idx === 3 ? 3 : 2;
 
       // Bring the on-top group to the front
-      if ( idx === 2 ) {
-        workLayer.removeChild( group2 );
-        workLayer.addChild( group2 );
+      if (idx === 2) {
+        workLayer.removeChild(group2);
+        workLayer.addChild(group2);
       } else {
-        workLayer.removeChild( group3 );
-        workLayer.addChild( group3 );
+        workLayer.removeChild(group3);
+        workLayer.addChild(group3);
       }
-    } );
+    });
 
     // Transparency
-    Multilink.multilink(
-      [ model.onTopIndexProperty, model.topFieldTransparentProperty ],
-      ( idx, transparent ) => {
-        field2Node.opacity = ( idx === 2 && transparent ) ? 0.4 : 1;
-        field3Node.opacity = ( idx === 3 && transparent ) ? 0.4 : 1;
-      }
-    );
+    Multilink.multilink([model.onTopIndexProperty, model.topFieldTransparentProperty], (idx, transparent) => {
+      field2Node.opacity = idx === 2 && transparent ? 0.4 : 1;
+      field3Node.opacity = idx === 3 && transparent ? 0.4 : 1;
+    });
 
     // Inverted colours — re-render all three fields
-    model.invertColorsProperty.link( invert => {
-      field1Node.setObservation( model.obsIndex1, invert );
-      field2Node.setObservation( model.obsIndex2, invert );
-      field3Node.setObservation( model.obsIndex3, invert );
-    } );
+    model.invertColorsProperty.link((invert) => {
+      field1Node.setObservation(model.obsIndex1, invert);
+      field2Node.setObservation(model.obsIndex2, invert);
+      field3Node.setObservation(model.obsIndex3, invert);
+    });
+
+    // Dragging adjusts the same offsets as the number pickers and arrow keys.
+    let draggedFieldIndex: 2 | 3 | null = null;
+    let dragStartPointerX = 0;
+    let dragStartPointerY = 0;
+    let dragStartOffsetX = 0;
+    let dragStartOffsetY = 0;
+
+    const startDrag = (event: SceneryEvent) => {
+      draggedFieldIndex = model.onTopIndexProperty.value === 2 ? 2 : 3;
+
+      const pointerPoint = workLayer.globalToLocalPoint(event.pointer.point);
+      dragStartPointerX = pointerPoint.x;
+      dragStartPointerY = pointerPoint.y;
+
+      if (draggedFieldIndex === 2) {
+        dragStartOffsetX = model.xOffset2Property.value;
+        dragStartOffsetY = model.yOffset2Property.value;
+      } else {
+        dragStartOffsetX = model.xOffset3Property.value;
+        dragStartOffsetY = model.yOffset3Property.value;
+      }
+    };
+
+    const dragField = (event: SceneryEvent) => {
+      if (draggedFieldIndex === null) {
+        return;
+      }
+
+      const pointerPoint = workLayer.globalToLocalPoint(event.pointer.point);
+      model.setFieldOffset(
+        draggedFieldIndex,
+        dragStartOffsetX + pointerPoint.x - dragStartPointerX,
+        dragStartOffsetY + pointerPoint.y - dragStartPointerY,
+      );
+    };
+
+    dragHitArea.addInputListener(
+      new DragListener({
+        start: startDrag,
+        drag: dragField,
+        end: () => {
+          draggedFieldIndex = null;
+        },
+      }),
+    );
 
     // -----------------------------------------------------------------------
     // Arrow-key / J nudge — global (fires anywhere in scene)
     // -----------------------------------------------------------------------
-    KeyboardListener.createGlobal( this, {
-      keys: [ 'arrowLeft', 'arrowRight', 'arrowUp', 'arrowDown', 'j' ] as const,
-      fire: ( _event, keysPressed ) => {
-        if ( keysPressed === 'arrowLeft' )  model.nudgeOnTopField( -1,  0 );
-        if ( keysPressed === 'arrowRight' ) model.nudgeOnTopField(  1,  0 );
-        if ( keysPressed === 'arrowUp' )    model.nudgeOnTopField(  0, -1 );
-        if ( keysPressed === 'arrowDown' )  model.nudgeOnTopField(  0,  1 );
-        if ( keysPressed === 'j' )          model.switchOnTopField();
+    KeyboardListener.createGlobal(this, {
+      keys: ["arrowLeft", "arrowRight", "arrowUp", "arrowDown", "j"] as const,
+      fire: (_event, keysPressed) => {
+        if (keysPressed === "arrowLeft") {
+          model.nudgeOnTopField(-1, 0);
+        }
+        if (keysPressed === "arrowRight") {
+          model.nudgeOnTopField(1, 0);
+        }
+        if (keysPressed === "arrowUp") {
+          model.nudgeOnTopField(0, -1);
+        }
+        if (keysPressed === "arrowDown") {
+          model.nudgeOnTopField(0, 1);
+        }
+        if (keysPressed === "j") {
+          model.switchOnTopField();
+        }
       },
-    } );
+    });
 
     // -----------------------------------------------------------------------
     // Control Panel
     // -----------------------------------------------------------------------
 
+    const makeColumnHeader = (label: string, centerX: number) =>
+      new Text(label, {
+        font: SMALL_FONT,
+        fill: MUTED_TEXT_FILL,
+        centerX,
+        centerY: CONTROL_HEADER_H / 2,
+      });
+
+    const makePlaceholder = (label: string, centerX: number) =>
+      new Text(label, {
+        font: LABEL_FONT,
+        fill: MUTED_TEXT_FILL,
+        centerX,
+        centerY: CONTROL_ROW_H / 2,
+      });
+
+    const makeTableControlNode = (node: Node, centerX: number): Node => {
+      node.centerX = centerX;
+      node.centerY = CONTROL_ROW_H / 2;
+      return node;
+    };
+
+    const createDivider = (x: number) =>
+      new Rectangle(x, 0, 1, CONTROL_HEADER_H + 3 * CONTROL_ROW_H, {
+        fill: "#dddddd",
+      });
+
+    const shownColumnX = 96;
+    const onTopColumnX = 144;
+    const xOffsetColumnX = 204;
+    const yOffsetColumnX = 258;
+
+    const tableHeader = new Node({
+      children: [
+        new Rectangle(0, 0, CONTROL_TABLE_W, CONTROL_HEADER_H, { fill: "#eeeeee" }),
+        makeColumnHeader("shown", shownColumnX),
+        makeColumnHeader("on top", onTopColumnX),
+        makeColumnHeader("x offset", xOffsetColumnX),
+        makeColumnHeader("y offset", yOffsetColumnX),
+      ],
+    });
+
     // Helper: one row of the starfield table
     function makeStarfieldRow(
       label: string,
-      shownProp: import('scenerystack/axon').BooleanProperty | null,
+      shownProp: import("scenerystack/axon").BooleanProperty | null,
       onTopValue: number | null,
-      xProp: import('scenerystack/axon').NumberProperty | null,
-      yProp: import('scenerystack/axon').NumberProperty | null
+      xProp: import("scenerystack/axon").NumberProperty | null,
+      yProp: import("scenerystack/axon").NumberProperty | null,
+      fill: string,
     ): Node {
-      const labelNode = new Text( label, { font: LABEL_FONT, maxWidth: 80 } );
+      const labelNode = new Text(label, {
+        font: LABEL_FONT,
+        fill: TEXT_FILL,
+        maxWidth: 82,
+        left: 6,
+        centerY: CONTROL_ROW_H / 2,
+      });
 
       const shownBox = shownProp
-        ? new Checkbox( shownProp, new Text( '', { font: LABEL_FONT } ), { boxWidth: 16 } )
-        : new Text( '●', { font: LABEL_FONT } ); // reference always shown
-
-      const onTopButton = ( onTopValue !== null )
-        ? new AquaRadioButton<number>(
-            model.onTopIndexProperty,
-            onTopValue,
-            new Text( '', { font: LABEL_FONT } ),
-            { radius: 7 }
+        ? makeTableControlNode(
+            new Checkbox(shownProp, new Text("", { font: LABEL_FONT }), { boxWidth: 16 }),
+            shownColumnX,
           )
-        : new Node();  // no radio for reference
+        : makePlaceholder("fixed", shownColumnX);
 
-      const xPicker = ( xProp !== null )
-        ? new NumberPicker( xProp, xProp.rangeProperty, {
-            font: LABEL_FONT, color: 'black',
-            incrementFunction: v => v + 1,
-            decrementFunction: v => v - 1,
-          } )
-        : new Node();
+      const onTopButton =
+        onTopValue !== null
+          ? makeTableControlNode(
+              new AquaRadioButton<number>(model.onTopIndexProperty, onTopValue, new Text("", { font: LABEL_FONT }), {
+                radius: 7,
+              }),
+              onTopColumnX,
+            )
+          : makePlaceholder("--", onTopColumnX);
 
-      const yPicker = ( yProp !== null )
-        ? new NumberPicker( yProp, yProp.rangeProperty, {
-            font: LABEL_FONT, color: 'black',
-            incrementFunction: v => v + 1,
-            decrementFunction: v => v - 1,
-          } )
-        : new Node();
+      const xPicker =
+        xProp !== null
+          ? makeTableControlNode(
+              new NumberPicker(xProp, xProp.rangeProperty, {
+                font: LABEL_FONT,
+                color: "black",
+                incrementFunction: (v) => v + 1,
+                decrementFunction: (v) => v - 1,
+              }),
+              xOffsetColumnX,
+            )
+          : makePlaceholder("--", xOffsetColumnX);
 
-      return new HBox( {
-        spacing: 8,
-        align: 'center',
-        children: [ labelNode, shownBox, onTopButton,
-          new Text( 'x:', { font: LABEL_FONT } ), xPicker,
-          new Text( 'y:', { font: LABEL_FONT } ), yPicker,
+      const yPicker =
+        yProp !== null
+          ? makeTableControlNode(
+              new NumberPicker(yProp, yProp.rangeProperty, {
+                font: LABEL_FONT,
+                color: "black",
+                incrementFunction: (v) => v + 1,
+                decrementFunction: (v) => v - 1,
+              }),
+              yOffsetColumnX,
+            )
+          : makePlaceholder("--", yOffsetColumnX);
+
+      return new Node({
+        children: [
+          new Rectangle(0, 0, CONTROL_TABLE_W, CONTROL_ROW_H, { fill }),
+          labelNode,
+          shownBox,
+          onTopButton,
+          xPicker,
+          yPicker,
         ],
-      } );
+      });
     }
 
-    const row1 = makeStarfieldRow( 'Starfield 1', null, null, null, null );
-    const row2 = makeStarfieldRow( 'Starfield 2',
-      model.shown2Property, 2,
-      model.xOffset2Property, model.yOffset2Property );
-    const row3 = makeStarfieldRow( 'Starfield 3',
-      model.shown3Property, 3,
-      model.xOffset3Property, model.yOffset3Property );
+    const row1 = makeStarfieldRow("starfield 1", null, null, null, null, SECTION_FILL);
+    const row2 = makeStarfieldRow(
+      "starfield 2",
+      model.shown2Property,
+      2,
+      model.xOffset2Property,
+      model.yOffset2Property,
+      "#fafafa",
+    );
+    const row3 = makeStarfieldRow(
+      "starfield 3",
+      model.shown3Property,
+      3,
+      model.xOffset3Property,
+      model.yOffset3Property,
+      SECTION_FILL,
+    );
+
+    row1.top = CONTROL_HEADER_H;
+    row2.top = row1.bottom;
+    row3.top = row2.bottom;
+
+    const tableFrame = new Rectangle(0, 0, CONTROL_TABLE_W, CONTROL_HEADER_H + 3 * CONTROL_ROW_H, {
+      fill: null,
+      stroke: "#cccccc",
+      lineWidth: 1,
+    });
+    const starfieldTable = new Node({
+      children: [
+        tableHeader,
+        row1,
+        row2,
+        row3,
+        createDivider(82),
+        createDivider(120),
+        createDivider(170),
+        createDivider(232),
+        tableFrame,
+      ],
+    });
+
+    const selectedFieldText = new Text("", {
+      font: SMALL_FONT,
+      fill: MUTED_TEXT_FILL,
+      maxWidth: CONTROL_TABLE_W,
+    });
+    model.onTopIndexProperty.link((idx) => {
+      selectedFieldText.string = `Drag the image or use arrow keys to move starfield ${idx}.`;
+    });
+
+    const switchButton = new TextPushButton("Switch on top field  (J)", {
+      font: LABEL_FONT,
+      listener: () => model.switchOnTopField(),
+      baseColor: "#d4d4d4",
+      minWidth: 170,
+    });
+
+    const starfieldControlsContent = new VBox({
+      spacing: 9,
+      align: "center",
+      children: [
+        new Text("Starfield Controls", { font: HEADER_FONT, fill: TEXT_FILL }),
+        starfieldTable,
+        selectedFieldText,
+        switchButton,
+      ],
+    });
+
+    const starfieldControlsPanel = new Panel(starfieldControlsContent, {
+      fill: PANEL_FILL,
+      stroke: PANEL_STROKE,
+      cornerRadius: 0,
+      xMargin: 10,
+      yMargin: 10,
+    });
 
     // Appearance Options
     const transparentCheckbox = new Checkbox(
       model.topFieldTransparentProperty,
-      new Text( 'make top field transparent', { font: LABEL_FONT } ),
-      { boxWidth: 16 }
+      new Text("make top field transparent", { font: LABEL_FONT }),
+      { boxWidth: 16 },
     );
 
-    const invertCheckbox = new Checkbox(
-      model.invertColorsProperty,
-      new Text( 'invert colors', { font: LABEL_FONT } ),
-      { boxWidth: 16 }
-    );
-
-    const switchButton = new TextPushButton( 'Switch on top field  (J)', {
-      font: LABEL_FONT,
-      listener: () => model.switchOnTopField(),
-      baseColor: '#d4d4d4',
-    } );
+    const invertCheckbox = new Checkbox(model.invertColorsProperty, new Text("invert colors", { font: LABEL_FONT }), {
+      boxWidth: 16,
+    });
 
     // Hint text
-    const hintText = new Text( 'Use arrow keys to adjust position', {
-      font: new PhetFont( 11 ),
-      fill: '#555',
-    } );
+    const hintText = new Text(
+      "Tip: select starfield 2 or 3, then drag the image for coarse alignment and use arrow keys for fine adjustment.",
+      {
+        font: SMALL_FONT,
+        fill: MUTED_TEXT_FILL,
+        maxWidth: CONTROL_TABLE_W,
+      },
+    );
 
-    const controlContent = new VBox( {
-      spacing: 10,
-      align: 'left',
+    const appearanceContent = new VBox({
+      spacing: 9,
+      align: "left",
       children: [
-        new Text( 'Starfield Controls', { font: HEADER_FONT } ),
-        row1, row2, row3,
-        new Rectangle( 0, 0, 1, 1 ), // spacer
-        new Text( 'Appearance Options', { font: HEADER_FONT } ),
+        new Text("Appearance Options", { font: HEADER_FONT, fill: TEXT_FILL }),
         transparentCheckbox,
         invertCheckbox,
-        new Rectangle( 0, 0, 1, 1 ), // spacer
-        switchButton,
         hintText,
       ],
-    } );
+    });
 
-    const controlPanel = new Panel( controlContent, {
-      fill: '#f0f0f0',
-      stroke: '#888',
-      cornerRadius: 6,
-      xMargin: 12,
-      yMargin: 12,
-    } );
+    const appearancePanel = new Panel(appearanceContent, {
+      fill: PANEL_FILL,
+      stroke: PANEL_STROKE,
+      cornerRadius: 0,
+      xMargin: 10,
+      yMargin: 10,
+    });
 
-    controlPanel.left = workArea.right + 20;
-    controlPanel.top  = workArea.top;
-    this.addChild( controlPanel );
+    const controlColumn = new VBox({
+      spacing: 8,
+      align: "left",
+      children: [starfieldControlsPanel, appearancePanel],
+    });
+
+    controlColumn.left = workArea.right + 12;
+    controlColumn.top = workArea.top;
+    this.addChild(controlColumn);
 
     // -----------------------------------------------------------------------
     // Reset All button
     // -----------------------------------------------------------------------
-    const resetAllButton = new ResetAllButton( {
+    const resetAllButton = new ResetAllButton({
       listener: () => model.reset(),
-      right:  this.layoutBounds.maxX - 10,
+      right: this.layoutBounds.maxX - 10,
       bottom: this.layoutBounds.maxY - 10,
-      tandem: tandem.createTandem( 'resetAllButton' ),
-    } );
-    this.addChild( resetAllButton );
+      tandem: tandem.createTandem("resetAllButton"),
+    });
+    this.addChild(resetAllButton);
   }
 
-  public override step( dt: number ): void {
-    super.step( dt );
+  public override step(dt: number): void {
+    super.step(dt);
   }
 }
