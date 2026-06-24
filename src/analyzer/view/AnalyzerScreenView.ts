@@ -52,6 +52,7 @@ const VARIABLE_COLOR = "#7CFC7C"; // green circle
 const COMPARISON_COLOR = "#5AB4FF"; // blue square
 const CROSSHAIR_COLOR = "#ff5050";
 const MARKER_COLOR = "#d62728";
+const PERIOD_MULTIPLE_COLOR = "rgba(214, 39, 40, 0.35)";
 
 /** Pick a round axis spacing that yields roughly `target` ticks across `span`. */
 function niceSpacing(span: number, target = 5): number {
@@ -188,10 +189,11 @@ export class AnalyzerScreenView extends ScreenView {
     // =======================================================================
     const OBS_W = 470;
     const OBS_H = 250;
+    const OBS_TIME_RANGE = new Range(1, 22);
     const obsTransform = new ChartTransform({
       viewWidth: OBS_W,
       viewHeight: OBS_H,
-      modelXRange: new Range(1, 22),
+      modelXRange: OBS_TIME_RANGE.copy(),
       modelYRange: new Range(0, 1),
       modelYRangeInverted: true, // brighter (smaller magnitude) at the top
     });
@@ -211,7 +213,11 @@ export class AnalyzerScreenView extends ScreenView {
     });
 
     const scatter = new ScatterPlot(obsTransform, [], { radius: 2.5, fill: "#1f77b4" });
-    const obsPlotLayer = new Node({ clipArea: Shape.rectangle(0, 0, OBS_W, OBS_H), children: [scatter] });
+    const periodMultipleLayer = new Node({ pickable: false });
+    const obsPlotLayer = new Node({
+      clipArea: Shape.rectangle(0, 0, OBS_W, OBS_H),
+      children: [periodMultipleLayer, scatter],
+    });
 
     // Flash DeltaMagOverlay equivalent: two draggable horizontal bars whose
     // separation reports a magnitude difference in the current plot scale.
@@ -296,6 +302,28 @@ export class AnalyzerScreenView extends ScreenView {
       center: new Vector2(OBS_W / 2, OBS_H / 2),
     });
 
+    const updatePeriodMultipleMarkers = () => {
+      const measurements = model.measurementsProperty.value;
+      const period = model.trialPeriodProperty.value;
+      const offset = model.phaseOffsetProperty.value;
+      const mode = model.lightCurveModeProperty.value;
+
+      if (measurements.length === 0 || mode !== "time" || !Number.isFinite(period) || period <= 0) {
+        periodMultipleLayer.children = [];
+        return;
+      }
+
+      const lines: Line[] = [];
+      const firstMultiple = Math.ceil((OBS_TIME_RANGE.min - offset) / period);
+      const lastMultiple = Math.floor((OBS_TIME_RANGE.max - offset) / period);
+      for (let multiple = firstMultiple; multiple <= lastMultiple; multiple++) {
+        const epoch = offset + multiple * period;
+        const x = obsTransform.modelToViewX(epoch);
+        lines.push(new Line(x, 0, x, OBS_H, { stroke: PERIOD_MULTIPLE_COLOR, lineWidth: 1 }));
+      }
+      periodMultipleLayer.children = lines;
+    };
+
     const obsChart = new Node({
       children: [
         obsBackground,
@@ -316,6 +344,7 @@ export class AnalyzerScreenView extends ScreenView {
       obsEmptyMsg.visible = measurements.length === 0;
       if (measurements.length === 0) {
         scatter.setDataSet([]);
+        updatePeriodMultipleMarkers();
         updateDeltaOverlayAndHits();
         return;
       }
@@ -341,7 +370,7 @@ export class AnalyzerScreenView extends ScreenView {
       obsLabelY.setCreateLabel((v: number) => new Text(v.toFixed(yd), { font: TICK_FONT }));
 
       if (mode === "time") {
-        obsTransform.setModelXRange(new Range(1, 22));
+        obsTransform.setModelXRange(OBS_TIME_RANGE.copy());
         obsGridX.setSpacing(5);
         obsTickX.setSpacing(5);
         obsLabelX.setSpacing(5);
@@ -354,6 +383,7 @@ export class AnalyzerScreenView extends ScreenView {
         obsLabelX.setCreateLabel((v: number) => new Text(v.toFixed(2), { font: TICK_FONT }));
       }
 
+      updatePeriodMultipleMarkers();
       scatter.setDataSet(data);
       updateDeltaOverlayAndHits();
     };
