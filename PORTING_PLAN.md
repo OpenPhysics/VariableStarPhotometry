@@ -2,6 +2,7 @@
 
 Source: `NAAP/astroUNL/naap/vsp/` (4 SWF files + settings.xml)  
 Target: TypeScript + SceneryStack (Vite PWA, `src/`)
+ALSO the very USEFUL NAAP/flash-source  for the fla files.
 
 ---
 

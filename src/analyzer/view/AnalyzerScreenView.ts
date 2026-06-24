@@ -3,38 +3,501 @@
  *
  * View for the Analyzer screen.
  *
- * Layout (TODO: implement)
- * ┌──────────────────────────────────────────────────────┐
- * │  Light-curve plot (JD vs magnitude)                  │
- * │  ─────────────────────────────────────────────────── │
- * │  [Phase-fold toggle]  [Period control]  [Phase offset] │
- * │  [Reset]                                             │
- * └──────────────────────────────────────────────────────┘
+ * Layout
+ * ┌─────────────────────────────┬────────────────────────────────┐
+ * │  Star field (380 × 290)     │  Observations plot (Δmag vs     │
+ * │  click: variable, then comp │  Julian date / phase)           │
+ * │  ○ variable  □ comparison   │  light-curve type: ○ time ○phase │
+ * ├─────────────────────────────┴────────────────────────────────┤
+ * │  PDM Plot — θ vs trial period          [zoom in] [zoom out]   │
+ * │  trial period: N.NNNN days             [full] [undo]          │
+ * │  ┌──────────────────────────────────────────────────────────┐ │
+ * │  │  θ vs period (draggable period marker)                    │ │
+ * │  └──────────────────────────────────────────────────────────┘ │
+ * └────────────────────────────────────────────────────[Reset All]┘
  */
-import { Node } from "scenerystack/scenery";
-import { ResetAllButton } from "scenerystack/scenery-phet";
+import { BooleanProperty, Multilink } from "scenerystack/axon";
+import {
+  ChartRectangle,
+  ChartTransform,
+  GridLineSet,
+  LinePlot,
+  ScatterPlot,
+  TickLabelSet,
+  TickMarkSet,
+} from "scenerystack/bamboo";
+import { Range, Vector2 } from "scenerystack/dot";
+import { Shape } from "scenerystack/kite";
+import { Orientation } from "scenerystack/phet-core";
+import type { SceneryEvent } from "scenerystack/scenery";
+import { Circle, DragListener, HBox, Line, Node, Rectangle, Text, VBox } from "scenerystack/scenery";
+import { PhetFont, ResetAllButton } from "scenerystack/scenery-phet";
 import type { ScreenViewOptions } from "scenerystack/sim";
 import { ScreenView } from "scenerystack/sim";
+import { AquaRadioButtonGroup, Checkbox, TextPushButton } from "scenerystack/sun";
 import { Tandem } from "scenerystack/tandem";
-import type { AnalyzerModel } from "../model/AnalyzerModel.js";
+import { bestPeriod } from "../../common/model/PDMCalculator.js";
+import { StarFieldNode } from "../../common/view/StarFieldNode.js";
+import type { AnalyzerModel, LightCurveMode } from "../model/AnalyzerModel.js";
+
+const FIELD_W = 380;
+const FIELD_H = 290;
+
+const LABEL_FONT = new PhetFont(13);
+const HEADER_FONT = new PhetFont({ size: 14, weight: "bold" });
+const TICK_FONT = new PhetFont(10);
+const SMALL_FONT = new PhetFont(11);
+
+const VARIABLE_COLOR = "#7CFC7C"; // green circle
+const COMPARISON_COLOR = "#5AB4FF"; // blue square
+const CROSSHAIR_COLOR = "#ff5050";
+const MARKER_COLOR = "#d62728";
+
+/** Pick a round axis spacing that yields roughly `target` ticks across `span`. */
+function niceSpacing(span: number, target = 5): number {
+  if (span <= 0) {
+    return 1;
+  }
+  const raw = span / target;
+  const mag = 10 ** Math.floor(Math.log10(raw));
+  const norm = raw / mag;
+  const nice = norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10;
+  return nice * mag;
+}
+
+/** Number of decimals to show for a tick spacing. */
+function decimalsFor(spacing: number): number {
+  return spacing >= 1 ? 0 : Math.ceil(-Math.log10(spacing));
+}
 
 export class AnalyzerScreenView extends ScreenView {
   public constructor(model: AnalyzerModel, options?: ScreenViewOptions) {
     super(options);
 
-    // TODO: add ChartTransform-based scatter plot, period NumberControl,
-    //       phase-offset control, phase-fold toggle checkbox, export button.
+    const tandem = options?.tandem instanceof Tandem ? options.tandem : Tandem.OPT_OUT;
+    const showCrosshairProperty = new BooleanProperty(true);
 
-    const placeholder = new Node();
-    this.addChild(placeholder);
+    // =======================================================================
+    // Star field with click-to-select + crosshair + selection markers
+    // =======================================================================
+    const starField = new StarFieldNode(0);
+    const fieldClip = new Node({
+      clipArea: Shape.rectangle(0, 0, FIELD_W, FIELD_H),
+      children: [starField],
+    });
+    const frame = new Rectangle(0, 0, FIELD_W, FIELD_H, { stroke: "#888", lineWidth: 1 });
 
-    const resetAllButton = new ResetAllButton({
-      listener: () => model.reset(),
-      right: this.layoutBounds.maxX - 10,
-      bottom: this.layoutBounds.maxY - 10,
-      tandem: options?.tandem instanceof Tandem ? options.tandem.createTandem("resetAllButton") : Tandem.OPT_OUT,
+    // Selection markers.
+    const variableMarker = new Circle(8, { stroke: VARIABLE_COLOR, lineWidth: 2, visible: false });
+    const comparisonMarker = new Rectangle(-7, -7, 14, 14, { stroke: COMPARISON_COLOR, lineWidth: 2, visible: false });
+    model.variableStarPositionProperty.link((p) => {
+      variableMarker.visible = p !== null;
+      if (p) {
+        variableMarker.translation = p;
+      }
+    });
+    model.comparisonStarPositionProperty.link((p) => {
+      comparisonMarker.visible = p !== null;
+      if (p) {
+        comparisonMarker.translation = p;
+      }
     });
 
+    // Crosshair following the pointer.
+    const crosshairH = new Line(0, 0, FIELD_W, 0, { stroke: CROSSHAIR_COLOR, lineWidth: 1 });
+    const crosshairV = new Line(0, 0, 0, FIELD_H, { stroke: CROSSHAIR_COLOR, lineWidth: 1 });
+    const crosshair = new Node({ children: [crosshairH, crosshairV], pickable: false, visible: false });
+
+    const hitArea = new Rectangle(0, 0, FIELD_W, FIELD_H, { fill: "transparent", cursor: "crosshair" });
+    let pointerInside = false;
+    const updateCrosshairVisible = () => {
+      crosshair.visible = showCrosshairProperty.value && pointerInside;
+    };
+    showCrosshairProperty.link(updateCrosshairVisible);
+    hitArea.addInputListener({
+      enter: () => {
+        pointerInside = true;
+        updateCrosshairVisible();
+      },
+      exit: () => {
+        pointerInside = false;
+        updateCrosshairVisible();
+      },
+      move: (event: SceneryEvent) => {
+        const point = hitArea.globalToLocalPoint(event.pointer.point);
+        crosshairH.y = point.y;
+        crosshairV.x = point.x;
+      },
+      down: (event: SceneryEvent) => {
+        const point = hitArea.globalToLocalPoint(event.pointer.point);
+        model.selectStarAt(new Vector2(Math.round(point.x), Math.round(point.y)));
+      },
+    });
+
+    const fieldContainer = new Node({
+      children: [fieldClip, frame, variableMarker, comparisonMarker, crosshair, hitArea],
+    });
+
+    // Legend + controls beneath the field.
+    const legend = new HBox({
+      spacing: 16,
+      children: [
+        new HBox({
+          spacing: 5,
+          children: [
+            new Circle(6, { stroke: VARIABLE_COLOR, lineWidth: 2 }),
+            new Text("variable", { font: SMALL_FONT }),
+          ],
+        }),
+        new HBox({
+          spacing: 5,
+          children: [
+            new Rectangle(-5, -5, 10, 10, { stroke: COMPARISON_COLOR, lineWidth: 2 }),
+            new Text("comparison", { font: SMALL_FONT }),
+          ],
+        }),
+      ],
+    });
+
+    const instructions = new Text("Click a variable star, then a comparison star.", { font: SMALL_FONT, fill: "#555" });
+    const clearButton = new TextPushButton("Clear selection", {
+      font: SMALL_FONT,
+      baseColor: "#d4d4d4",
+      listener: () => model.clearSelections(),
+    });
+    const crosshairCheckbox = new Checkbox(showCrosshairProperty, new Text("show crosshairs", { font: SMALL_FONT }), {
+      boxWidth: 14,
+    });
+
+    const leftColumn = new VBox({
+      spacing: 8,
+      align: "left",
+      children: [
+        fieldContainer,
+        legend,
+        instructions,
+        new HBox({ spacing: 12, children: [clearButton, crosshairCheckbox] }),
+      ],
+    });
+    leftColumn.left = 20;
+    leftColumn.top = 15;
+    this.addChild(leftColumn);
+
+    // =======================================================================
+    // Observations plot (Δmag vs Julian date / phase)
+    // =======================================================================
+    const OBS_W = 470;
+    const OBS_H = 250;
+    const obsTransform = new ChartTransform({
+      viewWidth: OBS_W,
+      viewHeight: OBS_H,
+      modelXRange: new Range(1, 22),
+      modelYRange: new Range(0, 1),
+      modelYRangeInverted: true, // brighter (smaller magnitude) at the top
+    });
+
+    const obsBackground = new ChartRectangle(obsTransform, { fill: "white", stroke: "#333" });
+    const obsGridX = new GridLineSet(obsTransform, Orientation.HORIZONTAL, 5, { stroke: "#e0e0e0" });
+    const obsGridY = new GridLineSet(obsTransform, Orientation.VERTICAL, 0.2, { stroke: "#e0e0e0" });
+    const obsTickX = new TickMarkSet(obsTransform, Orientation.HORIZONTAL, 5, { edge: "min" });
+    const obsTickY = new TickMarkSet(obsTransform, Orientation.VERTICAL, 0.2, { edge: "min" });
+    const obsLabelX = new TickLabelSet(obsTransform, Orientation.HORIZONTAL, 5, {
+      edge: "min",
+      createLabel: (v: number) => new Text(v.toFixed(0), { font: TICK_FONT }),
+    });
+    const obsLabelY = new TickLabelSet(obsTransform, Orientation.VERTICAL, 0.2, {
+      edge: "min",
+      createLabel: (v: number) => new Text(v.toFixed(2), { font: TICK_FONT }),
+    });
+
+    const scatter = new ScatterPlot(obsTransform, [], { radius: 2.5, fill: "#1f77b4" });
+    const obsPlotLayer = new Node({ clipArea: Shape.rectangle(0, 0, OBS_W, OBS_H), children: [scatter] });
+
+    const obsEmptyMsg = new Text("(select a variable and a comparison star)", {
+      font: SMALL_FONT,
+      fill: "#888",
+      center: new Vector2(OBS_W / 2, OBS_H / 2),
+    });
+
+    const obsChart = new Node({
+      children: [
+        obsBackground,
+        obsGridX,
+        obsGridY,
+        obsPlotLayer,
+        obsTickX,
+        obsTickY,
+        obsLabelX,
+        obsLabelY,
+        obsEmptyMsg,
+      ],
+    });
+
+    const updateObservations = () => {
+      const measurements = model.measurementsProperty.value;
+      obsEmptyMsg.visible = measurements.length === 0;
+      if (measurements.length === 0) {
+        scatter.setDataSet([]);
+        return;
+      }
+      const mode = model.lightCurveModeProperty.value;
+      const data = measurements.map(
+        (m) => new Vector2(mode === "time" ? m.epoch : model.getPhase(m.epoch), m.magnitude),
+      );
+
+      // Magnitude (y) range from the data, with padding.
+      let yMin = Infinity;
+      let yMax = -Infinity;
+      for (const m of measurements) {
+        yMin = Math.min(yMin, m.magnitude);
+        yMax = Math.max(yMax, m.magnitude);
+      }
+      const pad = Math.max(0.05, (yMax - yMin) * 0.1);
+      obsTransform.setModelYRange(new Range(yMin - pad, yMax + pad));
+      const ySpacing = niceSpacing(yMax - yMin + 2 * pad);
+      const yd = decimalsFor(ySpacing);
+      obsGridY.setSpacing(ySpacing);
+      obsTickY.setSpacing(ySpacing);
+      obsLabelY.setSpacing(ySpacing);
+      obsLabelY.setCreateLabel((v: number) => new Text(v.toFixed(yd), { font: TICK_FONT }));
+
+      if (mode === "time") {
+        obsTransform.setModelXRange(new Range(1, 22));
+        obsGridX.setSpacing(5);
+        obsTickX.setSpacing(5);
+        obsLabelX.setSpacing(5);
+        obsLabelX.setCreateLabel((v: number) => new Text(v.toFixed(0), { font: TICK_FONT }));
+      } else {
+        obsTransform.setModelXRange(new Range(0, 1));
+        obsGridX.setSpacing(0.25);
+        obsTickX.setSpacing(0.25);
+        obsLabelX.setSpacing(0.25);
+        obsLabelX.setCreateLabel((v: number) => new Text(v.toFixed(2), { font: TICK_FONT }));
+      }
+
+      scatter.setDataSet(data);
+    };
+    Multilink.multilink(
+      [model.measurementsProperty, model.lightCurveModeProperty, model.trialPeriodProperty, model.phaseOffsetProperty],
+      () => updateObservations(),
+    );
+
+    const obsTitle = new Text("Observations", { font: HEADER_FONT });
+    const obsYLabel = new Text("differential magnitude", { font: SMALL_FONT, rotation: -Math.PI / 2 });
+    const obsXLabel = new Text("Julian date (days)", { font: SMALL_FONT });
+    model.lightCurveModeProperty.link((mode) => {
+      obsXLabel.string = mode === "time" ? "Julian date (days)" : "phase";
+    });
+
+    const modeRadioGroup = new AquaRadioButtonGroup<LightCurveMode>(
+      model.lightCurveModeProperty,
+      [
+        { value: "time", createNode: () => new Text("time", { font: LABEL_FONT }) },
+        { value: "phase", createNode: () => new Text("phase", { font: LABEL_FONT }) },
+      ],
+      { orientation: "horizontal", spacing: 16, radioButtonOptions: { radius: 7 } },
+    );
+
+    // Assemble observations panel (title, [y-label | chart], x-label, radios).
+    const obsChartRow = new HBox({ spacing: 4, align: "center", children: [obsYLabel, obsChart] });
+    const obsModeRow = new HBox({
+      spacing: 8,
+      align: "center",
+      children: [new Text("light curve:", { font: LABEL_FONT }), modeRadioGroup],
+    });
+    const obsColumn = new VBox({
+      spacing: 6,
+      align: "center",
+      children: [obsTitle, obsChartRow, obsXLabel, obsModeRow],
+    });
+    obsColumn.left = leftColumn.right + 30;
+    obsColumn.top = 15;
+    this.addChild(obsColumn);
+
+    // =======================================================================
+    // PDM plot (θ vs trial period) with draggable period marker + zoom
+    // =======================================================================
+    const PDM_W = 880;
+    const PDM_H = 150;
+    const pdmTransform = new ChartTransform({
+      viewWidth: PDM_W,
+      viewHeight: PDM_H,
+      modelXRange: model.pdmZoomRangeProperty.value.copy(),
+      modelYRange: new Range(0, 1.2),
+    });
+
+    const pdmBackground = new ChartRectangle(pdmTransform, { fill: "white", stroke: "#333" });
+    const pdmGridX = new GridLineSet(pdmTransform, Orientation.HORIZONTAL, 1, { stroke: "#e0e0e0" });
+    const pdmGridY = new GridLineSet(pdmTransform, Orientation.VERTICAL, 0.2, { stroke: "#e0e0e0" });
+    const pdmTickX = new TickMarkSet(pdmTransform, Orientation.HORIZONTAL, 1, { edge: "min" });
+    const pdmTickY = new TickMarkSet(pdmTransform, Orientation.VERTICAL, 0.2, { edge: "min" });
+    const pdmLabelX = new TickLabelSet(pdmTransform, Orientation.HORIZONTAL, 1, {
+      edge: "min",
+      createLabel: (v: number) => new Text(v.toFixed(1), { font: TICK_FONT }),
+    });
+    const pdmLabelY = new TickLabelSet(pdmTransform, Orientation.VERTICAL, 0.2, {
+      edge: "min",
+      createLabel: (v: number) => new Text(v.toFixed(1), { font: TICK_FONT }),
+    });
+
+    const pdmLine = new LinePlot(pdmTransform, [], { stroke: "#0077b6", lineWidth: 1.5 });
+    const periodMarker = new Line(0, 0, 0, PDM_H, { stroke: MARKER_COLOR, lineWidth: 2 });
+    const pdmPlotLayer = new Node({
+      clipArea: Shape.rectangle(0, 0, PDM_W, PDM_H),
+      children: [pdmLine, periodMarker],
+    });
+
+    const pdmEmptyMsg = new Text("(no light curve yet)", {
+      font: SMALL_FONT,
+      fill: "#888",
+      center: new Vector2(PDM_W / 2, PDM_H / 2),
+    });
+
+    // Drag/click on the plot sets the trial period.
+    const pdmHit = new Rectangle(0, 0, PDM_W, PDM_H, { fill: "transparent", cursor: "ew-resize" });
+    const setPeriodFromEvent = (event: SceneryEvent) => {
+      const local = pdmHit.globalToLocalPoint(event.pointer.point);
+      const zoom = model.pdmZoomRangeProperty.value;
+      const period = pdmTransform.viewToModelX(local.x);
+      model.trialPeriodProperty.value = Math.max(zoom.min, Math.min(zoom.max, period));
+    };
+    pdmHit.addInputListener(
+      new DragListener({
+        start: (event) => setPeriodFromEvent(event),
+        drag: (event) => setPeriodFromEvent(event),
+      }),
+    );
+
+    const pdmChart = new Node({
+      children: [
+        pdmBackground,
+        pdmGridX,
+        pdmGridY,
+        pdmPlotLayer,
+        pdmTickX,
+        pdmTickY,
+        pdmLabelX,
+        pdmLabelY,
+        pdmHit,
+        pdmEmptyMsg,
+      ],
+    });
+
+    const updatePdmAxes = () => {
+      const zoom = model.pdmZoomRangeProperty.value;
+      pdmTransform.setModelXRange(zoom.copy());
+      const spacing = niceSpacing(zoom.max - zoom.min);
+      const xd = decimalsFor(spacing);
+      pdmGridX.setSpacing(spacing);
+      pdmTickX.setSpacing(spacing);
+      pdmLabelX.setSpacing(spacing);
+      pdmLabelX.setCreateLabel((v: number) => new Text(v.toFixed(xd), { font: TICK_FONT }));
+    };
+
+    const updatePdmData = () => {
+      const scan = model.pdmScanResultsProperty.value;
+      pdmEmptyMsg.visible = scan.length === 0;
+      pdmLine.setDataSet(scan.map((p) => new Vector2(p.period, Math.min(1.2, p.theta))));
+    };
+
+    const updateMarker = () => {
+      const x = pdmTransform.modelToViewX(model.trialPeriodProperty.value);
+      periodMarker.setLine(x, 0, x, PDM_H);
+      periodMarker.visible = x >= 0 && x <= PDM_W;
+    };
+
+    model.pdmZoomRangeProperty.link(() => {
+      updatePdmAxes();
+      updatePdmData();
+      updateMarker();
+    });
+    model.pdmScanResultsProperty.link(() => updatePdmData());
+    model.trialPeriodProperty.link(() => updateMarker());
+
+    // PDM controls: readout + zoom buttons.
+    const periodReadout = new Text("", { font: LABEL_FONT });
+    const updateReadout = () => {
+      const best = bestPeriod(model.pdmScanResultsProperty.value);
+      const bestText = best === null ? "—" : `${best.toFixed(4)} d`;
+      periodReadout.string = `trial period: ${model.trialPeriodProperty.value.toFixed(4)} days     (min θ at ${bestText})`;
+    };
+    Multilink.multilink([model.trialPeriodProperty, model.pdmScanResultsProperty], () => updateReadout());
+
+    const zoomInButton = new TextPushButton("zoom in around period", {
+      font: SMALL_FONT,
+      baseColor: "#cfe8ff",
+      listener: () => model.zoomInAroundPeriod(),
+    });
+    const zoomOutButton = new TextPushButton("zoom out around period", {
+      font: SMALL_FONT,
+      baseColor: "#cfe8ff",
+      listener: () => model.zoomOutAroundPeriod(),
+    });
+    const fullButton = new TextPushButton("zoom to full range", {
+      font: SMALL_FONT,
+      baseColor: "#d4d4d4",
+      listener: () => model.zoomToFull(),
+    });
+    const undoButton = new TextPushButton("undo last zoom", {
+      font: SMALL_FONT,
+      baseColor: "#d4d4d4",
+      listener: () => model.undoLastZoom(),
+    });
+    const snapButton = new TextPushButton("snap to min θ", {
+      font: SMALL_FONT,
+      baseColor: "#b6e3b6",
+      listener: () => {
+        const best = bestPeriod(model.pdmScanResultsProperty.value);
+        if (best !== null) {
+          model.trialPeriodProperty.value = best;
+        }
+      },
+    });
+
+    const pdmButtonRow = new HBox({
+      spacing: 8,
+      children: [zoomInButton, zoomOutButton, fullButton, undoButton, snapButton],
+    });
+    const pdmYLabel = new Text("θ (dispersion)", { font: SMALL_FONT, rotation: -Math.PI / 2 });
+    const pdmXLabel = new Text("trial period (days)", { font: SMALL_FONT });
+
+    const pdmColumn = new VBox({
+      spacing: 6,
+      align: "left",
+      children: [
+        new HBox({
+          spacing: 20,
+          align: "center",
+          children: [new Text("PDM Period Search", { font: HEADER_FONT }), periodReadout],
+        }),
+        pdmButtonRow,
+        new HBox({ spacing: 4, align: "center", children: [pdmYLabel, pdmChart] }),
+        pdmXLabel,
+      ],
+    });
+    pdmColumn.left = 60;
+    pdmColumn.top = leftColumn.bottom + 10;
+    this.addChild(pdmColumn);
+
+    // Initialise dynamic chart state.
+    updatePdmAxes();
+    updatePdmData();
+    updateMarker();
+    updateReadout();
+    updateObservations();
+
+    // =======================================================================
+    // Reset All
+    // =======================================================================
+    const resetAllButton = new ResetAllButton({
+      listener: () => {
+        model.reset();
+        showCrosshairProperty.reset();
+      },
+      right: this.layoutBounds.maxX - 10,
+      bottom: this.layoutBounds.maxY - 10,
+      tandem: tandem.createTandem("resetAllButton"),
+    });
     this.addChild(resetAllButton);
   }
 
