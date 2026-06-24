@@ -46,7 +46,9 @@ function besselJ1(x: number): number {
     const a2 =
       0.04687499995 + y * (-0.2002690873e-3 + y * (0.8449199096e-5 + y * (-0.88228987e-6 + y * 0.105787412e-6)));
     ans = Math.sqrt(0.636619772 / ax) * (Math.cos(xx) * a1 - z * Math.sin(xx) * a2);
-    if (x < 0.0) ans = -ans;
+    if (x < 0.0) {
+      ans = -ans;
+    }
   }
   return ans;
 }
@@ -131,8 +133,12 @@ function buildGammaLUT(invert: boolean): Uint8Array {
   const inv = 1 / 1.8;
   for (let v = 0; v <= peakValue; v++) {
     let g = Math.round(255 * (v / peakValue) ** inv);
-    if (g < 0) g = 0;
-    if (g > 255) g = 255;
+    if (g < 0) {
+      g = 0;
+    }
+    if (g > 255) {
+      g = 255;
+    }
     lut[v] = invert ? 255 - g : g;
   }
   return lut;
@@ -157,7 +163,9 @@ export class CCDField {
   private constructor() {
     this.numChunks = Math.floor(0.7 * W);
     this.chunkSize = Math.ceil((W * H) / this.numChunks);
-    if (this.chunkSize % 2 === 1) this.chunkSize += 1;
+    if (this.chunkSize % 2 === 1) {
+      this.chunkSize += 1;
+    }
 
     this.noiseData = buildNoiseData(this.numChunks, this.chunkSize);
     this.psf = buildAiryDisc(psfRadius);
@@ -168,7 +176,9 @@ export class CCDField {
   }
 
   public static getInstance(): CCDField {
-    if (!CCDField._instance) CCDField._instance = new CCDField();
+    if (!CCDField._instance) {
+      CCDField._instance = new CCDField();
+    }
     return CCDField._instance;
   }
 
@@ -178,7 +188,9 @@ export class CCDField {
   // -------------------------------------------------------------------------
   private buildChunkTable(noiseSeed: number): Int32Array {
     const tbl = new Int32Array(this.numChunks);
-    for (let i = 0; i < this.numChunks; i++) tbl[i] = i;
+    for (let i = 0; i < this.numChunks; i++) {
+      tbl[i] = i;
+    }
     let seed = noiseSeed;
     for (let i = 0; i < this.numChunks - 1; i++) {
       const j = i + Math.floor((this.numChunks - i) * (seed / 2147483647));
@@ -197,8 +209,12 @@ export class CCDField {
     const p = Math.floor(m / this.chunkSize);
     const q = m - p * this.chunkSize;
     let v = fieldData[q + this.chunkSize * (chunkTable[p] as number)] as number;
-    if (v < 0) v = 0;
-    if (v > peakValue) v = peakValue;
+    if (v < 0) {
+      v = 0;
+    }
+    if (v > peakValue) {
+      v = peakValue;
+    }
     return v;
   }
 
@@ -221,6 +237,7 @@ export class CCDField {
   // Build the full field data array for an observation
   // This is the heavy render step: noise shuffle + all star PSF contributions.
   // -------------------------------------------------------------------------
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Kept close to Flash StarField.as for parity.
   private buildFieldData(obsIndex: number): { fieldData: Float64Array; chunkTable: Int32Array } {
     const obs = OBSERVATIONS[obsIndex] as import("./StarFieldData.js").Observation;
     const chunkTable = this.buildChunkTable(obs.noiseSeed);
@@ -242,22 +259,36 @@ export class CCDField {
 
       for (let j = 0; j < this.psfSize; j++) {
         const px = left + j;
-        if (px < 0) continue;
-        if (px >= W) break;
+        if (px < 0) {
+          continue;
+        }
+        if (px >= W) {
+          break;
+        }
         const psfCol = this.psf[j] as Float64Array;
         for (let k = 0; k < this.psfSize; k++) {
           const u = psfCol[k] as number;
-          if (u <= 0) continue;
+          if (u <= 0) {
+            continue;
+          }
           const py = top + k;
-          if (py < 0) continue;
-          if (py >= H) break;
+          if (py < 0) {
+            continue;
+          }
+          if (py >= H) {
+            break;
+          }
           const m = px + py * W;
           const p = Math.floor(m / this.chunkSize);
           const q = m - p * this.chunkSize;
           const idx = q + this.chunkSize * (chunkTable[p] as number);
           let v = (fieldData[idx] as number) + f * u;
-          if (v < 0) v = 0;
-          if (v > peakValue) v = peakValue;
+          if (v < 0) {
+            v = 0;
+          }
+          if (v > peakValue) {
+            v = peakValue;
+          }
           fieldData[idx] = v;
         }
       }
@@ -271,7 +302,10 @@ export class CCDField {
   // -------------------------------------------------------------------------
   public render(obsIndex: number, invert = false): ImageData {
     const cacheKey = invert ? ~obsIndex : obsIndex; // ~x = -(x+1), unique negative
-    if (this.renderCache.has(cacheKey)) return this.renderCache.get(cacheKey)!;
+    const cachedImageData = this.renderCache.get(cacheKey);
+    if (cachedImageData !== undefined) {
+      return cachedImageData;
+    }
 
     const { fieldData, chunkTable } = this.buildFieldData(obsIndex);
     const lut = invert ? this.gammaLUTi : this.gammaLUT;
@@ -315,12 +349,18 @@ export class CCDField {
     for (let j = -rOuter; j <= rOuter; j++) {
       for (let k = -rOuter; k <= rOuter; k++) {
         const d2 = j * j + k * k;
-        if (d2 < r2Inner || d2 > r2Outer) continue;
+        if (d2 < r2Inner || d2 > r2Outer) {
+          continue;
+        }
         const px = cx + j;
         const py = cy + k;
-        if (px < 0 || px >= W || py < 0 || py >= H) continue;
+        if (px < 0 || px >= W || py < 0 || py >= H) {
+          continue;
+        }
         const m = px + py * W;
-        totalCounts += this.getFieldValue(m, chunkTable, fieldData);
+        // Flash StarField.as summed uint(v), so truncate the clamped raw count
+        // for bit-level parity with legacy aperture statistics.
+        totalCounts += Math.trunc(this.getFieldValue(m, chunkTable, fieldData));
         totalPixels++;
       }
     }

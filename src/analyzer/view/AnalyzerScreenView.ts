@@ -213,6 +213,83 @@ export class AnalyzerScreenView extends ScreenView {
     const scatter = new ScatterPlot(obsTransform, [], { radius: 2.5, fill: "#1f77b4" });
     const obsPlotLayer = new Node({ clipArea: Shape.rectangle(0, 0, OBS_W, OBS_H), children: [scatter] });
 
+    // Flash DeltaMagOverlay equivalent: two draggable horizontal bars whose
+    // separation reports a magnitude difference in the current plot scale.
+    let deltaBar1Y = OBS_H * 0.35;
+    let deltaBar2Y = OBS_H * 0.65;
+    const deltaBar1 = new Line(0, deltaBar1Y, OBS_W, deltaBar1Y, { stroke: "#909090", lineWidth: 1 });
+    const deltaBar2 = new Line(0, deltaBar2Y, OBS_W, deltaBar2Y, { stroke: "#909090", lineWidth: 1 });
+    const deltaFill = new Rectangle(0, 0, OBS_W, 0, { fill: "rgba(160, 160, 160, 0.18)", pickable: false });
+    const deltaText = new Text("", {
+      font: SMALL_FONT,
+      fill: "#333",
+      pickable: false,
+    });
+
+    const updateDeltaOverlay = () => {
+      const hasMeasurements = model.measurementsProperty.value.length > 0;
+      deltaBar1.visible = hasMeasurements;
+      deltaBar2.visible = hasMeasurements;
+      deltaFill.visible = hasMeasurements;
+      deltaText.visible = hasMeasurements;
+      deltaBar1Hit.visible = hasMeasurements;
+      deltaBar2Hit.visible = hasMeasurements;
+      if (!hasMeasurements) {
+        return;
+      }
+
+      const y1 = Math.max(0, Math.min(OBS_H, deltaBar1Y));
+      const y2 = Math.max(0, Math.min(OBS_H, deltaBar2Y));
+      deltaBar1.setLine(0, y1, OBS_W, y1);
+      deltaBar2.setLine(0, y2, OBS_W, y2);
+
+      const top = Math.min(y1, y2);
+      const bottom = Math.max(y1, y2);
+      deltaFill.setRect(0, top, OBS_W, bottom - top);
+
+      const mag1 = obsTransform.viewToModelY(y1);
+      const mag2 = obsTransform.viewToModelY(y2);
+      deltaText.string = `${Math.abs(mag2 - mag1).toFixed(2)} mag`;
+      deltaText.centerX = OBS_W / 2;
+      deltaText.bottom = Math.max(14, top - 4);
+    };
+
+    const makeDeltaBarHitTarget = (which: 1 | 2): Rectangle => {
+      const hit = new Rectangle(0, 0, OBS_W, 12, { fill: "transparent", cursor: "ns-resize" });
+      const setBarFromEvent = (event: SceneryEvent) => {
+        const local = hit.globalToLocalPoint(event.pointer.point);
+        const y = Math.max(0, Math.min(OBS_H, hit.y + local.y));
+        if (which === 1) {
+          deltaBar1Y = y;
+        } else {
+          deltaBar2Y = y;
+        }
+        updateDeltaOverlayAndHits();
+      };
+      hit.addInputListener(
+        new DragListener({
+          start: (event) => setBarFromEvent(event),
+          drag: (event) => setBarFromEvent(event),
+        }),
+      );
+      return hit;
+    };
+
+    const deltaBar1Hit = makeDeltaBarHitTarget(1);
+    const deltaBar2Hit = makeDeltaBarHitTarget(2);
+    const updateDeltaHitTargets = () => {
+      deltaBar1Hit.top = deltaBar1Y - 6;
+      deltaBar2Hit.top = deltaBar2Y - 6;
+    };
+    const deltaOverlay = new Node({
+      clipArea: Shape.rectangle(0, 0, OBS_W, OBS_H),
+      children: [deltaFill, deltaBar1, deltaBar2, deltaText, deltaBar1Hit, deltaBar2Hit],
+    });
+    const updateDeltaOverlayAndHits = () => {
+      updateDeltaOverlay();
+      updateDeltaHitTargets();
+    };
+
     const obsEmptyMsg = new Text("(select a variable and a comparison star)", {
       font: SMALL_FONT,
       fill: "#888",
@@ -225,6 +302,7 @@ export class AnalyzerScreenView extends ScreenView {
         obsGridX,
         obsGridY,
         obsPlotLayer,
+        deltaOverlay,
         obsTickX,
         obsTickY,
         obsLabelX,
@@ -238,6 +316,7 @@ export class AnalyzerScreenView extends ScreenView {
       obsEmptyMsg.visible = measurements.length === 0;
       if (measurements.length === 0) {
         scatter.setDataSet([]);
+        updateDeltaOverlayAndHits();
         return;
       }
       const mode = model.lightCurveModeProperty.value;
@@ -276,6 +355,7 @@ export class AnalyzerScreenView extends ScreenView {
       }
 
       scatter.setDataSet(data);
+      updateDeltaOverlayAndHits();
     };
     Multilink.multilink(
       [model.measurementsProperty, model.lightCurveModeProperty, model.trialPeriodProperty, model.phaseOffsetProperty],

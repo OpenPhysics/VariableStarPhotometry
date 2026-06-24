@@ -30,7 +30,6 @@ import {
   ANNULUS_INNER_RANGE,
   ANNULUS_OUTER_RANGE,
   APERTURE_DIAMETER_RANGE,
-  EPOCH_INDEX_RANGE,
   type PhotometryModel,
 } from "../model/PhotometryModel.js";
 
