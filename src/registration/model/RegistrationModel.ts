@@ -4,63 +4,106 @@
  * Model for the Registration screen.
  *
  * Students align a series of CCD images (taken at different epochs) to a
- * reference image by shifting the "working" image in X/Y. Once all images
- * are registered, the aligned stack is passed to the Blink Comparator screen.
- *
- * TODO: implement star-field generation, image rendering, alignment tracking.
+ * reference image by shifting the "working" images in X/Y.
  */
-import { BooleanProperty, NumberProperty } from "scenerystack/axon";
-import type { Tandem } from "scenerystack/tandem";
-import type { VSPPreferencesModel } from "../../preferences/VSPPreferencesModel.js";
-import VSPNamespace from "../../VSPNamespace.js";
+import { BooleanProperty, NumberProperty } from 'scenerystack/axon';
+import { Range } from 'scenerystack/dot';
+import type { Tandem } from 'scenerystack/tandem';
+import type { VSPPreferencesModel } from '../../preferences/VSPPreferencesModel.js';
+import VSPNamespace from '../../VSPNamespace.js';
+
+// Fixed observation indices chosen to sample early, mid, and late epochs.
+// index 0  → epoch  1.7215 d  (reference)
+// index 36 → epoch  8.7525 d  (working A)
+// index 63 → epoch 12.9682 d  (working B)
+export const REG_OBS_INDICES = [ 0, 36, 63 ] as const;
+
+const OFFSET_RANGE = new Range( -100, 100 );
 
 export class RegistrationModel {
-  /** Horizontal offset (in field pixels) of the working image relative to the reference. */
-  public readonly offsetXProperty: NumberProperty;
+  public readonly obsIndex1 = REG_OBS_INDICES[ 0 ];
+  public readonly obsIndex2 = REG_OBS_INDICES[ 1 ];
+  public readonly obsIndex3 = REG_OBS_INDICES[ 2 ];
 
-  /** Vertical offset (in field pixels) of the working image relative to the reference. */
-  public readonly offsetYProperty: NumberProperty;
+  public readonly shown2Property: BooleanProperty;
+  public readonly shown3Property: BooleanProperty;
 
-  /** Index of the currently selected working-image epoch (0 = reference). */
-  public readonly selectedEpochIndexProperty: NumberProperty;
+  /**
+   * Which working field is rendered on top (2 or 3).
+   * Starfield 1 (reference) is always at the bottom.
+   */
+  public readonly onTopIndexProperty: NumberProperty;
 
-  /** Whether the overlay grid is visible on the field. */
+  public readonly xOffset2Property: NumberProperty;
+  public readonly yOffset2Property: NumberProperty;
+  public readonly xOffset3Property: NumberProperty;
+  public readonly yOffset3Property: NumberProperty;
+
+  public readonly topFieldTransparentProperty: BooleanProperty;
+  public readonly invertColorsProperty: BooleanProperty;
   public readonly showGridProperty: BooleanProperty;
 
-  public constructor(preferences: VSPPreferencesModel, tandem?: Tandem) {
-    this.offsetXProperty = new NumberProperty(0, {
-      ...(tandem && { tandem: tandem.createTandem("offsetXProperty") }),
-    });
+  public constructor( preferences: VSPPreferencesModel, tandem?: Tandem ) {
+    const t = ( name: string ) => tandem ? { tandem: tandem.createTandem( name ) } : {};
 
-    this.offsetYProperty = new NumberProperty(0, {
-      ...(tandem && { tandem: tandem.createTandem("offsetYProperty") }),
-    });
+    this.shown2Property = new BooleanProperty( true, t( 'shown2Property' ) );
+    this.shown3Property = new BooleanProperty( false, t( 'shown3Property' ) );
 
-    this.selectedEpochIndexProperty = new NumberProperty(1, {
-      numberType: "Integer",
-      ...(tandem && { tandem: tandem.createTandem("selectedEpochIndexProperty") }),
-    });
+    this.onTopIndexProperty = new NumberProperty( 2, {
+      numberType: 'Integer',
+      validValues: [ 2, 3 ],
+      ...t( 'onTopIndexProperty' ),
+    } );
 
-    // Mirror the global preference; local override is allowed per-screen.
-    this.showGridProperty = new BooleanProperty(preferences.showGridProperty.value, {
-      ...(tandem && { tandem: tandem.createTandem("showGridProperty") }),
-    });
+    this.xOffset2Property = new NumberProperty( 0, {
+      numberType: 'Integer', range: OFFSET_RANGE, ...t( 'xOffset2Property' ),
+    } );
+    this.yOffset2Property = new NumberProperty( 0, {
+      numberType: 'Integer', range: OFFSET_RANGE, ...t( 'yOffset2Property' ),
+    } );
+    this.xOffset3Property = new NumberProperty( 0, {
+      numberType: 'Integer', range: OFFSET_RANGE, ...t( 'xOffset3Property' ),
+    } );
+    this.yOffset3Property = new NumberProperty( 0, {
+      numberType: 'Integer', range: OFFSET_RANGE, ...t( 'yOffset3Property' ),
+    } );
 
-    // Keep in sync with the preferences toggle
-    preferences.showGridProperty.link((show) => {
-      this.showGridProperty.value = show;
-    });
+    this.topFieldTransparentProperty = new BooleanProperty( false, t( 'topFieldTransparentProperty' ) );
+    this.invertColorsProperty = new BooleanProperty( false, t( 'invertColorsProperty' ) );
+
+    this.showGridProperty = new BooleanProperty( preferences.showGridProperty.value, t( 'showGridProperty' ) );
+    preferences.showGridProperty.link( show => { this.showGridProperty.value = show; } );
   }
 
-  public step(_dt: number): void {
-    // No time-dependent state yet
+  /** Move the currently-on-top working field by (dx, dy) pixels (arrow keys). */
+  public nudgeOnTopField( dx: number, dy: number ): void {
+    const clamp = ( v: number ) => Math.round( Math.max( OFFSET_RANGE.min, Math.min( OFFSET_RANGE.max, v ) ) );
+    if ( this.onTopIndexProperty.value === 2 ) {
+      this.xOffset2Property.value = clamp( this.xOffset2Property.value + dx );
+      this.yOffset2Property.value = clamp( this.yOffset2Property.value + dy );
+    } else {
+      this.xOffset3Property.value = clamp( this.xOffset3Property.value + dx );
+      this.yOffset3Property.value = clamp( this.yOffset3Property.value + dy );
+    }
   }
+
+  public switchOnTopField(): void {
+    this.onTopIndexProperty.value = this.onTopIndexProperty.value === 2 ? 3 : 2;
+  }
+
+  public step( _dt: number ): void { /* no time-dependent state */ }
 
   public reset(): void {
-    this.offsetXProperty.reset();
-    this.offsetYProperty.reset();
-    this.selectedEpochIndexProperty.reset();
+    this.shown2Property.reset();
+    this.shown3Property.reset();
+    this.onTopIndexProperty.reset();
+    this.xOffset2Property.reset();
+    this.yOffset2Property.reset();
+    this.xOffset3Property.reset();
+    this.yOffset3Property.reset();
+    this.topFieldTransparentProperty.reset();
+    this.invertColorsProperty.reset();
   }
 }
 
-VSPNamespace.register("RegistrationModel", RegistrationModel);
+VSPNamespace.register( 'RegistrationModel', RegistrationModel );
