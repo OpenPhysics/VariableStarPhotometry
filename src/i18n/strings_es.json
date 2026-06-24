@@ -1,0 +1,89 @@
+{
+  "title": "Fotometría de Estrellas Variables",
+  "screens": {
+    "registration": "Registro",
+    "blinkComparator": "Comparador Parpadeante",
+    "photometry": "Fotometría",
+    "analyzer": "Analizador"
+  },
+  "controls": {
+    "reset": "Reiniciar todo",
+    "play": "Reproducir",
+    "pause": "Pausa",
+    "nextFrame": "Siguiente cuadro",
+    "previousFrame": "Cuadro anterior",
+    "blinkSpeed": "Velocidad de parpadeo",
+    "epoch": "Época",
+    "apertureDiameter": "Diámetro de apertura",
+    "annulusInner": "Radio interior del anillo",
+    "annulusOuter": "Radio exterior del anillo",
+    "showApertures": "Mostrar aperturas",
+    "showGrid": "Mostrar cuadrícula",
+    "period": "Período",
+    "phaseWrap": "Envolver fase",
+    "phaseFold": "Plegar fase"
+  },
+  "labels": {
+    "magnitude": "Magnitud",
+    "instrumentalMagnitude": "Magnitud instrumental",
+    "julianDate": "Fecha juliana",
+    "phase": "Fase",
+    "epoch": "Época",
+    "star": "Estrella",
+    "variableStar": "Estrella variable",
+    "comparisonStar": "Estrella de comparación",
+    "checkStar": "Estrella de verificación",
+    "flux": "Flujo (cuentas)",
+    "background": "Fondo (cuentas/píxel)",
+    "lightCurve": "Curva de luz",
+    "phaseFoldedLightCurve": "Curva de luz plegada en fase"
+  },
+  "starTypes": {
+    "constantStar": "Estrella constante",
+    "pulsatingStar": "Estrella pulsante",
+    "eclipsingBinary": "Binaria eclipsante"
+  },
+  "units": {
+    "days": "días",
+    "hours": "hr",
+    "magnitudes": "mag",
+    "pixels": "px",
+    "counts": "cuentas"
+  },
+  "messages": {
+    "confirmReset": "¿Está seguro de que desea reiniciar todo?",
+    "confirmResetTitle": "Confirmar reinicio",
+    "selectStar": "Haga clic en una estrella para seleccionarla.",
+    "noMeasurements": "Sin mediciones aún. Tome lecturas fotométricas primero.",
+    "insufficientData": "Datos insuficientes para determinar el período. Agregue más observaciones."
+  },
+  "a11y": {
+    "screenSummary": {
+      "registration": {
+        "playArea": "El área de juego muestra una imagen CCD de referencia de un campo estelar junto con una segunda imagen tomada en una época diferente.",
+        "controlArea": "Los controles permiten desplazar y rotar la segunda imagen para alinearla con la referencia.",
+        "interactionHint": "Arrastre la imagen de comparación para alinear los patrones de estrellas."
+      },
+      "blinkComparator": {
+        "playArea": "El área de juego alterna entre dos imágenes CCD registradas del mismo campo estelar.",
+        "controlArea": "Ajuste la velocidad de parpadeo y seleccione el par de imágenes a comparar.",
+        "interactionHint": "Observe las estrellas que cambian de brillo entre cuadros."
+      },
+      "photometry": {
+        "playArea": "El área de juego muestra una imagen CCD con aperturas circulares colocadas sobre estrellas.",
+        "controlArea": "Establezca los tamaños de apertura y anillo de cielo.",
+        "interactionHint": "Haga clic en una estrella para colocar o mover una apertura."
+      },
+      "analyzer": {
+        "playArea": "El área de juego muestra una curva de luz: magnitud instrumental graficada contra fecha juliana.",
+        "controlArea": "Ingrese el período de prueba y ajuste el envolvimiento de fase.",
+        "interactionHint": "Ingrese un período de prueba y observe cómo se alinean los puntos de datos."
+      }
+    }
+  },
+  "preferences": {
+    "title": "Simulación",
+    "showGrid": "Mostrar líneas de cuadrícula",
+    "invertImages": "Invertir imágenes (cielo oscuro)"
+  }
+}

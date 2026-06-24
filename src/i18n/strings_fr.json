@@ -1,0 +1,89 @@
+{
+  "title": "Photométrie des Étoiles Variables",
+  "screens": {
+    "registration": "Recalage",
+    "blinkComparator": "Comparateur Clignotant",
+    "photometry": "Photométrie",
+    "analyzer": "Analyseur"
+  },
+  "controls": {
+    "reset": "Tout réinitialiser",
+    "play": "Lire",
+    "pause": "Pause",
+    "nextFrame": "Image suivante",
+    "previousFrame": "Image précédente",
+    "blinkSpeed": "Vitesse de clignotement",
+    "epoch": "Époque",
+    "apertureDiameter": "Diamètre d'ouverture",
+    "annulusInner": "Rayon intérieur de l'anneau",
+    "annulusOuter": "Rayon extérieur de l'anneau",
+    "showApertures": "Afficher les ouvertures",
+    "showGrid": "Afficher la grille",
+    "period": "Période",
+    "phaseWrap": "Enroulement de phase",
+    "phaseFold": "Repliement de phase"
+  },
+  "labels": {
+    "magnitude": "Magnitude",
+    "instrumentalMagnitude": "Magnitude instrumentale",
+    "julianDate": "Date julienne",
+    "phase": "Phase",
+    "epoch": "Époque",
+    "star": "Étoile",
+    "variableStar": "Étoile variable",
+    "comparisonStar": "Étoile de comparaison",
+    "checkStar": "Étoile de contrôle",
+    "flux": "Flux (comptes)",
+    "background": "Fond (comptes/pixel)",
+    "lightCurve": "Courbe de lumière",
+    "phaseFoldedLightCurve": "Courbe de lumière repliée en phase"
+  },
+  "starTypes": {
+    "constantStar": "Étoile constante",
+    "pulsatingStar": "Étoile pulsante",
+    "eclipsingBinary": "Binaire à éclipses"
+  },
+  "units": {
+    "days": "jours",
+    "hours": "h",
+    "magnitudes": "mag",
+    "pixels": "px",
+    "counts": "comptes"
+  },
+  "messages": {
+    "confirmReset": "Voulez-vous vraiment tout réinitialiser ?",
+    "confirmResetTitle": "Confirmer la réinitialisation",
+    "selectStar": "Cliquez sur une étoile pour la sélectionner.",
+    "noMeasurements": "Aucune mesure pour l'instant. Prenez d'abord des lectures photométriques.",
+    "insufficientData": "Données insuffisantes pour déterminer la période. Ajoutez plus d'observations."
+  },
+  "a11y": {
+    "screenSummary": {
+      "registration": {
+        "playArea": "La zone de jeu affiche une image CCD de référence d'un champ d'étoiles à côté d'une deuxième image prise à une époque différente.",
+        "controlArea": "Les commandes permettent de déplacer et de faire pivoter la deuxième image pour l'aligner sur la référence.",
+        "interactionHint": "Faites glisser l'image de comparaison pour aligner les motifs d'étoiles."
+      },
+      "blinkComparator": {
+        "playArea": "La zone de jeu alterne entre deux images CCD recalées du même champ d'étoiles.",
+        "controlArea": "Réglez la vitesse de clignotement et sélectionnez la paire d'images à comparer.",
+        "interactionHint": "Observez les étoiles qui changent de luminosité entre les images."
+      },
+      "photometry": {
+        "playArea": "La zone de jeu affiche une image CCD avec des ouvertures circulaires placées sur des étoiles.",
+        "controlArea": "Définissez les tailles d'ouverture et d'anneau de ciel.",
+        "interactionHint": "Cliquez sur une étoile pour placer ou déplacer une ouverture."
+      },
+      "analyzer": {
+        "playArea": "La zone de jeu affiche une courbe de lumière : magnitude instrumentale en fonction de la date julienne.",
+        "controlArea": "Entrez la période d'essai et ajustez l'enroulement de phase.",
+        "interactionHint": "Entrez une période d'essai et observez comment les points de données s'alignent."
+      }
+    }
+  },
+  "preferences": {
+    "title": "Simulation",
+    "showGrid": "Afficher les lignes de grille",
+    "invertImages": "Inverser les images (ciel sombre)"
+  }
+}

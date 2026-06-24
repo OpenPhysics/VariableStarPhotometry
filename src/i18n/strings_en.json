@@ -1,0 +1,89 @@
+{
+  "title": "Variable Star Photometry",
+  "screens": {
+    "registration": "Registration",
+    "blinkComparator": "Blink Comparator",
+    "photometry": "Photometry",
+    "analyzer": "Analyzer"
+  },
+  "controls": {
+    "reset": "Reset All",
+    "play": "Play",
+    "pause": "Pause",
+    "nextFrame": "Next Frame",
+    "previousFrame": "Previous Frame",
+    "blinkSpeed": "Blink Speed",
+    "epoch": "Epoch",
+    "apertureDiameter": "Aperture Diameter",
+    "annulusInner": "Annulus Inner Radius",
+    "annulusOuter": "Annulus Outer Radius",
+    "showApertures": "Show Apertures",
+    "showGrid": "Show Grid",
+    "period": "Period",
+    "phaseWrap": "Phase Wrap",
+    "phaseFold": "Phase Fold"
+  },
+  "labels": {
+    "magnitude": "Magnitude",
+    "instrumentalMagnitude": "Instrumental Magnitude",
+    "julianDate": "Julian Date",
+    "phase": "Phase",
+    "epoch": "Epoch",
+    "star": "Star",
+    "variableStar": "Variable Star",
+    "comparisonStar": "Comparison Star",
+    "checkStar": "Check Star",
+    "flux": "Flux (counts)",
+    "background": "Background (counts/pixel)",
+    "lightCurve": "Light Curve",
+    "phaseFoldedLightCurve": "Phase-Folded Light Curve"
+  },
+  "starTypes": {
+    "constantStar": "Constant Star",
+    "pulsatingStar": "Pulsating Star",
+    "eclipsingBinary": "Eclipsing Binary"
+  },
+  "units": {
+    "days": "days",
+    "hours": "hr",
+    "magnitudes": "mag",
+    "pixels": "px",
+    "counts": "counts"
+  },
+  "messages": {
+    "confirmReset": "Are you sure you'd like to reset everything?",
+    "confirmResetTitle": "Confirm Reset",
+    "selectStar": "Click a star to select it.",
+    "noMeasurements": "No measurements yet. Take photometry readings first.",
+    "insufficientData": "Insufficient data to determine period. Add more observations."
+  },
+  "a11y": {
+    "screenSummary": {
+      "registration": {
+        "playArea": "The play area shows a reference CCD image of a star field alongside a second image taken at a different epoch. Both images contain identical stars that can be aligned.",
+        "controlArea": "Controls let you shift and rotate the second image to align it with the reference. A Reset All button returns everything to the starting state.",
+        "interactionHint": "Drag the comparison image to align the star patterns, then use fine-tune controls for precise registration."
+      },
+      "blinkComparator": {
+        "playArea": "The play area alternates between two registered CCD images of the same star field. Variable stars appear to flicker when the images are blinked.",
+        "controlArea": "Adjust the blink speed and select which pair of images to compare. Click a star to mark it as a candidate variable.",
+        "interactionHint": "Watch for stars that change brightness between frames. Click a blinking star to identify it."
+      },
+      "photometry": {
+        "playArea": "The play area shows a CCD image with circular apertures placed on stars. Counts within the aperture are summed to measure stellar brightness.",
+        "controlArea": "Set aperture and sky annulus sizes. Select one star as the variable and others as comparison stars. Measured instrumental magnitudes appear in the table.",
+        "interactionHint": "Click a star to place or move an aperture. Adjust aperture size and measure brightness for the variable and comparison stars."
+      },
+      "analyzer": {
+        "playArea": "The play area shows a light curve: instrumental magnitude plotted against Julian Date. Use phase-folding to reveal the variability period.",
+        "controlArea": "Enter the trial period and adjust phase wrapping to fold the light curve. Best-fit period minimizes scatter in the folded curve.",
+        "interactionHint": "Enter a trial period and observe how the data points align. Adjust until the folded light curve is smooth."
+      }
+    }
+  },
+  "preferences": {
+    "title": "Simulation",
+    "showGrid": "Show Grid Lines",
+    "invertImages": "Invert Images (dark sky)"
+  }
+}
