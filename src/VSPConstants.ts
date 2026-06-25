@@ -54,12 +54,18 @@ const FONT_SIZE = {
   TICK: 10, // chart tick labels (pt)
 } as const;
 
+/** Analysis constants for the PDM period finder. */
+const PDM = {
+  SCAN_STEPS: 400, // number of trial periods evaluated per scan pass
+} as const;
+
 const VSPConstants = {
   FIELD,
   APERTURE,
   TIME,
   LAYOUT,
   FONT_SIZE,
+  PDM,
 } as const;
 
 VSPNamespace.register("VSPConstants", VSPConstants);

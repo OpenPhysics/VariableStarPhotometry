@@ -160,6 +160,12 @@ export class CCDField {
   private readonly gammaLUTi: Uint8Array; // inverted
   private readonly renderCache = new Map<number, ImageData>(); // key = obsIndex (positive = normal, negative-1 = inverted)
 
+  // Last-used cache for the raw field data. Avoids rebuilding the same observation's
+  // float array when multiple apertures are measured in sequence (e.g., AnalyzerModel
+  // measures the variable then comparison star for every epoch in one loop).
+  private lastFieldBuildIndex = -1;
+  private lastFieldBuildResult: { fieldData: Float64Array; chunkTable: Int32Array } | null = null;
+
   private constructor() {
     this.numChunks = Math.floor(0.7 * W);
     this.chunkSize = Math.ceil((W * H) / this.numChunks);
@@ -239,6 +245,10 @@ export class CCDField {
   // -------------------------------------------------------------------------
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Kept close to Flash StarField.as for parity.
   private buildFieldData(obsIndex: number): { fieldData: Float64Array; chunkTable: Int32Array } {
+    if (this.lastFieldBuildIndex === obsIndex && this.lastFieldBuildResult !== null) {
+      return this.lastFieldBuildResult;
+    }
+
     const obs = OBSERVATIONS[obsIndex] as import("./StarFieldData.js").Observation;
     const chunkTable = this.buildChunkTable(obs.noiseSeed);
 
@@ -294,7 +304,9 @@ export class CCDField {
       }
     }
 
-    return { fieldData, chunkTable };
+    this.lastFieldBuildIndex = obsIndex;
+    this.lastFieldBuildResult = { fieldData, chunkTable };
+    return this.lastFieldBuildResult;
   }
 
   // -------------------------------------------------------------------------

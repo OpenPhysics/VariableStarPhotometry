@@ -125,7 +125,9 @@ export class BlinkComparatorModel {
     }
     this.blinkAccumulatorS += dt;
     const intervalS = this.blinkIntervalMsProperty.value / 1000;
-    if (this.blinkAccumulatorS >= intervalS) {
+    // Loop so that a large dt (e.g. after the tab is backgrounded) advances the
+    // correct number of frames rather than always advancing by exactly one.
+    while (this.blinkAccumulatorS >= intervalS) {
       this.blinkAccumulatorS -= intervalS;
       this.queuePositionProperty.value = (this.queuePositionProperty.value + 1) % this.blinkQueue.length;
     }
