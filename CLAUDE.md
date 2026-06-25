@@ -48,13 +48,15 @@ concerns and flat-prefixed names (e.g. `FIELD_WIDTH`, `LAYOUT_SCREEN_MARGIN`) wo
 All groups are frozen, so the convention of "no magic numbers in model or view" is still upheld.
 The file lives at `src/` root as required by CONVENTIONS.md.
 
-### No ModelViewTransform2
+### ModelViewTransform2 is identity
 
 Model and view share the same coordinate space: CCD pixel coordinates, 380 × 290 px, origin
-top-left. `CCDField` renders physical pixel data, and star positions are stored and displayed in
-the same units. A `ModelViewTransform2` would be an identity transform and is intentionally absent.
-When a screen scales the star field (e.g., `FIELD_SCALE = 1.25` in the Blink Comparator), it uses
-a SceneryStack scene-graph `scale()` — the model coordinate values are unchanged.
+top-left. A `ModelViewTransform2.createIdentity()` is used in `PhotometryScreenView` and
+`AnalyzerScreenView` (passed to `ApertureNode` and used for selection-marker placement) to make
+the model→view boundary explicit and allow future scale changes in one place. The transform is
+also wired into `ApertureNode`'s `DragListener` via the `transform` option so drags update the
+aperture `centerProperty` in model space. When a screen scales the star field (e.g., Blink
+Comparator), it uses a SceneryStack scene-graph `scale()` — model coordinate values are unchanged.
 
 ## Physics notes
 
