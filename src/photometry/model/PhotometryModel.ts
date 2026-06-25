@@ -22,7 +22,7 @@ import {
   type PhotometryResult,
 } from "../../common/model/AperturePhotometry.js";
 import { OBSERVATIONS } from "../../common/model/StarFieldData.js";
-import VSPConstants from "../../common/VSPConstants.js";
+import VSPConstants from "../../VSPConstants.js";
 import VSPNamespace from "../../VSPNamespace.js";
 
 export const APERTURE_DIAMETER_RANGE = new Range(6, 30);

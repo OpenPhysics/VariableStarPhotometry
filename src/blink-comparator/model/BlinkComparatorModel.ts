@@ -14,7 +14,7 @@ import { BooleanProperty, createObservableArray, DerivedProperty, NumberProperty
 import { Range } from "scenerystack/dot";
 import type { Tandem } from "scenerystack/tandem";
 import { OBSERVATIONS } from "../../common/model/StarFieldData.js";
-import VSPConstants from "../../common/VSPConstants.js";
+import VSPConstants from "../../VSPConstants.js";
 import VSPNamespace from "../../VSPNamespace.js";
 
 /** Allowed range for blink interval in milliseconds. */

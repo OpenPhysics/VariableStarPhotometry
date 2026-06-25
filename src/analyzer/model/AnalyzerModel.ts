@@ -21,7 +21,7 @@ import type { Tandem } from "scenerystack/tandem";
 import { differentialMagnitude, measureAperture } from "../../common/model/AperturePhotometry.js";
 import { type PdmPoint, pdmScan } from "../../common/model/PDMCalculator.js";
 import { OBSERVATIONS } from "../../common/model/StarFieldData.js";
-import VSPConstants from "../../common/VSPConstants.js";
+import VSPConstants from "../../VSPConstants.js";
 import VSPNamespace from "../../VSPNamespace.js";
 
 export const PERIOD_RANGE = new Range(0.1, 100);

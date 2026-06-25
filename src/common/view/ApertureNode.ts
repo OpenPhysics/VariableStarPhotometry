@@ -16,7 +16,7 @@ import { optionize } from "scenerystack/phet-core";
 import type { NodeOptions, TColor } from "scenerystack/scenery";
 import { Circle, DragListener, Node, Text } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
-import VSPConstants from "../VSPConstants.js";
+import VSPConstants from "../../VSPConstants.js";
 
 type ApertureNodeSelfOptions = {
   /** Field-pixel bounds the centre is clamped to while dragging. */
