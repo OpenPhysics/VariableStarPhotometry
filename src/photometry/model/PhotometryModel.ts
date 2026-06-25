@@ -22,8 +22,9 @@ import {
   type PhotometryResult,
 } from "../../common/model/AperturePhotometry.js";
 import { OBSERVATIONS } from "../../common/model/StarFieldData.js";
-import VSPConstants from "../../common/VSPConstants.js";
+import VSPConstants from "../../VSPConstants.js";
 import VSPNamespace from "../../VSPNamespace.js";
+import vspQueryParameters from "../../preferences/vspQueryParameters.js";
 
 export const APERTURE_DIAMETER_RANGE = new Range(6, 30);
 export const ANNULUS_INNER_RANGE = new Range(8, 25);
@@ -70,9 +71,10 @@ export class PhotometryModel {
   public readonly magnitudeDifferenceProperty: TReadOnlyProperty<number | null>;
 
   public constructor(_tandem?: Tandem) {
-    this.apertureDiameterProperty = new NumberProperty(VSPConstants.APERTURE.DEFAULT_DIAMETER, {
-      range: APERTURE_DIAMETER_RANGE,
-    });
+    this.apertureDiameterProperty = new NumberProperty(
+      vspQueryParameters.apertureDiameter ?? VSPConstants.APERTURE.DEFAULT_DIAMETER,
+      { range: APERTURE_DIAMETER_RANGE },
+    );
 
     this.annulusInnerRadiusProperty = new NumberProperty(VSPConstants.APERTURE.DEFAULT_ANNULUS_INNER, {
       range: ANNULUS_INNER_RANGE,

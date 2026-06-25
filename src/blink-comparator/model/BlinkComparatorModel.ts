@@ -14,8 +14,9 @@ import { BooleanProperty, createObservableArray, DerivedProperty, NumberProperty
 import { Range } from "scenerystack/dot";
 import type { Tandem } from "scenerystack/tandem";
 import { OBSERVATIONS } from "../../common/model/StarFieldData.js";
-import VSPConstants from "../../common/VSPConstants.js";
+import VSPConstants from "../../VSPConstants.js";
 import VSPNamespace from "../../VSPNamespace.js";
+import vspQueryParameters from "../../preferences/vspQueryParameters.js";
 
 /** Allowed range for blink interval in milliseconds. */
 export const BLINK_INTERVAL_RANGE = new Range(200, 2000);
@@ -67,13 +68,14 @@ export class BlinkComparatorModel {
       range: OBS_INDEX_RANGE,
     });
 
-    this.blinkIntervalMsProperty = new NumberProperty(VSPConstants.TIME.DEFAULT_BLINK_INTERVAL_MS, {
-      range: BLINK_INTERVAL_RANGE,
-    });
+    this.blinkIntervalMsProperty = new NumberProperty(
+      vspQueryParameters.blinkIntervalMs ?? VSPConstants.TIME.DEFAULT_BLINK_INTERVAL_MS,
+      { range: BLINK_INTERVAL_RANGE },
+    );
 
     this.isBlinkingProperty = new BooleanProperty(true);
 
-    this.showCrosshairProperty = new BooleanProperty(true);
+    this.showCrosshairProperty = new BooleanProperty(vspQueryParameters.showCrosshair);
 
     this.displayedObsIndexProperty = new DerivedProperty(
       [this.blinkQueue.lengthProperty, this.queuePositionProperty, this.selectedObsIndexProperty],

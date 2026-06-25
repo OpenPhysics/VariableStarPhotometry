@@ -22,9 +22,10 @@ import type { ScreenViewOptions } from "scenerystack/sim";
 import { ScreenView } from "scenerystack/sim";
 import { Checkbox, NumberPicker, Panel } from "scenerystack/sun";
 import { Tandem } from "scenerystack/tandem";
+import { ModelViewTransform2 } from "scenerystack/phetcommon";
 import { CCDField } from "../../common/model/CCDField.js";
 import { OBSERVATIONS } from "../../common/model/StarFieldData.js";
-import VSPConstants from "../../common/VSPConstants.js";
+import VSPConstants from "../../VSPConstants.js";
 import { ApertureNode } from "../../common/view/ApertureNode.js";
 import { StarFieldNode } from "../../common/view/StarFieldNode.js";
 import { StringManager } from "../../i18n/StringManager.js";
@@ -151,6 +152,12 @@ export class PhotometryScreenView extends ScreenView {
       lineWidth: 1,
     });
 
+    // Transform from model (CCD pixel) space to field-container view space.
+    // VSP renders the star field at 1:1 pixel scale, so this is an identity
+    // transform. It makes the model–view coordinate relationship explicit and
+    // allows future scale changes without hunting through event handlers.
+    const fieldMVT = ModelViewTransform2.createIdentity();
+
     // Aperture radius = half the diameter; annulus properties are already radii.
     const apertureRadiusProperty = new DerivedProperty([model.apertureDiameterProperty], (d) => d / 2);
     const dragBounds = new Bounds2(0, 0, FIELD_W, FIELD_H);
@@ -165,6 +172,7 @@ export class PhotometryScreenView extends ScreenView {
         color: VSPColors.aperturePrimaryColorProperty,
         label: "1",
         labelVisibleProperty: model.labelAperturesProperty,
+        modelViewTransform: fieldMVT,
       },
     );
     const aperture2 = new ApertureNode(
@@ -177,6 +185,7 @@ export class PhotometryScreenView extends ScreenView {
         color: VSPColors.apertureSecondaryColorProperty,
         label: "2",
         labelVisibleProperty: model.labelAperturesProperty,
+        modelViewTransform: fieldMVT,
       },
     );
 

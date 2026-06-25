@@ -10,7 +10,7 @@
  * days (d); blink interval in milliseconds (ms); layout/font values in view
  * pixels (px). Each value carries a unit comment.
  */
-import VSPNamespace from "../VSPNamespace.js";
+import VSPNamespace from "./VSPNamespace.js";
 
 /** Synthetic CCD star-field geometry and detector model (mirrors NAAP settings.xml). */
 const FIELD = {
