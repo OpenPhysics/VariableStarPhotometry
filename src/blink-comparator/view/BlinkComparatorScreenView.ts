@@ -13,6 +13,12 @@
  * └────────────────────────────────┴────────────────────────────┘
  *                                                    [Reset All]
  */
+import {
+  DerivedProperty,
+  PatternStringProperty,
+  type ReadOnlyProperty,
+  type TReadOnlyProperty,
+} from "scenerystack/axon";
 import { Shape } from "scenerystack/kite";
 import type { SceneryEvent } from "scenerystack/scenery";
 import { Circle, HBox, KeyboardListener, Line, Node, Rectangle, Text, VBox } from "scenerystack/scenery";
@@ -22,40 +28,33 @@ import { ScreenView } from "scenerystack/sim";
 import { Checkbox, HSlider, Panel, RectangularPushButton, TextPushButton } from "scenerystack/sun";
 import { Tandem } from "scenerystack/tandem";
 import { OBSERVATIONS } from "../../common/model/StarFieldData.js";
+import VSPConstants from "../../common/VSPConstants.js";
 import { StarFieldNode } from "../../common/view/StarFieldNode.js";
+import { StringManager } from "../../i18n/StringManager.js";
+import VSPColors from "../../VSPColors.js";
 import { BLINK_INTERVAL_RANGE, type BlinkComparatorModel } from "../model/BlinkComparatorModel.js";
 
-const FIELD_W = 380;
-const FIELD_H = 290;
+const FIELD_W = VSPConstants.FIELD.WIDTH;
+const FIELD_H = VSPConstants.FIELD.HEIGHT;
 const FIELD_SCALE = 1.25;
 const OBS_LIST_VISIBLE_ROWS = 13;
 const QUEUE_LIST_VISIBLE_ROWS = 10;
 const TABLE_ROW_HEIGHT = 22;
 const TABLE_WIDTH = 118;
 
-const LABEL_FONT = new PhetFont(13);
-const HEADER_FONT = new PhetFont({ size: 14, weight: "bold" });
-const SMALL_FONT = new PhetFont(11);
+const LABEL_FONT = new PhetFont(VSPConstants.FONT_SIZE.LABEL);
+const HEADER_FONT = new PhetFont({ size: VSPConstants.FONT_SIZE.HEADER, weight: "bold" });
+const SMALL_FONT = new PhetFont(VSPConstants.FONT_SIZE.SMALL);
 
-const CROSSHAIR_COLOR = "#ff5050";
-const SELECTION_FILL = "#8fd3f4";
-const QUEUE_DOT_COLOR = "#ff3030";
-
-/** Format an observation index as its epoch label, e.g. "8.7525 days". */
-function epochLabel(obsIndex: number): string {
-  const obs = OBSERVATIONS[obsIndex];
-  return obs ? `${obs.epoch.toFixed(4)} days` : "—";
-}
-
-function makeTableHeader(width: number): Node {
+function makeTableHeader(width: number, epochLabelProperty: TReadOnlyProperty<string>): Node {
   return new Node({
     children: [
       new Rectangle(0, 0, width, TABLE_ROW_HEIGHT, {
-        fill: "#eeeeee",
-        stroke: "#777",
+        fill: VSPColors.tableHeaderFillProperty,
+        stroke: VSPColors.controlPanelStrokeProperty,
         lineWidth: 1,
       }),
-      new Text("epoch", { font: LABEL_FONT, left: 8, centerY: TABLE_ROW_HEIGHT / 2 }),
+      new Text(epochLabelProperty, { font: LABEL_FONT, left: 8, centerY: TABLE_ROW_HEIGHT / 2 }),
     ],
   });
 }
@@ -69,6 +68,16 @@ export class BlinkComparatorScreenView extends ScreenView {
     this.model = model;
 
     const tandem = options?.tandem instanceof Tandem ? options.tandem : Tandem.OPT_OUT;
+    const strings = StringManager.getInstance().getBlinkViewStrings();
+    const unitStrings = StringManager.getInstance().getUnitStrings();
+
+    // Localized "{{value}} days" label for a given observation index.
+    const makeEpochDaysProperty = (obsIndex: number): ReadOnlyProperty<string> => {
+      const obs = OBSERVATIONS[obsIndex];
+      return obs
+        ? new PatternStringProperty(unitStrings.daysPatternStringProperty, { value: obs.epoch.toFixed(4) })
+        : strings.noEpochStringProperty;
+    };
 
     // -----------------------------------------------------------------------
     // Star field + crosshair overlay
@@ -81,10 +90,13 @@ export class BlinkComparatorScreenView extends ScreenView {
       children: [starField],
     });
 
-    const frame = new Rectangle(0, 0, FIELD_W, FIELD_H, { stroke: "#888", lineWidth: 1 });
+    const frame = new Rectangle(0, 0, FIELD_W, FIELD_H, {
+      stroke: VSPColors.controlPanelStrokeProperty,
+      lineWidth: 1,
+    });
 
-    const crosshairH = new Line(0, 0, FIELD_W, 0, { stroke: CROSSHAIR_COLOR, lineWidth: 1 });
-    const crosshairV = new Line(0, 0, 0, FIELD_H, { stroke: CROSSHAIR_COLOR, lineWidth: 1 });
+    const crosshairH = new Line(0, 0, FIELD_W, 0, { stroke: VSPColors.crosshairColorProperty, lineWidth: 1 });
+    const crosshairV = new Line(0, 0, 0, FIELD_H, { stroke: VSPColors.crosshairColorProperty, lineWidth: 1 });
     const crosshair = new Node({ children: [crosshairH, crosshairV], pickable: false, visible: false });
 
     // Transparent hit target on top of the field that reports mouse position.
@@ -116,17 +128,22 @@ export class BlinkComparatorScreenView extends ScreenView {
 
     fieldContainer.scale(FIELD_SCALE);
 
-    // Epoch readout below the field, matching the Flash reference.
-    const epochReadout = new Text(`epoch of field above:  ${epochLabel(model.displayedObsIndexProperty.value)}`, {
-      font: LABEL_FONT,
+    // Epoch readout below the field, matching the Flash reference. The displayed
+    // epoch value (numeric, localized "days") is folded into the readout pattern.
+    const displayedEpochDaysProperty = new PatternStringProperty(unitStrings.daysPatternStringProperty, {
+      value: new DerivedProperty([model.displayedObsIndexProperty], (index) => {
+        const obs = OBSERVATIONS[index];
+        return obs ? obs.epoch.toFixed(4) : "";
+      }),
     });
-    model.displayedObsIndexProperty.link((index) => {
-      epochReadout.string = `epoch of field above:  ${epochLabel(index)}`;
-    });
+    const epochReadout = new Text(
+      new PatternStringProperty(strings.epochOfFieldAboveStringProperty, { value: displayedEpochDaysProperty }),
+      { font: LABEL_FONT },
+    );
 
     const crosshairCheckbox = new Checkbox(
       model.showCrosshairProperty,
-      new Text("show crosshairs", { font: LABEL_FONT }),
+      new Text(strings.showCrosshairsStringProperty, { font: LABEL_FONT }),
       { boxWidth: 16 },
     );
 
@@ -139,17 +156,17 @@ export class BlinkComparatorScreenView extends ScreenView {
     const leftColumn = new VBox({
       spacing: 8,
       align: "left",
-      children: [new Text("Blink Comparator", { font: HEADER_FONT }), fieldContainer, fieldFooter],
+      children: [new Text(strings.titleStringProperty, { font: HEADER_FONT }), fieldContainer, fieldFooter],
     });
 
     const leftPanel = new Panel(leftColumn, {
-      fill: "#f0f0f0",
-      stroke: "#888",
-      cornerRadius: 2,
-      xMargin: 8,
-      yMargin: 8,
+      fill: VSPColors.controlPanelFillProperty,
+      stroke: VSPColors.controlPanelStrokeProperty,
+      cornerRadius: VSPConstants.LAYOUT.PANEL_CORNER_RADIUS,
+      xMargin: VSPConstants.LAYOUT.PANEL_Y_MARGIN,
+      yMargin: VSPConstants.LAYOUT.PANEL_Y_MARGIN,
     });
-    leftPanel.left = 20;
+    leftPanel.left = VSPConstants.LAYOUT.SCREEN_MARGIN;
     leftPanel.centerY = this.layoutBounds.centerY;
     this.addChild(leftPanel);
 
@@ -159,9 +176,13 @@ export class BlinkComparatorScreenView extends ScreenView {
     const observationRows = new VBox({ spacing: 0, align: "left" });
     let observationFirstIndex = 0;
 
-    const addButton = new TextPushButton("Add to blink queue", {
+    // Per-row epoch labels are disposed and rebuilt with their rows.
+    const observationRowProps: ReadOnlyProperty<string>[] = [];
+    const queueRowProps: ReadOnlyProperty<string>[] = [];
+
+    const addButton = new TextPushButton(strings.addToQueueStringProperty, {
       font: LABEL_FONT,
-      baseColor: "#d7edf8",
+      baseColor: VSPColors.buttonAddColorProperty,
       listener: () => {
         const selected = model.selectedObsIndexProperty.value;
         model.addSelectedToQueue();
@@ -172,12 +193,13 @@ export class BlinkComparatorScreenView extends ScreenView {
       },
     });
 
-    const removeButton = new TextPushButton("Remove from queue", {
+    const removeButton = new TextPushButton(strings.removeFromQueueStringProperty, {
       font: LABEL_FONT,
-      baseColor: "#e6e6e6",
+      baseColor: VSPColors.buttonNeutralColorProperty,
       listener: () => {
         if (model.blinkQueue.length > 0) {
-          const obsIndex = model.blinkQueue[Math.max(0, Math.min(model.queuePositionProperty.value, model.blinkQueue.length - 1))];
+          const obsIndex =
+            model.blinkQueue[Math.max(0, Math.min(model.queuePositionProperty.value, model.blinkQueue.length - 1))];
           if (obsIndex !== undefined) {
             model.removeFromQueue(obsIndex);
           }
@@ -189,6 +211,10 @@ export class BlinkComparatorScreenView extends ScreenView {
       for (const child of observationRows.children.slice()) {
         child.dispose();
       }
+      for (const prop of observationRowProps) {
+        prop.dispose();
+      }
+      observationRowProps.length = 0;
       const selected = model.selectedObsIndexProperty.value;
       const maxFirst = Math.max(0, OBSERVATIONS.length - OBS_LIST_VISIBLE_ROWS);
       observationFirstIndex = Math.max(0, Math.min(maxFirst, observationFirstIndex));
@@ -206,17 +232,19 @@ export class BlinkComparatorScreenView extends ScreenView {
         }
         const isSelected = obsIndex === selected;
         const rowBackground = new Rectangle(0, 0, TABLE_WIDTH, TABLE_ROW_HEIGHT, {
-          fill: isSelected ? SELECTION_FILL : "white",
-          stroke: "#999",
+          fill: isSelected ? VSPColors.selectionFillProperty : VSPColors.tableRowFillProperty,
+          stroke: VSPColors.tableStrokeProperty,
           lineWidth: 1,
         });
+        const epochProp = makeEpochDaysProperty(obsIndex);
+        observationRowProps.push(epochProp);
         const row = new Node({
           cursor: "pointer",
           children: [
             rowBackground,
-            new Text(epochLabel(obsIndex), {
+            new Text(epochProp, {
               font: LABEL_FONT,
-              fill: isSelected ? "black" : "#444",
+              fill: isSelected ? VSPColors.panelTextColorProperty : VSPColors.mutedTextColorProperty,
               left: 8,
               centerY: TABLE_ROW_HEIGHT / 2,
             }),
@@ -240,14 +268,14 @@ export class BlinkComparatorScreenView extends ScreenView {
 
     const obsScrollUpButton = new RectangularPushButton({
       content: new Text("▲", { font: SMALL_FONT }),
-      baseColor: "#eeeeee",
+      baseColor: VSPColors.tableHeaderFillProperty,
       xMargin: 3,
       yMargin: 2,
       listener: () => scrollObservationList(-1),
     });
     const obsScrollDownButton = new RectangularPushButton({
       content: new Text("▼", { font: SMALL_FONT }),
-      baseColor: "#eeeeee",
+      baseColor: VSPColors.tableHeaderFillProperty,
       xMargin: 3,
       yMargin: 2,
       listener: () => scrollObservationList(1),
@@ -257,7 +285,11 @@ export class BlinkComparatorScreenView extends ScreenView {
       spacing: 2,
       align: "top",
       children: [
-        new VBox({ spacing: 0, align: "left", children: [makeTableHeader(TABLE_WIDTH), observationRows] }),
+        new VBox({
+          spacing: 0,
+          align: "left",
+          children: [makeTableHeader(TABLE_WIDTH, strings.epochStringProperty), observationRows],
+        }),
         new VBox({ spacing: 4, align: "center", children: [obsScrollUpButton, obsScrollDownButton] }),
       ],
     });
@@ -268,24 +300,30 @@ export class BlinkComparatorScreenView extends ScreenView {
       for (const child of queueRows.children.slice()) {
         child.dispose();
       }
+      for (const prop of queueRowProps) {
+        prop.dispose();
+      }
+      queueRowProps.length = 0;
       const rows: Node[] = [];
       for (let i = 0; i < QUEUE_LIST_VISIBLE_ROWS; i++) {
         const obsIndex = model.blinkQueue[i];
         const isSelected = i === model.queuePositionProperty.value && obsIndex !== undefined;
         const rowBackground = new Rectangle(0, 0, TABLE_WIDTH, TABLE_ROW_HEIGHT, {
-          fill: isSelected ? SELECTION_FILL : "white",
-          stroke: "#dddddd",
+          fill: isSelected ? VSPColors.selectionFillProperty : VSPColors.tableRowFillProperty,
+          stroke: VSPColors.dividerColorProperty,
           lineWidth: 1,
         });
         const children: Node[] = [rowBackground];
         if (obsIndex !== undefined) {
+          const epochProp = makeEpochDaysProperty(obsIndex);
+          queueRowProps.push(epochProp);
           children.push(
             new Circle(4, {
-              fill: isSelected ? QUEUE_DOT_COLOR : null,
+              fill: isSelected ? VSPColors.queueMarkerColorProperty : null,
               left: 12,
               centerY: TABLE_ROW_HEIGHT / 2,
             }),
-            new Text(epochLabel(obsIndex), {
+            new Text(epochProp, {
               font: LABEL_FONT,
               left: 28,
               centerY: TABLE_ROW_HEIGHT / 2,
@@ -309,12 +347,12 @@ export class BlinkComparatorScreenView extends ScreenView {
     const queueTable = new VBox({
       spacing: 0,
       align: "left",
-      children: [makeTableHeader(TABLE_WIDTH), queueRows],
+      children: [makeTableHeader(TABLE_WIDTH, strings.epochStringProperty), queueRows],
     });
 
     const previousButton = new TextPushButton("<", {
       font: LABEL_FONT,
-      baseColor: "#e6e6e6",
+      baseColor: VSPColors.buttonNeutralColorProperty,
       listener: () => {
         if (model.blinkQueue.length > 0) {
           model.queuePositionProperty.value =
@@ -322,19 +360,19 @@ export class BlinkComparatorScreenView extends ScreenView {
         }
       },
     });
-    const blinkButton = new TextPushButton("blink", {
+    const blinkButton = new TextPushButton(strings.blinkStringProperty, {
       font: LABEL_FONT,
-      baseColor: "#e6e6e6",
+      baseColor: VSPColors.buttonNeutralColorProperty,
       listener: () => {
         model.isBlinkingProperty.value = !model.isBlinkingProperty.value;
       },
     });
     model.isBlinkingProperty.link((isBlinking) => {
-      blinkButton.baseColor = isBlinking ? "#cfe8ff" : "#e6e6e6";
+      blinkButton.baseColor = isBlinking ? VSPColors.buttonActiveColorProperty : VSPColors.buttonNeutralColorProperty;
     });
     const nextButton = new TextPushButton(">", {
       font: LABEL_FONT,
-      baseColor: "#e6e6e6",
+      baseColor: VSPColors.buttonNeutralColorProperty,
       listener: () => {
         if (model.blinkQueue.length > 0) {
           model.queuePositionProperty.value = (model.queuePositionProperty.value + 1) % model.blinkQueue.length;
@@ -345,13 +383,18 @@ export class BlinkComparatorScreenView extends ScreenView {
     const blinkSpeedSlider = new HSlider(model.blinkIntervalMsProperty, BLINK_INTERVAL_RANGE, {
       tandem: tandem.createTandem("blinkSpeedSlider"),
     });
-    blinkSpeedSlider.addMajorTick(BLINK_INTERVAL_RANGE.min, new Text("fast", { font: SMALL_FONT }));
-    blinkSpeedSlider.addMajorTick(BLINK_INTERVAL_RANGE.max, new Text("slow", { font: SMALL_FONT }));
+    blinkSpeedSlider.addMajorTick(BLINK_INTERVAL_RANGE.min, new Text(strings.fastStringProperty, { font: SMALL_FONT }));
+    blinkSpeedSlider.addMajorTick(BLINK_INTERVAL_RANGE.max, new Text(strings.slowStringProperty, { font: SMALL_FONT }));
 
     const transferControls = new VBox({
       spacing: 20,
       align: "center",
-      children: [new Text("⟶", { font: new PhetFont(38), fill: "#666" }), addButton, removeButton, new Text("⟵", { font: new PhetFont(34), fill: "#666" })],
+      children: [
+        new Text("⟶", { font: new PhetFont(38), fill: VSPColors.transferArrowColorProperty }),
+        addButton,
+        removeButton,
+        new Text("⟵", { font: new PhetFont(34), fill: VSPColors.transferArrowColorProperty }),
+      ],
     });
 
     const listRow = new HBox({
@@ -361,13 +404,13 @@ export class BlinkComparatorScreenView extends ScreenView {
         new VBox({
           spacing: 6,
           align: "left",
-          children: [new Text("observations list:", { font: LABEL_FONT }), observationTable],
+          children: [new Text(strings.observationsListStringProperty, { font: LABEL_FONT }), observationTable],
         }),
         transferControls,
         new VBox({
           spacing: 6,
           align: "left",
-          children: [new Text("blinking queue:", { font: LABEL_FONT }), queueTable],
+          children: [new Text(strings.blinkingQueueStringProperty, { font: LABEL_FONT }), queueTable],
         }),
       ],
     });
@@ -381,14 +424,14 @@ export class BlinkComparatorScreenView extends ScreenView {
     const rateRow = new HBox({
       spacing: 8,
       align: "center",
-      children: [new Text("rate:", { font: LABEL_FONT }), blinkSpeedSlider],
+      children: [new Text(strings.rateStringProperty, { font: LABEL_FONT }), blinkSpeedSlider],
     });
 
     const controlContent = new VBox({
       spacing: 14,
       align: "left",
       children: [
-        new Text("Blinking Queue Controls", { font: HEADER_FONT }),
+        new Text(strings.queueControlsStringProperty, { font: HEADER_FONT }),
         listRow,
         new HBox({ spacing: 38, align: "center", children: [new Node({ maxWidth: 150 }), navigationRow] }),
         new HBox({ spacing: 42, align: "center", children: [new Node({ maxWidth: 150 }), rateRow] }),
@@ -396,11 +439,11 @@ export class BlinkComparatorScreenView extends ScreenView {
     });
 
     const controlPanel = new Panel(controlContent, {
-      fill: "#f0f0f0",
-      stroke: "#888",
-      cornerRadius: 2,
-      xMargin: 8,
-      yMargin: 8,
+      fill: VSPColors.controlPanelFillProperty,
+      stroke: VSPColors.controlPanelStrokeProperty,
+      cornerRadius: VSPConstants.LAYOUT.PANEL_CORNER_RADIUS,
+      xMargin: VSPConstants.LAYOUT.PANEL_Y_MARGIN,
+      yMargin: VSPConstants.LAYOUT.PANEL_Y_MARGIN,
     });
     controlPanel.left = leftPanel.right + 8;
     controlPanel.top = leftPanel.top;
@@ -425,8 +468,8 @@ export class BlinkComparatorScreenView extends ScreenView {
     // -----------------------------------------------------------------------
     const resetAllButton = new ResetAllButton({
       listener: () => model.reset(),
-      right: this.layoutBounds.maxX - 10,
-      bottom: this.layoutBounds.maxY - 10,
+      right: this.layoutBounds.maxX - VSPConstants.LAYOUT.RESET_BUTTON_MARGIN,
+      bottom: this.layoutBounds.maxY - VSPConstants.LAYOUT.RESET_BUTTON_MARGIN,
       tandem: tandem.createTandem("resetAllButton"),
     });
     this.addChild(resetAllButton);

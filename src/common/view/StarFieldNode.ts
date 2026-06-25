@@ -15,6 +15,7 @@
  */
 
 import { Bounds2 } from "scenerystack/dot";
+import { type EmptySelfOptions, optionize } from "scenerystack/phet-core";
 import type { CanvasNodeOptions } from "scenerystack/scenery";
 import { CanvasNode } from "scenerystack/scenery";
 import { CCDField } from "../model/CCDField.js";
@@ -32,11 +33,13 @@ export class StarFieldNode extends CanvasNode {
   private readonly buffer: HTMLCanvasElement;
   private readonly bufferContext: CanvasRenderingContext2D;
 
-  public constructor(obsIndex = 0, invert = false, options?: StarFieldNodeOptions) {
-    super({
-      canvasBounds: new Bounds2(0, 0, FIELD.width, FIELD.height),
-      ...options,
-    });
+  public constructor(obsIndex = 0, invert = false, providedOptions?: StarFieldNodeOptions) {
+    const options = optionize<StarFieldNodeOptions, EmptySelfOptions, CanvasNodeOptions>()(
+      { canvasBounds: new Bounds2(0, 0, FIELD.width, FIELD.height) },
+      providedOptions,
+    );
+
+    super(options);
 
     this.obsIndex = obsIndex;
     this.invert = invert;
