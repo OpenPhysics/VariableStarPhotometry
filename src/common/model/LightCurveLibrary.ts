@@ -208,10 +208,3 @@ export function getEclipsingMagnitude(prototypeName: string, peakMagnitude: numb
   const visMag = -18.9669559998301 - (2.5 / Math.LN10) * Math.log(visFlux);
   return k.distanceModulus + visMag;
 }
-
-/**
- * Returns the period (days) of an eclipsing binary.
- */
-export function getEclipsingPeriod(prototypeName: string, peakMagnitude: number): number {
-  return getEclipsingConstants(prototypeName, peakMagnitude).period;
-}

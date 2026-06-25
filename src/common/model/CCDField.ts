@@ -10,7 +10,7 @@
  *   const field = CCDField.getInstance();
  *   const imageData = field.render( epochIndex );          // greyscale RGBA
  *   const imageData = field.render( epochIndex, true );    // inverted
- *   const { totalCounts, totalPixels } = field.getApertureStats( epochIndex, cx, cy, radius );
+ *   const { disc, sky, netFlux } = field.getPhotometry( epochIndex, cx, cy, rAp, rSkyIn, rSkyOut );
  */
 
 import { getEclipsingMagnitude, getPulsatingMagnitude } from "./LightCurveLibrary.js";
@@ -378,16 +378,6 @@ export class CCDField {
     }
 
     return { totalCounts, totalPixels, average: totalPixels > 0 ? totalCounts / totalPixels : 0 };
-  }
-
-  // -------------------------------------------------------------------------
-  // Public: sum raw counts (before gamma) within a circular aperture
-  // Used by Photometry and Analyzer screens for flux measurement.
-  // Returns { totalCounts, totalPixels, average }
-  // -------------------------------------------------------------------------
-  public getApertureStats(obsIndex: number, cx: number, cy: number, radius: number): RegionStats {
-    const { fieldData, chunkTable } = this.buildFieldData(obsIndex);
-    return this.measureRegion(fieldData, chunkTable, cx, cy, 0, radius);
   }
 
   // -------------------------------------------------------------------------

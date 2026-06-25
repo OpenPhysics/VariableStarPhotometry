@@ -38,10 +38,12 @@ import { ScreenView } from "scenerystack/sim";
 import { AquaRadioButtonGroup, Checkbox, TextPushButton } from "scenerystack/sun";
 import { Tandem } from "scenerystack/tandem";
 import { bestPeriod } from "../../common/model/PDMCalculator.js";
-import VSPConstants from "../../VSPConstants.js";
+import { FieldGridNode } from "../../common/view/FieldGridNode.js";
 import { StarFieldNode } from "../../common/view/StarFieldNode.js";
 import { StringManager } from "../../i18n/StringManager.js";
+import type { VSPPreferencesModel } from "../../preferences/VSPPreferencesModel.js";
 import VSPColors from "../../VSPColors.js";
+import VSPConstants from "../../VSPConstants.js";
 import type { AnalyzerModel, LightCurveMode } from "../model/AnalyzerModel.js";
 
 const FIELD_W = VSPConstants.FIELD.WIDTH;
@@ -70,7 +72,7 @@ function decimalsFor(spacing: number): number {
 }
 
 export class AnalyzerScreenView extends ScreenView {
-  public constructor(model: AnalyzerModel, options?: ScreenViewOptions) {
+  public constructor(model: AnalyzerModel, preferences: VSPPreferencesModel, options?: ScreenViewOptions) {
     super(options);
 
     const tandem = options?.tandem instanceof Tandem ? options.tandem : Tandem.OPT_OUT;
@@ -88,11 +90,13 @@ export class AnalyzerScreenView extends ScreenView {
     // coordinates when the student selects variable/comparison stars.
     const fieldMVT = ModelViewTransform2.createIdentity();
 
-    const starField = new StarFieldNode(0);
+    const starField = new StarFieldNode(0, preferences.invertImagesProperty.value);
+    preferences.invertImagesProperty.link((invert) => starField.setObservation(0, invert));
     const fieldClip = new Node({
       clipArea: Shape.rectangle(0, 0, FIELD_W, FIELD_H),
       children: [starField],
     });
+    const grid = new FieldGridNode(FIELD_W, FIELD_H, preferences.showGridProperty);
     const frame = new Rectangle(0, 0, FIELD_W, FIELD_H, {
       stroke: VSPColors.controlPanelStrokeProperty,
       lineWidth: 1,
@@ -153,7 +157,7 @@ export class AnalyzerScreenView extends ScreenView {
     });
 
     const fieldContainer = new Node({
-      children: [fieldClip, frame, variableMarker, comparisonMarker, crosshair, hitArea],
+      children: [fieldClip, grid, frame, variableMarker, comparisonMarker, crosshair, hitArea],
     });
 
     // Legend + controls beneath the field.

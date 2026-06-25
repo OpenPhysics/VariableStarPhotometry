@@ -16,20 +16,22 @@
 import { DerivedProperty, Multilink, PatternStringProperty, type TReadOnlyProperty } from "scenerystack/axon";
 import { Bounds2, Dimension2, type Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
+import { ModelViewTransform2 } from "scenerystack/phetcommon";
 import { CanvasNode, Circle, HBox, Node, Rectangle, RichText, type TColor, Text, VBox } from "scenerystack/scenery";
 import { NumberControl, PhetFont, ResetAllButton } from "scenerystack/scenery-phet";
 import type { ScreenViewOptions } from "scenerystack/sim";
 import { ScreenView } from "scenerystack/sim";
 import { Checkbox, NumberPicker, Panel } from "scenerystack/sun";
 import { Tandem } from "scenerystack/tandem";
-import { ModelViewTransform2 } from "scenerystack/phetcommon";
 import { CCDField } from "../../common/model/CCDField.js";
 import { OBSERVATIONS } from "../../common/model/StarFieldData.js";
-import VSPConstants from "../../VSPConstants.js";
 import { ApertureNode } from "../../common/view/ApertureNode.js";
+import { FieldGridNode } from "../../common/view/FieldGridNode.js";
 import { StarFieldNode } from "../../common/view/StarFieldNode.js";
 import { StringManager } from "../../i18n/StringManager.js";
+import type { VSPPreferencesModel } from "../../preferences/VSPPreferencesModel.js";
 import VSPColors from "../../VSPColors.js";
+import VSPConstants from "../../VSPConstants.js";
 import {
   ANNULUS_INNER_RANGE,
   ANNULUS_OUTER_RANGE,
@@ -58,14 +60,20 @@ class AperturePreviewNode extends CanvasNode {
   private readonly bufferContext: CanvasRenderingContext2D;
 
   private obsIndex: number;
+  private invert: boolean;
   private apertureCenter: Vector2;
 
-  public constructor(epochIndexProperty: TReadOnlyProperty<number>, centerProperty: TReadOnlyProperty<Vector2>) {
+  public constructor(
+    epochIndexProperty: TReadOnlyProperty<number>,
+    centerProperty: TReadOnlyProperty<Vector2>,
+    invertProperty: TReadOnlyProperty<boolean>,
+  ) {
     super({
       canvasBounds: new Bounds2(0, 0, APERTURE_PREVIEW_SIZE, APERTURE_PREVIEW_SIZE),
     });
 
     this.obsIndex = epochIndexProperty.value;
+    this.invert = invertProperty.value;
     this.apertureCenter = centerProperty.value;
 
     this.buffer = document.createElement("canvas");
@@ -83,6 +91,11 @@ class AperturePreviewNode extends CanvasNode {
       this.updateBuffer();
       this.invalidatePaint();
     });
+    invertProperty.link((invert) => {
+      this.invert = invert;
+      this.updateBuffer();
+      this.invalidatePaint();
+    });
     centerProperty.link((center) => {
       this.apertureCenter = center;
       this.invalidatePaint();
@@ -93,7 +106,7 @@ class AperturePreviewNode extends CanvasNode {
   }
 
   private updateBuffer(): void {
-    this.bufferContext.putImageData(FIELD.render(this.obsIndex), 0, 0);
+    this.bufferContext.putImageData(FIELD.render(this.obsIndex, this.invert), 0, 0);
   }
 
   public override paintCanvas(context: CanvasRenderingContext2D): void {
@@ -130,7 +143,7 @@ class AperturePreviewNode extends CanvasNode {
 }
 
 export class PhotometryScreenView extends ScreenView {
-  public constructor(model: PhotometryModel, options?: ScreenViewOptions) {
+  public constructor(model: PhotometryModel, preferences: VSPPreferencesModel, options?: ScreenViewOptions) {
     super(options);
 
     const tandem = options?.tandem instanceof Tandem ? options.tandem : Tandem.OPT_OUT;
@@ -140,13 +153,16 @@ export class PhotometryScreenView extends ScreenView {
     // -----------------------------------------------------------------------
     // Star field + aperture overlays
     // -----------------------------------------------------------------------
-    const starField = new StarFieldNode(model.epochIndexProperty.value);
-    model.epochIndexProperty.link((index) => starField.setObservation(index));
+    const starField = new StarFieldNode(model.epochIndexProperty.value, preferences.invertImagesProperty.value);
+    Multilink.multilink([model.epochIndexProperty, preferences.invertImagesProperty], (index, invert) =>
+      starField.setObservation(index, invert),
+    );
 
     const fieldClip = new Node({
       clipArea: Shape.rectangle(0, 0, FIELD_W, FIELD_H),
       children: [starField],
     });
+    const grid = new FieldGridNode(FIELD_W, FIELD_H, preferences.showGridProperty);
     const frame = new Rectangle(0, 0, FIELD_W, FIELD_H, {
       stroke: VSPColors.controlPanelStrokeProperty,
       lineWidth: 1,
@@ -189,7 +205,7 @@ export class PhotometryScreenView extends ScreenView {
       },
     );
 
-    const fieldContainer = new Node({ children: [fieldClip, frame, aperture1, aperture2] });
+    const fieldContainer = new Node({ children: [fieldClip, grid, frame, aperture1, aperture2] });
 
     // -----------------------------------------------------------------------
     // Field controls: epoch picker, aperture/annulus sizes, label toggle
@@ -274,7 +290,11 @@ export class PhotometryScreenView extends ScreenView {
       centerProperty: typeof model.aperture1CenterProperty,
       photometryProperty: typeof model.aperture1PhotometryProperty,
     ): Node => {
-      const previewImage = new AperturePreviewNode(model.epochIndexProperty, centerProperty);
+      const previewImage = new AperturePreviewNode(
+        model.epochIndexProperty,
+        centerProperty,
+        preferences.invertImagesProperty,
+      );
       const previewFrame = new Rectangle(0, 0, APERTURE_PREVIEW_SIZE, APERTURE_PREVIEW_SIZE, {
         stroke: VSPColors.controlPanelStrokeProperty,
         lineWidth: 1,

@@ -49,13 +49,17 @@ export class ApertureNode extends Node {
     providedOptions: ApertureNodeOptions,
   ) {
     const options = optionize<ApertureNodeOptions, ApertureNodeSelfOptions, NodeOptions>()(
-      { cursor: "pointer" },
+      {
+        cursor: "pointer",
+        // Default to identity — VSP renders the field at 1:1 scale so model px = view px.
+        modelViewTransform: ModelViewTransform2.createIdentity(),
+      },
       providedOptions,
     );
 
     super(options);
 
-    const mvt = options.modelViewTransform ?? ModelViewTransform2.createIdentity();
+    const mvt = options.modelViewTransform;
 
     // Inner flux disc.
     const discRing = new Circle(apertureRadiusProperty.value, {

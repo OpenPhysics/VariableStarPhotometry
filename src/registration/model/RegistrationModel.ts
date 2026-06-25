@@ -78,7 +78,13 @@ export class RegistrationModel {
     });
 
     this.topFieldTransparentProperty = new BooleanProperty(false, t("topFieldTransparentProperty"));
-    this.invertColorsProperty = new BooleanProperty(false, t("invertColorsProperty"));
+
+    // invertColors and showGrid follow the global preferences but remain locally
+    // toggleable on this screen (the preference change re-drives them).
+    this.invertColorsProperty = new BooleanProperty(preferences.invertImagesProperty.value, t("invertColorsProperty"));
+    preferences.invertImagesProperty.link((invert) => {
+      this.invertColorsProperty.value = invert;
+    });
 
     this.showGridProperty = new BooleanProperty(preferences.showGridProperty.value, t("showGridProperty"));
     preferences.showGridProperty.link((show) => {

@@ -11,7 +11,7 @@
  * SceneryStack requires this exact load order. Never reorder these imports.
  */
 
-// brand.js MUST be first — triggers: init.ts → assert.ts → splash.ts → brand.ts
+// brand.js MUST be first — triggers: brand.ts → splash.ts → assert.ts → init.ts
 import "./brand.js";
 
 import { onReadyToLaunch, PreferencesModel, Sim } from "scenerystack/sim";
@@ -37,14 +37,17 @@ onReadyToLaunch(() => {
       tandem: Tandem.ROOT.createTandem("registrationScreen"),
     }),
     new BlinkComparatorScreen({
+      preferences: vspPreferences,
       name: screenNames.blinkComparatorStringProperty,
       tandem: Tandem.ROOT.createTandem("blinkComparatorScreen"),
     }),
     new PhotometryScreen({
+      preferences: vspPreferences,
       name: screenNames.photometryStringProperty,
       tandem: Tandem.ROOT.createTandem("photometryScreen"),
     }),
     new AnalyzerScreen({
+      preferences: vspPreferences,
       name: screenNames.analyzerStringProperty,
       tandem: Tandem.ROOT.createTandem("analyzerScreen"),
     }),

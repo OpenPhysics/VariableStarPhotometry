@@ -44,6 +44,7 @@ const LAYOUT = {
   PANEL_CORNER_RADIUS: 2, // corner radius of control panels (px)
   PANEL_SPACING: 8, // spacing between stacked panels/controls (px)
   FRAME_LINE_WIDTH: 1, // stroke width of star-field/chart frames (px)
+  GRID_SPACING: 38, // spacing of the optional star-field overlay grid (px)
 } as const;
 
 /** Font sizes used across the views (pt). */
