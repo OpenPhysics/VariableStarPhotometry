@@ -15,6 +15,7 @@
  */
 import {
   DerivedProperty,
+  Multilink,
   PatternStringProperty,
   type ReadOnlyProperty,
   type TReadOnlyProperty,
@@ -28,8 +29,10 @@ import { ScreenView } from "scenerystack/sim";
 import { Checkbox, HSlider, Panel, RectangularPushButton, TextPushButton } from "scenerystack/sun";
 import { Tandem } from "scenerystack/tandem";
 import { OBSERVATIONS } from "../../common/model/StarFieldData.js";
+import { FieldGridNode } from "../../common/view/FieldGridNode.js";
 import { StarFieldNode } from "../../common/view/StarFieldNode.js";
 import { StringManager } from "../../i18n/StringManager.js";
+import type { VSPPreferencesModel } from "../../preferences/VSPPreferencesModel.js";
 import VSPColors from "../../VSPColors.js";
 import VSPConstants from "../../VSPConstants.js";
 import { BLINK_INTERVAL_RANGE, type BlinkComparatorModel } from "../model/BlinkComparatorModel.js";
@@ -62,7 +65,7 @@ function makeTableHeader(width: number, epochLabelProperty: TReadOnlyProperty<st
 export class BlinkComparatorScreenView extends ScreenView {
   private readonly model: BlinkComparatorModel;
 
-  public constructor(model: BlinkComparatorModel, options?: ScreenViewOptions) {
+  public constructor(model: BlinkComparatorModel, preferences: VSPPreferencesModel, options?: ScreenViewOptions) {
     super(options);
 
     this.model = model;
@@ -82,13 +85,17 @@ export class BlinkComparatorScreenView extends ScreenView {
     // -----------------------------------------------------------------------
     // Star field + crosshair overlay
     // -----------------------------------------------------------------------
-    const starField = new StarFieldNode(model.displayedObsIndexProperty.value);
-    model.displayedObsIndexProperty.link((index) => starField.setObservation(index));
+    const starField = new StarFieldNode(model.displayedObsIndexProperty.value, preferences.invertImagesProperty.value);
+    Multilink.multilink([model.displayedObsIndexProperty, preferences.invertImagesProperty], (index, invert) =>
+      starField.setObservation(index, invert),
+    );
 
     const fieldClip = new Node({
       clipArea: Shape.rectangle(0, 0, FIELD_W, FIELD_H),
       children: [starField],
     });
+
+    const grid = new FieldGridNode(FIELD_W, FIELD_H, preferences.showGridProperty);
 
     const frame = new Rectangle(0, 0, FIELD_W, FIELD_H, {
       stroke: VSPColors.controlPanelStrokeProperty,
@@ -124,7 +131,7 @@ export class BlinkComparatorScreenView extends ScreenView {
       },
     });
 
-    const fieldContainer = new Node({ children: [fieldClip, frame, crosshair, hitArea] });
+    const fieldContainer = new Node({ children: [fieldClip, grid, frame, crosshair, hitArea] });
 
     fieldContainer.scale(FIELD_SCALE);
 

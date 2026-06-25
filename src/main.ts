@@ -37,14 +37,17 @@ onReadyToLaunch(() => {
       tandem: Tandem.ROOT.createTandem("registrationScreen"),
     }),
     new BlinkComparatorScreen({
+      preferences: vspPreferences,
       name: screenNames.blinkComparatorStringProperty,
       tandem: Tandem.ROOT.createTandem("blinkComparatorScreen"),
     }),
     new PhotometryScreen({
+      preferences: vspPreferences,
       name: screenNames.photometryStringProperty,
       tandem: Tandem.ROOT.createTandem("photometryScreen"),
     }),
     new AnalyzerScreen({
+      preferences: vspPreferences,
       name: screenNames.analyzerStringProperty,
       tandem: Tandem.ROOT.createTandem("analyzerScreen"),
     }),

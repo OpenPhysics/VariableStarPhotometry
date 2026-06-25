@@ -178,6 +178,12 @@ const VSPColors = {
     projector: new Color("#d62728"),
   }),
 
+  /** Faint overlay grid drawn over a star field (toggled in Preferences). */
+  fieldGridColorProperty: new ProfileColorProperty(VSPNamespace, "fieldGrid", {
+    default: new Color(255, 255, 255, 0.18),
+    projector: new Color(0, 0, 0, 0.22),
+  }),
+
   /** Aperture 1 (variable target) ring color. */
   aperturePrimaryColorProperty: new ProfileColorProperty(VSPNamespace, "aperturePrimary", {
     default: new Color("#ffe066"),
