@@ -163,7 +163,7 @@ export class BlinkComparatorScreenView extends ScreenView {
       fill: VSPColors.controlPanelFillProperty,
       stroke: VSPColors.controlPanelStrokeProperty,
       cornerRadius: VSPConstants.LAYOUT.PANEL_CORNER_RADIUS,
-      xMargin: VSPConstants.LAYOUT.PANEL_Y_MARGIN,
+      xMargin: VSPConstants.LAYOUT.PANEL_X_MARGIN,
       yMargin: VSPConstants.LAYOUT.PANEL_Y_MARGIN,
     });
     leftPanel.left = VSPConstants.LAYOUT.SCREEN_MARGIN;
@@ -442,7 +442,7 @@ export class BlinkComparatorScreenView extends ScreenView {
       fill: VSPColors.controlPanelFillProperty,
       stroke: VSPColors.controlPanelStrokeProperty,
       cornerRadius: VSPConstants.LAYOUT.PANEL_CORNER_RADIUS,
-      xMargin: VSPConstants.LAYOUT.PANEL_Y_MARGIN,
+      xMargin: VSPConstants.LAYOUT.PANEL_X_MARGIN,
       yMargin: VSPConstants.LAYOUT.PANEL_Y_MARGIN,
     });
     controlPanel.left = leftPanel.right + 8;

@@ -203,7 +203,7 @@ export class AnalyzerScreenView extends ScreenView {
       ],
     });
     leftColumn.left = VSPConstants.LAYOUT.SCREEN_MARGIN;
-    leftColumn.top = 15;
+    leftColumn.top = VSPConstants.LAYOUT.SCREEN_MARGIN;
     this.addChild(leftColumn);
 
     // =======================================================================
@@ -470,7 +470,7 @@ export class AnalyzerScreenView extends ScreenView {
       children: [obsTitle, obsChartRow, obsXLabel, obsModeRow],
     });
     obsColumn.left = leftColumn.right + 30;
-    obsColumn.top = 15;
+    obsColumn.top = VSPConstants.LAYOUT.SCREEN_MARGIN;
     this.addChild(obsColumn);
 
     // =======================================================================
@@ -667,9 +667,5 @@ export class AnalyzerScreenView extends ScreenView {
       tandem: tandem.createTandem("resetAllButton"),
     });
     this.addChild(resetAllButton);
-  }
-
-  public override step(dt: number): void {
-    super.step(dt);
   }
 }

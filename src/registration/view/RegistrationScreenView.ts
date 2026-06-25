@@ -520,8 +520,4 @@ export class RegistrationScreenView extends ScreenView {
     });
     this.addChild(resetAllButton);
   }
-
-  public override step(dt: number): void {
-    super.step(dt);
-  }
 }

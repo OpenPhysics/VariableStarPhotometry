@@ -42,7 +42,7 @@ const ANALYZER_SKY_OUTER = VSPConstants.APERTURE.DEFAULT_ANNULUS_OUTER;
 const FULL_PDM_RANGE = new Range(0.2, 10);
 
 /** Number of trial periods evaluated per scan (resolution adapts to zoom). */
-const PDM_SCAN_STEPS = 400;
+const PDM_SCAN_STEPS = VSPConstants.PDM.SCAN_STEPS;
 
 export class AnalyzerModel {
   /** Trial period for phase-folding and the PDM marker, in days. */
@@ -78,10 +78,10 @@ export class AnalyzerModel {
 
     this.phaseOffsetProperty = new NumberProperty(0.0);
 
-    const initialMode = (vspQueryParameters.lightCurveMode as LightCurveMode) ?? "time";
-    this.lightCurveModeProperty = new StringUnionProperty<LightCurveMode>(initialMode, {
-      validValues: ["time", "phase"],
-    });
+    this.lightCurveModeProperty = new StringUnionProperty<LightCurveMode>(
+      vspQueryParameters.lightCurveMode as LightCurveMode,
+      { validValues: ["time", "phase"] },
+    );
 
     this.variableStarPositionProperty = new Property<Vector2 | null>(null);
     this.comparisonStarPositionProperty = new Property<Vector2 | null>(null);
