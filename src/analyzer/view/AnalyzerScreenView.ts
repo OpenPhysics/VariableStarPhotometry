@@ -29,6 +29,7 @@ import {
 import { Range, Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
 import { Orientation } from "scenerystack/phet-core";
+import { ModelViewTransform2 } from "scenerystack/phetcommon";
 import type { SceneryEvent } from "scenerystack/scenery";
 import { Circle, DragListener, HBox, Line, Node, Rectangle, Text, VBox } from "scenerystack/scenery";
 import { PhetFont, ResetAllButton } from "scenerystack/scenery-phet";
@@ -80,6 +81,13 @@ export class AnalyzerScreenView extends ScreenView {
     // =======================================================================
     // Star field with click-to-select + crosshair + selection markers
     // =======================================================================
+
+    // Transform from model (CCD pixel) space to field-container view space.
+    // The field is rendered at 1:1 scale so the transform is identity.
+    // Used to convert pointer clicks from view coordinates back to model
+    // coordinates when the student selects variable/comparison stars.
+    const fieldMVT = ModelViewTransform2.createIdentity();
+
     const starField = new StarFieldNode(0);
     const fieldClip = new Node({
       clipArea: Shape.rectangle(0, 0, FIELD_W, FIELD_H),
@@ -100,13 +108,13 @@ export class AnalyzerScreenView extends ScreenView {
     model.variableStarPositionProperty.link((p) => {
       variableMarker.visible = p !== null;
       if (p) {
-        variableMarker.translation = p;
+        variableMarker.translation = fieldMVT.modelToViewPosition(p);
       }
     });
     model.comparisonStarPositionProperty.link((p) => {
       comparisonMarker.visible = p !== null;
       if (p) {
-        comparisonMarker.translation = p;
+        comparisonMarker.translation = fieldMVT.modelToViewPosition(p);
       }
     });
 
@@ -131,13 +139,16 @@ export class AnalyzerScreenView extends ScreenView {
         updateCrosshairVisible();
       },
       move: (event: SceneryEvent) => {
-        const point = hitArea.globalToLocalPoint(event.pointer.point);
-        crosshairH.y = point.y;
-        crosshairV.x = point.x;
+        const viewPoint = hitArea.globalToLocalPoint(event.pointer.point);
+        crosshairH.y = viewPoint.y;
+        crosshairV.x = viewPoint.x;
       },
       down: (event: SceneryEvent) => {
-        const point = hitArea.globalToLocalPoint(event.pointer.point);
-        model.selectStarAt(new Vector2(Math.round(point.x), Math.round(point.y)));
+        // Convert the pointer position from field-container view space to model
+        // (CCD pixel) space before passing to the model.
+        const viewPoint = hitArea.globalToLocalPoint(event.pointer.point);
+        const modelPoint = fieldMVT.viewToModelPosition(viewPoint);
+        model.selectStarAt(new Vector2(Math.round(modelPoint.x), Math.round(modelPoint.y)));
       },
     });
 

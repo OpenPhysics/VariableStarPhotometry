@@ -13,13 +13,14 @@ import type { TReadOnlyProperty } from "scenerystack/axon";
 import { Property } from "scenerystack/axon";
 import type { Bounds2, Vector2, Vector2Property } from "scenerystack/dot";
 import { optionize } from "scenerystack/phet-core";
+import { ModelViewTransform2 } from "scenerystack/phetcommon";
 import type { NodeOptions, TColor } from "scenerystack/scenery";
 import { Circle, DragListener, Node, Text } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
 import VSPConstants from "../../VSPConstants.js";
 
 type ApertureNodeSelfOptions = {
-  /** Field-pixel bounds the centre is clamped to while dragging. */
+  /** Field-pixel bounds the centre is clamped to while dragging (model space). */
   dragBounds: Bounds2;
   /** Ring colour (disc + annulus + label). */
   color: TColor;
@@ -27,6 +28,12 @@ type ApertureNodeSelfOptions = {
   label: string;
   /** Whether the label is currently visible. */
   labelVisibleProperty: TReadOnlyProperty<boolean>;
+  /**
+   * Transform from model (CCD pixel) coordinates to view (field-container local)
+   * coordinates. Defaults to identity — VSP renders the field at 1:1 scale so
+   * model px = view px in the field container.
+   */
+  modelViewTransform?: ModelViewTransform2;
 };
 
 export type ApertureNodeOptions = ApertureNodeSelfOptions & NodeOptions;
@@ -47,6 +54,8 @@ export class ApertureNode extends Node {
     );
 
     super(options);
+
+    const mvt = options.modelViewTransform ?? ModelViewTransform2.createIdentity();
 
     // Inner flux disc.
     const discRing = new Circle(apertureRadiusProperty.value, {
@@ -92,16 +101,19 @@ export class ApertureNode extends Node {
 
     this.children = [skyOuterRing, skyInnerRing, discRing, centerDot, label];
 
-    // Position the node at the aperture centre (field-pixel coordinates).
+    // Position the node: model centre → view position via the transform.
     centerProperty.link((center: Vector2) => {
-      this.translation = center;
+      this.translation = mvt.modelToViewPosition(center);
     });
 
-    // Drag updates the centre, clamped to the field bounds.
+    // DragListener: `transform` maps pointer positions from view space to model
+    // space so positionProperty is kept in model (CCD pixel) coordinates.
+    // dragBoundsProperty is also in model space.
     this.addInputListener(
       new DragListener({
         positionProperty: centerProperty,
         dragBoundsProperty: new Property(options.dragBounds),
+        transform: mvt,
         useParentOffset: true,
       }),
     );
