@@ -21,9 +21,9 @@ import type { Tandem } from "scenerystack/tandem";
 import { differentialMagnitude, measureAperture } from "../../common/model/AperturePhotometry.js";
 import { type PdmPoint, pdmScan } from "../../common/model/PDMCalculator.js";
 import { OBSERVATIONS } from "../../common/model/StarFieldData.js";
+import vspQueryParameters from "../../preferences/vspQueryParameters.js";
 import VSPConstants from "../../VSPConstants.js";
 import VSPNamespace from "../../VSPNamespace.js";
-import vspQueryParameters from "../../preferences/vspQueryParameters.js";
 
 export const PERIOD_RANGE = new Range(0.1, 100);
 
@@ -71,10 +71,7 @@ export class AnalyzerModel {
   private readonly pdmZoomHistory: Range[] = [];
 
   public constructor(_tandem?: Tandem) {
-    this.trialPeriodProperty = new NumberProperty(
-      vspQueryParameters.trialPeriod ?? 1.0,
-      { range: PERIOD_RANGE },
-    );
+    this.trialPeriodProperty = new NumberProperty(vspQueryParameters.trialPeriod ?? 1.0, { range: PERIOD_RANGE });
 
     this.phaseOffsetProperty = new NumberProperty(0.0);
 

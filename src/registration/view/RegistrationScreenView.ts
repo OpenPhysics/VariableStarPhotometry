@@ -35,10 +35,10 @@ import type { ScreenViewOptions } from "scenerystack/sim";
 import { ScreenView } from "scenerystack/sim";
 import { AquaRadioButton, Checkbox, NumberPicker, Panel, TextPushButton } from "scenerystack/sun";
 import { Tandem } from "scenerystack/tandem";
-import VSPConstants from "../../VSPConstants.js";
 import { StarFieldNode } from "../../common/view/StarFieldNode.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import VSPColors from "../../VSPColors.js";
+import VSPConstants from "../../VSPConstants.js";
 import type { RegistrationModel } from "../model/RegistrationModel.js";
 
 const FIELD_W = VSPConstants.FIELD.WIDTH;

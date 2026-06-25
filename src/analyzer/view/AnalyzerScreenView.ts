@@ -38,10 +38,10 @@ import { ScreenView } from "scenerystack/sim";
 import { AquaRadioButtonGroup, Checkbox, TextPushButton } from "scenerystack/sun";
 import { Tandem } from "scenerystack/tandem";
 import { bestPeriod } from "../../common/model/PDMCalculator.js";
-import VSPConstants from "../../VSPConstants.js";
 import { StarFieldNode } from "../../common/view/StarFieldNode.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import VSPColors from "../../VSPColors.js";
+import VSPConstants from "../../VSPConstants.js";
 import type { AnalyzerModel, LightCurveMode } from "../model/AnalyzerModel.js";
 
 const FIELD_W = VSPConstants.FIELD.WIDTH;

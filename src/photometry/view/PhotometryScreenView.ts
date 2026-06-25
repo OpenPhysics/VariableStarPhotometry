@@ -16,20 +16,20 @@
 import { DerivedProperty, Multilink, PatternStringProperty, type TReadOnlyProperty } from "scenerystack/axon";
 import { Bounds2, Dimension2, type Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
+import { ModelViewTransform2 } from "scenerystack/phetcommon";
 import { CanvasNode, Circle, HBox, Node, Rectangle, RichText, type TColor, Text, VBox } from "scenerystack/scenery";
 import { NumberControl, PhetFont, ResetAllButton } from "scenerystack/scenery-phet";
 import type { ScreenViewOptions } from "scenerystack/sim";
 import { ScreenView } from "scenerystack/sim";
 import { Checkbox, NumberPicker, Panel } from "scenerystack/sun";
 import { Tandem } from "scenerystack/tandem";
-import { ModelViewTransform2 } from "scenerystack/phetcommon";
 import { CCDField } from "../../common/model/CCDField.js";
 import { OBSERVATIONS } from "../../common/model/StarFieldData.js";
-import VSPConstants from "../../VSPConstants.js";
 import { ApertureNode } from "../../common/view/ApertureNode.js";
 import { StarFieldNode } from "../../common/view/StarFieldNode.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import VSPColors from "../../VSPColors.js";
+import VSPConstants from "../../VSPConstants.js";
 import {
   ANNULUS_INNER_RANGE,
   ANNULUS_OUTER_RANGE,
