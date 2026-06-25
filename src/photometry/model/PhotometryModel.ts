@@ -33,8 +33,8 @@ export const ANNULUS_OUTER_RANGE = new Range(12, 40);
 export const EPOCH_INDEX_RANGE = new Range(0, OBSERVATIONS.length - 1);
 
 /** Field dimensions (model pixels) — apertures are clamped to this. */
-const FIELD_W = VSPConstants.FIELD_WIDTH;
-const FIELD_H = VSPConstants.FIELD_HEIGHT;
+const FIELD_W = VSPConstants.FIELD.WIDTH;
+const FIELD_H = VSPConstants.FIELD.HEIGHT;
 
 /** Default aperture placements: a pulsating variable and a steady comparison. */
 const DEFAULT_APERTURE_1 = new Vector2(308, 175); // del Cep (variable)
@@ -70,15 +70,15 @@ export class PhotometryModel {
   public readonly magnitudeDifferenceProperty: TReadOnlyProperty<number | null>;
 
   public constructor(_tandem?: Tandem) {
-    this.apertureDiameterProperty = new NumberProperty(VSPConstants.DEFAULT_APERTURE_DIAMETER, {
+    this.apertureDiameterProperty = new NumberProperty(VSPConstants.APERTURE.DEFAULT_DIAMETER, {
       range: APERTURE_DIAMETER_RANGE,
     });
 
-    this.annulusInnerRadiusProperty = new NumberProperty(VSPConstants.DEFAULT_ANNULUS_INNER, {
+    this.annulusInnerRadiusProperty = new NumberProperty(VSPConstants.APERTURE.DEFAULT_ANNULUS_INNER, {
       range: ANNULUS_INNER_RANGE,
     });
 
-    this.annulusOuterRadiusProperty = new NumberProperty(VSPConstants.DEFAULT_ANNULUS_OUTER, {
+    this.annulusOuterRadiusProperty = new NumberProperty(VSPConstants.APERTURE.DEFAULT_ANNULUS_OUTER, {
       range: ANNULUS_OUTER_RANGE,
     });
 

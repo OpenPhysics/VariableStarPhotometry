@@ -67,7 +67,7 @@ export class BlinkComparatorModel {
       range: OBS_INDEX_RANGE,
     });
 
-    this.blinkIntervalMsProperty = new NumberProperty(VSPConstants.DEFAULT_BLINK_INTERVAL_MS, {
+    this.blinkIntervalMsProperty = new NumberProperty(VSPConstants.TIME.DEFAULT_BLINK_INTERVAL_MS, {
       range: BLINK_INTERVAL_RANGE,
     });
 

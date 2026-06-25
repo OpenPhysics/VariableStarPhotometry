@@ -16,7 +16,7 @@
  * │  └──────────────────────────────────────────────────────────┘ │
  * └────────────────────────────────────────────────────[Reset All]┘
  */
-import { BooleanProperty, Multilink } from "scenerystack/axon";
+import { BooleanProperty, DerivedProperty, Multilink, NumberProperty, PatternStringProperty } from "scenerystack/axon";
 import {
   ChartRectangle,
   ChartTransform,
@@ -37,22 +37,19 @@ import { ScreenView } from "scenerystack/sim";
 import { AquaRadioButtonGroup, Checkbox, TextPushButton } from "scenerystack/sun";
 import { Tandem } from "scenerystack/tandem";
 import { bestPeriod } from "../../common/model/PDMCalculator.js";
+import VSPConstants from "../../common/VSPConstants.js";
 import { StarFieldNode } from "../../common/view/StarFieldNode.js";
+import { StringManager } from "../../i18n/StringManager.js";
+import VSPColors from "../../VSPColors.js";
 import type { AnalyzerModel, LightCurveMode } from "../model/AnalyzerModel.js";
 
-const FIELD_W = 380;
-const FIELD_H = 290;
+const FIELD_W = VSPConstants.FIELD.WIDTH;
+const FIELD_H = VSPConstants.FIELD.HEIGHT;
 
-const LABEL_FONT = new PhetFont(13);
-const HEADER_FONT = new PhetFont({ size: 14, weight: "bold" });
-const TICK_FONT = new PhetFont(10);
-const SMALL_FONT = new PhetFont(11);
-
-const VARIABLE_COLOR = "#7CFC7C"; // green circle
-const COMPARISON_COLOR = "#5AB4FF"; // blue square
-const CROSSHAIR_COLOR = "#ff5050";
-const MARKER_COLOR = "#d62728";
-const PERIOD_MULTIPLE_COLOR = "rgba(214, 39, 40, 0.35)";
+const LABEL_FONT = new PhetFont(VSPConstants.FONT_SIZE.LABEL);
+const HEADER_FONT = new PhetFont({ size: VSPConstants.FONT_SIZE.HEADER, weight: "bold" });
+const TICK_FONT = new PhetFont(VSPConstants.FONT_SIZE.TICK);
+const SMALL_FONT = new PhetFont(VSPConstants.FONT_SIZE.SMALL);
 
 /** Pick a round axis spacing that yields roughly `target` ticks across `span`. */
 function niceSpacing(span: number, target = 5): number {
@@ -76,6 +73,8 @@ export class AnalyzerScreenView extends ScreenView {
     super(options);
 
     const tandem = options?.tandem instanceof Tandem ? options.tandem : Tandem.OPT_OUT;
+    const strings = StringManager.getInstance().getAnalyzerViewStrings();
+    const unitStrings = StringManager.getInstance().getUnitStrings();
     const showCrosshairProperty = new BooleanProperty(true);
 
     // =======================================================================
@@ -86,11 +85,18 @@ export class AnalyzerScreenView extends ScreenView {
       clipArea: Shape.rectangle(0, 0, FIELD_W, FIELD_H),
       children: [starField],
     });
-    const frame = new Rectangle(0, 0, FIELD_W, FIELD_H, { stroke: "#888", lineWidth: 1 });
+    const frame = new Rectangle(0, 0, FIELD_W, FIELD_H, {
+      stroke: VSPColors.controlPanelStrokeProperty,
+      lineWidth: 1,
+    });
 
     // Selection markers.
-    const variableMarker = new Circle(8, { stroke: VARIABLE_COLOR, lineWidth: 2, visible: false });
-    const comparisonMarker = new Rectangle(-7, -7, 14, 14, { stroke: COMPARISON_COLOR, lineWidth: 2, visible: false });
+    const variableMarker = new Circle(8, { stroke: VSPColors.variableStarColorProperty, lineWidth: 2, visible: false });
+    const comparisonMarker = new Rectangle(-7, -7, 14, 14, {
+      stroke: VSPColors.comparisonStarColorProperty,
+      lineWidth: 2,
+      visible: false,
+    });
     model.variableStarPositionProperty.link((p) => {
       variableMarker.visible = p !== null;
       if (p) {
@@ -105,8 +111,8 @@ export class AnalyzerScreenView extends ScreenView {
     });
 
     // Crosshair following the pointer.
-    const crosshairH = new Line(0, 0, FIELD_W, 0, { stroke: CROSSHAIR_COLOR, lineWidth: 1 });
-    const crosshairV = new Line(0, 0, 0, FIELD_H, { stroke: CROSSHAIR_COLOR, lineWidth: 1 });
+    const crosshairH = new Line(0, 0, FIELD_W, 0, { stroke: VSPColors.crosshairColorProperty, lineWidth: 1 });
+    const crosshairV = new Line(0, 0, 0, FIELD_H, { stroke: VSPColors.crosshairColorProperty, lineWidth: 1 });
     const crosshair = new Node({ children: [crosshairH, crosshairV], pickable: false, visible: false });
 
     const hitArea = new Rectangle(0, 0, FIELD_W, FIELD_H, { fill: "transparent", cursor: "crosshair" });
@@ -146,29 +152,34 @@ export class AnalyzerScreenView extends ScreenView {
         new HBox({
           spacing: 5,
           children: [
-            new Circle(6, { stroke: VARIABLE_COLOR, lineWidth: 2 }),
-            new Text("variable", { font: SMALL_FONT }),
+            new Circle(6, { stroke: VSPColors.variableStarColorProperty, lineWidth: 2 }),
+            new Text(strings.variableStringProperty, { font: SMALL_FONT }),
           ],
         }),
         new HBox({
           spacing: 5,
           children: [
-            new Rectangle(-5, -5, 10, 10, { stroke: COMPARISON_COLOR, lineWidth: 2 }),
-            new Text("comparison", { font: SMALL_FONT }),
+            new Rectangle(-5, -5, 10, 10, { stroke: VSPColors.comparisonStarColorProperty, lineWidth: 2 }),
+            new Text(strings.comparisonStringProperty, { font: SMALL_FONT }),
           ],
         }),
       ],
     });
 
-    const instructions = new Text("Click a variable star, then a comparison star.", { font: SMALL_FONT, fill: "#555" });
-    const clearButton = new TextPushButton("Clear selection", {
+    const instructions = new Text(strings.selectHintStringProperty, {
       font: SMALL_FONT,
-      baseColor: "#d4d4d4",
+      fill: VSPColors.mutedTextColorProperty,
+    });
+    const clearButton = new TextPushButton(strings.clearSelectionStringProperty, {
+      font: SMALL_FONT,
+      baseColor: VSPColors.buttonColorProperty,
       listener: () => model.clearSelections(),
     });
-    const crosshairCheckbox = new Checkbox(showCrosshairProperty, new Text("show crosshairs", { font: SMALL_FONT }), {
-      boxWidth: 14,
-    });
+    const crosshairCheckbox = new Checkbox(
+      showCrosshairProperty,
+      new Text(strings.showCrosshairsStringProperty, { font: SMALL_FONT }),
+      { boxWidth: 14 },
+    );
 
     const leftColumn = new VBox({
       spacing: 8,
@@ -180,7 +191,7 @@ export class AnalyzerScreenView extends ScreenView {
         new HBox({ spacing: 12, children: [clearButton, crosshairCheckbox] }),
       ],
     });
-    leftColumn.left = 20;
+    leftColumn.left = VSPConstants.LAYOUT.SCREEN_MARGIN;
     leftColumn.top = 15;
     this.addChild(leftColumn);
 
@@ -198,9 +209,16 @@ export class AnalyzerScreenView extends ScreenView {
       modelYRangeInverted: true, // brighter (smaller magnitude) at the top
     });
 
-    const obsBackground = new ChartRectangle(obsTransform, { fill: "white", stroke: "#333" });
-    const obsGridX = new GridLineSet(obsTransform, Orientation.HORIZONTAL, 5, { stroke: "#e0e0e0" });
-    const obsGridY = new GridLineSet(obsTransform, Orientation.VERTICAL, 0.2, { stroke: "#e0e0e0" });
+    const obsBackground = new ChartRectangle(obsTransform, {
+      fill: VSPColors.chartBackgroundColorProperty,
+      stroke: VSPColors.chartStrokeColorProperty,
+    });
+    const obsGridX = new GridLineSet(obsTransform, Orientation.HORIZONTAL, 5, {
+      stroke: VSPColors.chartGridColorProperty,
+    });
+    const obsGridY = new GridLineSet(obsTransform, Orientation.VERTICAL, 0.2, {
+      stroke: VSPColors.chartGridColorProperty,
+    });
     const obsTickX = new TickMarkSet(obsTransform, Orientation.HORIZONTAL, 5, { edge: "min" });
     const obsTickY = new TickMarkSet(obsTransform, Orientation.VERTICAL, 0.2, { edge: "min" });
     const obsLabelX = new TickLabelSet(obsTransform, Orientation.HORIZONTAL, 5, {
@@ -212,7 +230,7 @@ export class AnalyzerScreenView extends ScreenView {
       createLabel: (v: number) => new Text(v.toFixed(2), { font: TICK_FONT }),
     });
 
-    const scatter = new ScatterPlot(obsTransform, [], { radius: 2.5, fill: "#1f77b4" });
+    const scatter = new ScatterPlot(obsTransform, [], { radius: 2.5, fill: VSPColors.scatterPointColorProperty });
     const periodMultipleLayer = new Node({ pickable: false });
     const obsPlotLayer = new Node({
       clipArea: Shape.rectangle(0, 0, OBS_W, OBS_H),
@@ -223,14 +241,28 @@ export class AnalyzerScreenView extends ScreenView {
     // separation reports a magnitude difference in the current plot scale.
     let deltaBar1Y = OBS_H * 0.35;
     let deltaBar2Y = OBS_H * 0.65;
-    const deltaBar1 = new Line(0, deltaBar1Y, OBS_W, deltaBar1Y, { stroke: "#909090", lineWidth: 1 });
-    const deltaBar2 = new Line(0, deltaBar2Y, OBS_W, deltaBar2Y, { stroke: "#909090", lineWidth: 1 });
-    const deltaFill = new Rectangle(0, 0, OBS_W, 0, { fill: "rgba(160, 160, 160, 0.18)", pickable: false });
-    const deltaText = new Text("", {
-      font: SMALL_FONT,
-      fill: "#333",
-      pickable: false,
+    const deltaBar1 = new Line(0, deltaBar1Y, OBS_W, deltaBar1Y, {
+      stroke: VSPColors.deltaBarColorProperty,
+      lineWidth: 1,
     });
+    const deltaBar2 = new Line(0, deltaBar2Y, OBS_W, deltaBar2Y, {
+      stroke: VSPColors.deltaBarColorProperty,
+      lineWidth: 1,
+    });
+    const deltaFill = new Rectangle(0, 0, OBS_W, 0, { fill: VSPColors.deltaFillColorProperty, pickable: false });
+
+    // Magnitude separation reported by the difference tool (bound to its label).
+    const deltaMagProperty = new NumberProperty(0);
+    const deltaText = new Text(
+      new PatternStringProperty(unitStrings.magPatternStringProperty, {
+        value: new DerivedProperty([deltaMagProperty], (v) => v.toFixed(2)),
+      }),
+      {
+        font: SMALL_FONT,
+        fill: VSPColors.panelTextColorProperty,
+        pickable: false,
+      },
+    );
 
     const updateDeltaOverlay = () => {
       const hasMeasurements = model.measurementsProperty.value.length > 0;
@@ -255,7 +287,7 @@ export class AnalyzerScreenView extends ScreenView {
 
       const mag1 = obsTransform.viewToModelY(y1);
       const mag2 = obsTransform.viewToModelY(y2);
-      deltaText.string = `${Math.abs(mag2 - mag1).toFixed(2)} mag`;
+      deltaMagProperty.value = Math.abs(mag2 - mag1);
       deltaText.centerX = OBS_W / 2;
       deltaText.bottom = Math.max(14, top - 4);
     };
@@ -296,9 +328,9 @@ export class AnalyzerScreenView extends ScreenView {
       updateDeltaHitTargets();
     };
 
-    const obsEmptyMsg = new Text("(select a variable and a comparison star)", {
+    const obsEmptyMsg = new Text(strings.selectBothStarsStringProperty, {
       font: SMALL_FONT,
-      fill: "#888",
+      fill: VSPColors.mutedTextColorProperty,
       center: new Vector2(OBS_W / 2, OBS_H / 2),
     });
 
@@ -319,7 +351,7 @@ export class AnalyzerScreenView extends ScreenView {
       for (let multiple = firstMultiple; multiple <= lastMultiple; multiple++) {
         const epoch = offset + multiple * period;
         const x = obsTransform.modelToViewX(epoch);
-        lines.push(new Line(x, 0, x, OBS_H, { stroke: PERIOD_MULTIPLE_COLOR, lineWidth: 1 }));
+        lines.push(new Line(x, 0, x, OBS_H, { stroke: VSPColors.periodMultipleColorProperty, lineWidth: 1 }));
       }
       periodMultipleLayer.children = lines;
     };
@@ -392,18 +424,24 @@ export class AnalyzerScreenView extends ScreenView {
       () => updateObservations(),
     );
 
-    const obsTitle = new Text("Observations", { font: HEADER_FONT });
-    const obsYLabel = new Text("differential magnitude", { font: SMALL_FONT, rotation: -Math.PI / 2 });
-    const obsXLabel = new Text("Julian date (days)", { font: SMALL_FONT });
-    model.lightCurveModeProperty.link((mode) => {
-      obsXLabel.string = mode === "time" ? "Julian date (days)" : "phase";
+    const obsTitle = new Text(strings.observationsStringProperty, { font: HEADER_FONT });
+    const obsYLabel = new Text(strings.differentialMagnitudeStringProperty, {
+      font: SMALL_FONT,
+      rotation: -Math.PI / 2,
     });
+    const obsXLabel = new Text(
+      new DerivedProperty(
+        [model.lightCurveModeProperty, strings.julianDateStringProperty, strings.phaseStringProperty],
+        (mode, julianDate, phase) => (mode === "time" ? julianDate : phase),
+      ),
+      { font: SMALL_FONT },
+    );
 
     const modeRadioGroup = new AquaRadioButtonGroup<LightCurveMode>(
       model.lightCurveModeProperty,
       [
-        { value: "time", createNode: () => new Text("time", { font: LABEL_FONT }) },
-        { value: "phase", createNode: () => new Text("phase", { font: LABEL_FONT }) },
+        { value: "time", createNode: () => new Text(strings.timeStringProperty, { font: LABEL_FONT }) },
+        { value: "phase", createNode: () => new Text(strings.phaseStringProperty, { font: LABEL_FONT }) },
       ],
       { orientation: "horizontal", spacing: 16, radioButtonOptions: { radius: 7 } },
     );
@@ -413,7 +451,7 @@ export class AnalyzerScreenView extends ScreenView {
     const obsModeRow = new HBox({
       spacing: 8,
       align: "center",
-      children: [new Text("light curve:", { font: LABEL_FONT }), modeRadioGroup],
+      children: [new Text(strings.lightCurveStringProperty, { font: LABEL_FONT }), modeRadioGroup],
     });
     const obsColumn = new VBox({
       spacing: 6,
@@ -436,9 +474,16 @@ export class AnalyzerScreenView extends ScreenView {
       modelYRange: new Range(0, 1.2),
     });
 
-    const pdmBackground = new ChartRectangle(pdmTransform, { fill: "white", stroke: "#333" });
-    const pdmGridX = new GridLineSet(pdmTransform, Orientation.HORIZONTAL, 1, { stroke: "#e0e0e0" });
-    const pdmGridY = new GridLineSet(pdmTransform, Orientation.VERTICAL, 0.2, { stroke: "#e0e0e0" });
+    const pdmBackground = new ChartRectangle(pdmTransform, {
+      fill: VSPColors.chartBackgroundColorProperty,
+      stroke: VSPColors.chartStrokeColorProperty,
+    });
+    const pdmGridX = new GridLineSet(pdmTransform, Orientation.HORIZONTAL, 1, {
+      stroke: VSPColors.chartGridColorProperty,
+    });
+    const pdmGridY = new GridLineSet(pdmTransform, Orientation.VERTICAL, 0.2, {
+      stroke: VSPColors.chartGridColorProperty,
+    });
     const pdmTickX = new TickMarkSet(pdmTransform, Orientation.HORIZONTAL, 1, { edge: "min" });
     const pdmTickY = new TickMarkSet(pdmTransform, Orientation.VERTICAL, 0.2, { edge: "min" });
     const pdmLabelX = new TickLabelSet(pdmTransform, Orientation.HORIZONTAL, 1, {
@@ -450,16 +495,16 @@ export class AnalyzerScreenView extends ScreenView {
       createLabel: (v: number) => new Text(v.toFixed(1), { font: TICK_FONT }),
     });
 
-    const pdmLine = new LinePlot(pdmTransform, [], { stroke: "#0077b6", lineWidth: 1.5 });
-    const periodMarker = new Line(0, 0, 0, PDM_H, { stroke: MARKER_COLOR, lineWidth: 2 });
+    const pdmLine = new LinePlot(pdmTransform, [], { stroke: VSPColors.lightCurveColorProperty, lineWidth: 1.5 });
+    const periodMarker = new Line(0, 0, 0, PDM_H, { stroke: VSPColors.pdmMarkerColorProperty, lineWidth: 2 });
     const pdmPlotLayer = new Node({
       clipArea: Shape.rectangle(0, 0, PDM_W, PDM_H),
       children: [pdmLine, periodMarker],
     });
 
-    const pdmEmptyMsg = new Text("(no light curve yet)", {
+    const pdmEmptyMsg = new Text(strings.noLightCurveStringProperty, {
       font: SMALL_FONT,
-      fill: "#888",
+      fill: VSPColors.mutedTextColorProperty,
       center: new Vector2(PDM_W / 2, PDM_H / 2),
     });
 
@@ -525,37 +570,40 @@ export class AnalyzerScreenView extends ScreenView {
     model.trialPeriodProperty.link(() => updateMarker());
 
     // PDM controls: readout + zoom buttons.
-    const periodReadout = new Text("", { font: LABEL_FONT });
-    const updateReadout = () => {
-      const best = bestPeriod(model.pdmScanResultsProperty.value);
-      const bestText = best === null ? "—" : `${best.toFixed(4)} d`;
-      periodReadout.string = `trial period: ${model.trialPeriodProperty.value.toFixed(4)} days     (min θ at ${bestText})`;
-    };
-    Multilink.multilink([model.trialPeriodProperty, model.pdmScanResultsProperty], () => updateReadout());
+    const periodReadout = new Text(
+      new PatternStringProperty(strings.trialPeriodStringProperty, {
+        period: new DerivedProperty([model.trialPeriodProperty], (p) => p.toFixed(4)),
+        best: new DerivedProperty([model.pdmScanResultsProperty], (scan) => {
+          const best = bestPeriod(scan);
+          return best === null ? "—" : `${best.toFixed(4)} d`;
+        }),
+      }),
+      { font: LABEL_FONT },
+    );
 
-    const zoomInButton = new TextPushButton("zoom in around period", {
+    const zoomInButton = new TextPushButton(strings.zoomInAroundPeriodStringProperty, {
       font: SMALL_FONT,
-      baseColor: "#cfe8ff",
+      baseColor: VSPColors.buttonActiveColorProperty,
       listener: () => model.zoomInAroundPeriod(),
     });
-    const zoomOutButton = new TextPushButton("zoom out around period", {
+    const zoomOutButton = new TextPushButton(strings.zoomOutAroundPeriodStringProperty, {
       font: SMALL_FONT,
-      baseColor: "#cfe8ff",
+      baseColor: VSPColors.buttonActiveColorProperty,
       listener: () => model.zoomOutAroundPeriod(),
     });
-    const fullButton = new TextPushButton("zoom to full range", {
+    const fullButton = new TextPushButton(strings.zoomToFullStringProperty, {
       font: SMALL_FONT,
-      baseColor: "#d4d4d4",
+      baseColor: VSPColors.buttonColorProperty,
       listener: () => model.zoomToFull(),
     });
-    const undoButton = new TextPushButton("undo last zoom", {
+    const undoButton = new TextPushButton(strings.undoLastZoomStringProperty, {
       font: SMALL_FONT,
-      baseColor: "#d4d4d4",
+      baseColor: VSPColors.buttonColorProperty,
       listener: () => model.undoLastZoom(),
     });
-    const snapButton = new TextPushButton("snap to min θ", {
+    const snapButton = new TextPushButton(strings.snapToMinStringProperty, {
       font: SMALL_FONT,
-      baseColor: "#b6e3b6",
+      baseColor: VSPColors.buttonSnapColorProperty,
       listener: () => {
         const best = bestPeriod(model.pdmScanResultsProperty.value);
         if (best !== null) {
@@ -568,8 +616,8 @@ export class AnalyzerScreenView extends ScreenView {
       spacing: 8,
       children: [zoomInButton, zoomOutButton, fullButton, undoButton, snapButton],
     });
-    const pdmYLabel = new Text("θ (dispersion)", { font: SMALL_FONT, rotation: -Math.PI / 2 });
-    const pdmXLabel = new Text("trial period (days)", { font: SMALL_FONT });
+    const pdmYLabel = new Text(strings.thetaAxisStringProperty, { font: SMALL_FONT, rotation: -Math.PI / 2 });
+    const pdmXLabel = new Text(strings.trialPeriodAxisStringProperty, { font: SMALL_FONT });
 
     const pdmColumn = new VBox({
       spacing: 6,
@@ -578,7 +626,7 @@ export class AnalyzerScreenView extends ScreenView {
         new HBox({
           spacing: 20,
           align: "center",
-          children: [new Text("PDM Period Search", { font: HEADER_FONT }), periodReadout],
+          children: [new Text(strings.pdmTitleStringProperty, { font: HEADER_FONT }), periodReadout],
         }),
         pdmButtonRow,
         new HBox({ spacing: 4, align: "center", children: [pdmYLabel, pdmChart] }),
@@ -593,7 +641,6 @@ export class AnalyzerScreenView extends ScreenView {
     updatePdmAxes();
     updatePdmData();
     updateMarker();
-    updateReadout();
     updateObservations();
 
     // =======================================================================
@@ -604,8 +651,8 @@ export class AnalyzerScreenView extends ScreenView {
         model.reset();
         showCrosshairProperty.reset();
       },
-      right: this.layoutBounds.maxX - 10,
-      bottom: this.layoutBounds.maxY - 10,
+      right: this.layoutBounds.maxX - VSPConstants.LAYOUT.RESET_BUTTON_MARGIN,
+      bottom: this.layoutBounds.maxY - VSPConstants.LAYOUT.RESET_BUTTON_MARGIN,
       tandem: tandem.createTandem("resetAllButton"),
     });
     this.addChild(resetAllButton);

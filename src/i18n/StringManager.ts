@@ -23,12 +23,10 @@ const stringProperties = LocalizedString.getNestedStringProperties({
 export class StringManager {
   private static instance: StringManager | null = null;
 
-  private constructor() {}
+  private constructor() {} // obtain via getInstance()
 
   public static getInstance(): StringManager {
-    if (StringManager.instance === null) {
-      StringManager.instance = new StringManager();
-    }
+    StringManager.instance ??= new StringManager();
     return StringManager.instance;
   }
 
@@ -76,5 +74,21 @@ export class StringManager {
 
   public getPreferences(): typeof stringProperties.preferences {
     return stringProperties.preferences;
+  }
+
+  public getRegistrationViewStrings(): typeof stringProperties.view.registration {
+    return stringProperties.view.registration;
+  }
+
+  public getBlinkViewStrings(): typeof stringProperties.view.blink {
+    return stringProperties.view.blink;
+  }
+
+  public getPhotometryViewStrings(): typeof stringProperties.view.photometry {
+    return stringProperties.view.photometry;
+  }
+
+  public getAnalyzerViewStrings(): typeof stringProperties.view.analyzer {
+    return stringProperties.view.analyzer;
   }
 }

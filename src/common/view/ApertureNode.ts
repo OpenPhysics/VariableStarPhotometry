@@ -12,11 +12,13 @@
 import type { TReadOnlyProperty } from "scenerystack/axon";
 import { Property } from "scenerystack/axon";
 import type { Bounds2, Vector2, Vector2Property } from "scenerystack/dot";
-import type { TColor } from "scenerystack/scenery";
+import { optionize } from "scenerystack/phet-core";
+import type { NodeOptions, TColor } from "scenerystack/scenery";
 import { Circle, DragListener, Node, Text } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
+import VSPConstants from "../VSPConstants.js";
 
-export type ApertureNodeOptions = {
+type ApertureNodeSelfOptions = {
   /** Field-pixel bounds the centre is clamped to while dragging. */
   dragBounds: Bounds2;
   /** Ring colour (disc + annulus + label). */
@@ -27,7 +29,9 @@ export type ApertureNodeOptions = {
   labelVisibleProperty: TReadOnlyProperty<boolean>;
 };
 
-const LABEL_FONT = new PhetFont({ size: 13, weight: "bold" });
+export type ApertureNodeOptions = ApertureNodeSelfOptions & NodeOptions;
+
+const LABEL_FONT = new PhetFont({ size: VSPConstants.FONT_SIZE.LABEL, weight: "bold" });
 
 export class ApertureNode extends Node {
   public constructor(
@@ -35,9 +39,14 @@ export class ApertureNode extends Node {
     apertureRadiusProperty: TReadOnlyProperty<number>,
     skyInnerRadiusProperty: TReadOnlyProperty<number>,
     skyOuterRadiusProperty: TReadOnlyProperty<number>,
-    options: ApertureNodeOptions,
+    providedOptions: ApertureNodeOptions,
   ) {
-    super({ cursor: "pointer" });
+    const options = optionize<ApertureNodeOptions, ApertureNodeSelfOptions, NodeOptions>()(
+      { cursor: "pointer" },
+      providedOptions,
+    );
+
+    super(options);
 
     // Inner flux disc.
     const discRing = new Circle(apertureRadiusProperty.value, {

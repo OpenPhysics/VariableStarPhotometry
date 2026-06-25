@@ -20,33 +20,34 @@
  * └─────────────────────┴──────────────────────────────┘
  *                                            [Reset All]
  */
-import { Multilink } from "scenerystack/axon";
+import {
+  type BooleanProperty,
+  Multilink,
+  type NumberProperty,
+  PatternStringProperty,
+  type TReadOnlyProperty,
+} from "scenerystack/axon";
 import { Shape } from "scenerystack/kite";
-import type { SceneryEvent } from "scenerystack/scenery";
+import type { SceneryEvent, TColor } from "scenerystack/scenery";
 import { DragListener, KeyboardListener, Node, Rectangle, Text, VBox } from "scenerystack/scenery";
 import { PhetFont, ResetAllButton } from "scenerystack/scenery-phet";
 import type { ScreenViewOptions } from "scenerystack/sim";
 import { ScreenView } from "scenerystack/sim";
 import { AquaRadioButton, Checkbox, NumberPicker, Panel, TextPushButton } from "scenerystack/sun";
 import { Tandem } from "scenerystack/tandem";
+import VSPConstants from "../../common/VSPConstants.js";
 import { StarFieldNode } from "../../common/view/StarFieldNode.js";
+import { StringManager } from "../../i18n/StringManager.js";
+import VSPColors from "../../VSPColors.js";
 import type { RegistrationModel } from "../model/RegistrationModel.js";
 
-const FIELD_W = 380;
-const FIELD_H = 290;
+const FIELD_W = VSPConstants.FIELD.WIDTH;
+const FIELD_H = VSPConstants.FIELD.HEIGHT;
 
-const LABEL_FONT = new PhetFont(13);
-const SMALL_FONT = new PhetFont(11);
-const HEADER_FONT = new PhetFont({ size: 14, weight: "bold" });
+const LABEL_FONT = new PhetFont(VSPConstants.FONT_SIZE.LABEL);
+const SMALL_FONT = new PhetFont(VSPConstants.FONT_SIZE.SMALL);
+const HEADER_FONT = new PhetFont({ size: VSPConstants.FONT_SIZE.HEADER, weight: "bold" });
 
-// Colours matching the Flash reference
-const COLOR_ON_TOP = "#ff9090";
-const COLOR_NORMAL = "#909090";
-const PANEL_FILL = "#f5f5f5";
-const PANEL_STROKE = "#888";
-const SECTION_FILL = "#ffffff";
-const TEXT_FILL = "#222";
-const MUTED_TEXT_FILL = "#555";
 const WORK_PANEL_MARGIN = 12;
 const WORK_PANEL_TITLE_HEIGHT = 26;
 const CONTROL_TABLE_W = 286;
@@ -58,6 +59,7 @@ export class RegistrationScreenView extends ScreenView {
     super(options);
 
     const tandem = options?.tandem instanceof Tandem ? options.tandem : Tandem.OPT_OUT;
+    const strings = StringManager.getInstance().getRegistrationViewStrings();
 
     // -----------------------------------------------------------------------
     // Work Area — three overlaid star fields
@@ -69,7 +71,7 @@ export class RegistrationScreenView extends ScreenView {
     // Each field group: star image + coloured border
     function makeBorderRect(): Rectangle {
       return new Rectangle(0, 0, FIELD_W, FIELD_H, {
-        stroke: COLOR_NORMAL,
+        stroke: VSPColors.fieldBorderColorProperty,
         lineWidth: 2,
         fill: null,
         pickable: false,
@@ -92,7 +94,7 @@ export class RegistrationScreenView extends ScreenView {
 
     // Outer frame for the movable star fields.
     const workFrame = new Rectangle(0, 0, FIELD_W, FIELD_H, {
-      stroke: "#555",
+      stroke: VSPColors.mutedTextColorProperty,
       lineWidth: 1,
       fill: null,
     });
@@ -106,13 +108,13 @@ export class RegistrationScreenView extends ScreenView {
     const workPanelW = FIELD_W + 2 * WORK_PANEL_MARGIN;
     const workPanelH = FIELD_H + WORK_PANEL_TITLE_HEIGHT + WORK_PANEL_MARGIN;
     const workPanelFrame = new Rectangle(0, 0, workPanelW, workPanelH, {
-      fill: PANEL_FILL,
-      stroke: PANEL_STROKE,
+      fill: VSPColors.controlPanelFillProperty,
+      stroke: VSPColors.controlPanelStrokeProperty,
       lineWidth: 1,
     });
-    const workTitle = new Text("Work Area", {
+    const workTitle = new Text(strings.workAreaStringProperty, {
       font: HEADER_FONT,
-      fill: TEXT_FILL,
+      fill: VSPColors.panelTextColorProperty,
       left: WORK_PANEL_MARGIN,
       centerY: WORK_PANEL_TITLE_HEIGHT / 2,
     });
@@ -124,7 +126,7 @@ export class RegistrationScreenView extends ScreenView {
 
     const workArea = new Node({
       children: [workPanelFrame, workTitle, fieldContainer],
-      left: 20,
+      left: VSPConstants.LAYOUT.SCREEN_MARGIN,
       top: this.layoutBounds.centerY - workPanelH / 2,
     });
     this.addChild(workArea);
@@ -157,9 +159,9 @@ export class RegistrationScreenView extends ScreenView {
 
     // "On top" → border colour + z-order
     model.onTopIndexProperty.link((idx) => {
-      border2.stroke = idx === 2 ? COLOR_ON_TOP : COLOR_NORMAL;
+      border2.stroke = idx === 2 ? VSPColors.fieldBorderHighlightColorProperty : VSPColors.fieldBorderColorProperty;
       border2.lineWidth = idx === 2 ? 3 : 2;
-      border3.stroke = idx === 3 ? COLOR_ON_TOP : COLOR_NORMAL;
+      border3.stroke = idx === 3 ? VSPColors.fieldBorderHighlightColorProperty : VSPColors.fieldBorderColorProperty;
       border3.lineWidth = idx === 3 ? 3 : 2;
 
       // Bring the on-top group to the front
@@ -259,18 +261,18 @@ export class RegistrationScreenView extends ScreenView {
     // Control Panel
     // -----------------------------------------------------------------------
 
-    const makeColumnHeader = (label: string, centerX: number) =>
+    const makeColumnHeader = (label: TReadOnlyProperty<string>, centerX: number) =>
       new Text(label, {
         font: SMALL_FONT,
-        fill: MUTED_TEXT_FILL,
+        fill: VSPColors.mutedTextColorProperty,
         centerX,
         centerY: CONTROL_HEADER_H / 2,
       });
 
-    const makePlaceholder = (label: string, centerX: number) =>
+    const makePlaceholder = (label: TReadOnlyProperty<string>, centerX: number) =>
       new Text(label, {
         font: LABEL_FONT,
-        fill: MUTED_TEXT_FILL,
+        fill: VSPColors.mutedTextColorProperty,
         centerX,
         centerY: CONTROL_ROW_H / 2,
       });
@@ -283,7 +285,7 @@ export class RegistrationScreenView extends ScreenView {
 
     const createDivider = (x: number) =>
       new Rectangle(x, 0, 1, CONTROL_HEADER_H + 3 * CONTROL_ROW_H, {
-        fill: "#dddddd",
+        fill: VSPColors.dividerColorProperty,
       });
 
     const shownColumnX = 96;
@@ -293,26 +295,26 @@ export class RegistrationScreenView extends ScreenView {
 
     const tableHeader = new Node({
       children: [
-        new Rectangle(0, 0, CONTROL_TABLE_W, CONTROL_HEADER_H, { fill: "#eeeeee" }),
-        makeColumnHeader("shown", shownColumnX),
-        makeColumnHeader("on top", onTopColumnX),
-        makeColumnHeader("x offset", xOffsetColumnX),
-        makeColumnHeader("y offset", yOffsetColumnX),
+        new Rectangle(0, 0, CONTROL_TABLE_W, CONTROL_HEADER_H, { fill: VSPColors.tableHeaderFillProperty }),
+        makeColumnHeader(strings.shownStringProperty, shownColumnX),
+        makeColumnHeader(strings.onTopStringProperty, onTopColumnX),
+        makeColumnHeader(strings.xOffsetStringProperty, xOffsetColumnX),
+        makeColumnHeader(strings.yOffsetStringProperty, yOffsetColumnX),
       ],
     });
 
     // Helper: one row of the starfield table
     function makeStarfieldRow(
-      label: string,
-      shownProp: import("scenerystack/axon").BooleanProperty | null,
+      label: TReadOnlyProperty<string>,
+      shownProp: BooleanProperty | null,
       onTopValue: number | null,
-      xProp: import("scenerystack/axon").NumberProperty | null,
-      yProp: import("scenerystack/axon").NumberProperty | null,
-      fill: string,
+      xProp: NumberProperty | null,
+      yProp: NumberProperty | null,
+      fill: TColor,
     ): Node {
       const labelNode = new Text(label, {
         font: LABEL_FONT,
-        fill: TEXT_FILL,
+        fill: VSPColors.panelTextColorProperty,
         maxWidth: 82,
         left: 6,
         centerY: CONTROL_ROW_H / 2,
@@ -323,7 +325,7 @@ export class RegistrationScreenView extends ScreenView {
             new Checkbox(shownProp, new Text("", { font: LABEL_FONT }), { boxWidth: 16 }),
             shownColumnX,
           )
-        : makePlaceholder("fixed", shownColumnX);
+        : makePlaceholder(strings.fixedStringProperty, shownColumnX);
 
       const onTopButton =
         onTopValue !== null
@@ -333,33 +335,33 @@ export class RegistrationScreenView extends ScreenView {
               }),
               onTopColumnX,
             )
-          : makePlaceholder("--", onTopColumnX);
+          : makePlaceholder(strings.noneStringProperty, onTopColumnX);
 
       const xPicker =
         xProp !== null
           ? makeTableControlNode(
               new NumberPicker(xProp, xProp.rangeProperty, {
                 font: LABEL_FONT,
-                color: "black",
+                color: VSPColors.panelTextColorProperty,
                 incrementFunction: (v) => v + 1,
                 decrementFunction: (v) => v - 1,
               }),
               xOffsetColumnX,
             )
-          : makePlaceholder("--", xOffsetColumnX);
+          : makePlaceholder(strings.noneStringProperty, xOffsetColumnX);
 
       const yPicker =
         yProp !== null
           ? makeTableControlNode(
               new NumberPicker(yProp, yProp.rangeProperty, {
                 font: LABEL_FONT,
-                color: "black",
+                color: VSPColors.panelTextColorProperty,
                 incrementFunction: (v) => v + 1,
                 decrementFunction: (v) => v - 1,
               }),
               yOffsetColumnX,
             )
-          : makePlaceholder("--", yOffsetColumnX);
+          : makePlaceholder(strings.noneStringProperty, yOffsetColumnX);
 
       return new Node({
         children: [
@@ -373,22 +375,25 @@ export class RegistrationScreenView extends ScreenView {
       });
     }
 
-    const row1 = makeStarfieldRow("starfield 1", null, null, null, null, SECTION_FILL);
+    const starfieldLabel = (number: number) =>
+      new PatternStringProperty(strings.starfieldNumberStringProperty, { number });
+
+    const row1 = makeStarfieldRow(starfieldLabel(1), null, null, null, null, VSPColors.tableRowFillProperty);
     const row2 = makeStarfieldRow(
-      "starfield 2",
+      starfieldLabel(2),
       model.shown2Property,
       2,
       model.xOffset2Property,
       model.yOffset2Property,
-      "#fafafa",
+      VSPColors.tableRowAltFillProperty,
     );
     const row3 = makeStarfieldRow(
-      "starfield 3",
+      starfieldLabel(3),
       model.shown3Property,
       3,
       model.xOffset3Property,
       model.yOffset3Property,
-      SECTION_FILL,
+      VSPColors.tableRowFillProperty,
     );
 
     row1.top = CONTROL_HEADER_H;
@@ -397,7 +402,7 @@ export class RegistrationScreenView extends ScreenView {
 
     const tableFrame = new Rectangle(0, 0, CONTROL_TABLE_W, CONTROL_HEADER_H + 3 * CONTROL_ROW_H, {
       fill: null,
-      stroke: "#cccccc",
+      stroke: VSPColors.tableStrokeProperty,
       lineWidth: 1,
     });
     const starfieldTable = new Node({
@@ -414,19 +419,19 @@ export class RegistrationScreenView extends ScreenView {
       ],
     });
 
-    const selectedFieldText = new Text("", {
-      font: SMALL_FONT,
-      fill: MUTED_TEXT_FILL,
-      maxWidth: CONTROL_TABLE_W,
-    });
-    model.onTopIndexProperty.link((idx) => {
-      selectedFieldText.string = `Drag the image or use arrow keys to move starfield ${idx}.`;
-    });
+    const selectedFieldText = new Text(
+      new PatternStringProperty(strings.moveHintStringProperty, { number: model.onTopIndexProperty }),
+      {
+        font: SMALL_FONT,
+        fill: VSPColors.mutedTextColorProperty,
+        maxWidth: CONTROL_TABLE_W,
+      },
+    );
 
-    const switchButton = new TextPushButton("Switch on top field  (J)", {
+    const switchButton = new TextPushButton(strings.switchOnTopStringProperty, {
       font: LABEL_FONT,
       listener: () => model.switchOnTopField(),
-      baseColor: "#d4d4d4",
+      baseColor: VSPColors.buttonColorProperty,
       minWidth: 170,
     });
 
@@ -434,7 +439,10 @@ export class RegistrationScreenView extends ScreenView {
       spacing: 9,
       align: "center",
       children: [
-        new Text("Starfield Controls", { font: HEADER_FONT, fill: TEXT_FILL }),
+        new Text(strings.starfieldControlsStringProperty, {
+          font: HEADER_FONT,
+          fill: VSPColors.panelTextColorProperty,
+        }),
         starfieldTable,
         selectedFieldText,
         switchButton,
@@ -442,8 +450,8 @@ export class RegistrationScreenView extends ScreenView {
     });
 
     const starfieldControlsPanel = new Panel(starfieldControlsContent, {
-      fill: PANEL_FILL,
-      stroke: PANEL_STROKE,
+      fill: VSPColors.controlPanelFillProperty,
+      stroke: VSPColors.controlPanelStrokeProperty,
       cornerRadius: 0,
       xMargin: 10,
       yMargin: 10,
@@ -452,29 +460,31 @@ export class RegistrationScreenView extends ScreenView {
     // Appearance Options
     const transparentCheckbox = new Checkbox(
       model.topFieldTransparentProperty,
-      new Text("make top field transparent", { font: LABEL_FONT }),
+      new Text(strings.makeTopTransparentStringProperty, { font: LABEL_FONT }),
       { boxWidth: 16 },
     );
 
-    const invertCheckbox = new Checkbox(model.invertColorsProperty, new Text("invert colors", { font: LABEL_FONT }), {
-      boxWidth: 16,
-    });
+    const invertCheckbox = new Checkbox(
+      model.invertColorsProperty,
+      new Text(strings.invertColorsStringProperty, { font: LABEL_FONT }),
+      { boxWidth: 16 },
+    );
 
     // Hint text
-    const hintText = new Text(
-      "Tip: select starfield 2 or 3, then drag the image for coarse alignment and use arrow keys for fine adjustment.",
-      {
-        font: SMALL_FONT,
-        fill: MUTED_TEXT_FILL,
-        maxWidth: CONTROL_TABLE_W,
-      },
-    );
+    const hintText = new Text(strings.tipStringProperty, {
+      font: SMALL_FONT,
+      fill: VSPColors.mutedTextColorProperty,
+      maxWidth: CONTROL_TABLE_W,
+    });
 
     const appearanceContent = new VBox({
       spacing: 9,
       align: "left",
       children: [
-        new Text("Appearance Options", { font: HEADER_FONT, fill: TEXT_FILL }),
+        new Text(strings.appearanceOptionsStringProperty, {
+          font: HEADER_FONT,
+          fill: VSPColors.panelTextColorProperty,
+        }),
         transparentCheckbox,
         invertCheckbox,
         hintText,
@@ -482,8 +492,8 @@ export class RegistrationScreenView extends ScreenView {
     });
 
     const appearancePanel = new Panel(appearanceContent, {
-      fill: PANEL_FILL,
-      stroke: PANEL_STROKE,
+      fill: VSPColors.controlPanelFillProperty,
+      stroke: VSPColors.controlPanelStrokeProperty,
       cornerRadius: 0,
       xMargin: 10,
       yMargin: 10,
@@ -504,8 +514,8 @@ export class RegistrationScreenView extends ScreenView {
     // -----------------------------------------------------------------------
     const resetAllButton = new ResetAllButton({
       listener: () => model.reset(),
-      right: this.layoutBounds.maxX - 10,
-      bottom: this.layoutBounds.maxY - 10,
+      right: this.layoutBounds.maxX - VSPConstants.LAYOUT.RESET_BUTTON_MARGIN,
+      bottom: this.layoutBounds.maxY - VSPConstants.LAYOUT.RESET_BUTTON_MARGIN,
       tandem: tandem.createTandem("resetAllButton"),
     });
     this.addChild(resetAllButton);

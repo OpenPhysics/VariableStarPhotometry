@@ -33,9 +33,9 @@ export type LightCurveMode = "time" | "phase";
 export type DiffMag = { epoch: number; magnitude: number };
 
 /** Fixed aperture geometry used for the automated per-observation photometry. */
-const ANALYZER_APERTURE_RADIUS = VSPConstants.DEFAULT_APERTURE_DIAMETER / 2;
-const ANALYZER_SKY_INNER = VSPConstants.DEFAULT_ANNULUS_INNER;
-const ANALYZER_SKY_OUTER = VSPConstants.DEFAULT_ANNULUS_OUTER;
+const ANALYZER_APERTURE_RADIUS = VSPConstants.APERTURE.DEFAULT_DIAMETER / 2;
+const ANALYZER_SKY_INNER = VSPConstants.APERTURE.DEFAULT_ANNULUS_INNER;
+const ANALYZER_SKY_OUTER = VSPConstants.APERTURE.DEFAULT_ANNULUS_OUTER;
 
 /** Initial (full) PDM period-scan window, in days. */
 const FULL_PDM_RANGE = new Range(0.2, 10);
