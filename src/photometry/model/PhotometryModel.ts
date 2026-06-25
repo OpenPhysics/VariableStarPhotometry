@@ -22,9 +22,9 @@ import {
   type PhotometryResult,
 } from "../../common/model/AperturePhotometry.js";
 import { OBSERVATIONS } from "../../common/model/StarFieldData.js";
+import vspQueryParameters from "../../preferences/vspQueryParameters.js";
 import VSPConstants from "../../VSPConstants.js";
 import VSPNamespace from "../../VSPNamespace.js";
-import vspQueryParameters from "../../preferences/vspQueryParameters.js";
 
 export const APERTURE_DIAMETER_RANGE = new Range(6, 30);
 export const ANNULUS_INNER_RANGE = new Range(8, 25);
@@ -32,10 +32,6 @@ export const ANNULUS_OUTER_RANGE = new Range(12, 40);
 
 /** Index of the epoch (observation) being measured. */
 export const EPOCH_INDEX_RANGE = new Range(0, OBSERVATIONS.length - 1);
-
-/** Field dimensions (model pixels) — apertures are clamped to this. */
-const FIELD_W = VSPConstants.FIELD.WIDTH;
-const FIELD_H = VSPConstants.FIELD.HEIGHT;
 
 /** Default aperture placements: a pulsating variable and a steady comparison. */
 const DEFAULT_APERTURE_1 = new Vector2(308, 175); // del Cep (variable)
@@ -114,11 +110,6 @@ export class PhotometryModel {
       [this.aperture1PhotometryProperty, this.aperture2PhotometryProperty],
       (p1, p2) => differentialMagnitude(p1.netFlux, p2.netFlux),
     );
-  }
-
-  /** Clamp a candidate aperture centre to the field bounds. */
-  public static clampToField(point: Vector2): Vector2 {
-    return new Vector2(Math.max(0, Math.min(FIELD_W, point.x)), Math.max(0, Math.min(FIELD_H, point.y)));
   }
 
   public step(_dt: number): void {
