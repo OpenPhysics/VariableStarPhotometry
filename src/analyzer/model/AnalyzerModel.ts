@@ -26,6 +26,10 @@ import VSPConstants from "../../VSPConstants.js";
 import VSPNamespace from "../../VSPNamespace.js";
 
 export const PERIOD_RANGE = new Range(0.1, 100);
+export const PHASE_OFFSET_RANGE = new Range(
+  0,
+  Math.ceil((OBSERVATIONS[OBSERVATIONS.length - 1] as { epoch: number }).epoch),
+);
 
 /** Light-curve x-axis mode. */
 export type LightCurveMode = "time" | "phase";
@@ -73,7 +77,7 @@ export class AnalyzerModel {
   public constructor(_tandem?: Tandem) {
     this.trialPeriodProperty = new NumberProperty(vspQueryParameters.trialPeriod ?? 1.0, { range: PERIOD_RANGE });
 
-    this.phaseOffsetProperty = new NumberProperty(0.0);
+    this.phaseOffsetProperty = new NumberProperty(0.0, { range: PHASE_OFFSET_RANGE });
 
     this.lightCurveModeProperty = new StringUnionProperty<LightCurveMode>(
       vspQueryParameters.lightCurveMode as LightCurveMode,
@@ -179,6 +183,16 @@ export class AnalyzerModel {
     const next = new Range(Math.max(PERIOD_RANGE.min, center - half), Math.min(PERIOD_RANGE.max, center + half));
     this.pdmZoomHistory.push(current);
     this.pdmZoomRangeProperty.value = next;
+  }
+
+  /** Push the current window and zoom to an explicitly selected period range. */
+  public zoomToPeriodRange(minPeriod: number, maxPeriod: number): void {
+    const min = Math.max(PERIOD_RANGE.min, Math.min(minPeriod, maxPeriod));
+    const max = Math.min(PERIOD_RANGE.max, Math.max(minPeriod, maxPeriod));
+    if (max > min) {
+      this.pdmZoomHistory.push(this.pdmZoomRangeProperty.value);
+      this.pdmZoomRangeProperty.value = new Range(min, max);
+    }
   }
 
   /** Reset the PDM window to the full scan range. */

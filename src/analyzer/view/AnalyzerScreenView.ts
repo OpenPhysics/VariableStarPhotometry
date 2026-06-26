@@ -26,13 +26,13 @@ import {
   TickLabelSet,
   TickMarkSet,
 } from "scenerystack/bamboo";
-import { Range, Vector2 } from "scenerystack/dot";
+import { Dimension2, Range, Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
 import { Orientation } from "scenerystack/phet-core";
 import { ModelViewTransform2 } from "scenerystack/phetcommon";
 import type { SceneryEvent } from "scenerystack/scenery";
 import { Circle, DragListener, HBox, Line, Node, Rectangle, Text, VBox } from "scenerystack/scenery";
-import { PhetFont, ResetAllButton } from "scenerystack/scenery-phet";
+import { NumberControl, PhetFont, ResetAllButton } from "scenerystack/scenery-phet";
 import type { ScreenViewOptions } from "scenerystack/sim";
 import { ScreenView } from "scenerystack/sim";
 import { AquaRadioButtonGroup, Checkbox, TextPushButton } from "scenerystack/sun";
@@ -44,7 +44,7 @@ import { StringManager } from "../../i18n/StringManager.js";
 import type { VSPPreferencesModel } from "../../preferences/VSPPreferencesModel.js";
 import VSPColors from "../../VSPColors.js";
 import VSPConstants from "../../VSPConstants.js";
-import type { AnalyzerModel, LightCurveMode } from "../model/AnalyzerModel.js";
+import { type AnalyzerModel, type LightCurveMode, PHASE_OFFSET_RANGE } from "../model/AnalyzerModel.js";
 
 const FIELD_W = VSPConstants.FIELD.WIDTH;
 const FIELD_H = VSPConstants.FIELD.HEIGHT;
@@ -79,6 +79,7 @@ export class AnalyzerScreenView extends ScreenView {
     const strings = StringManager.getInstance().getAnalyzerViewStrings();
     const unitStrings = StringManager.getInstance().getUnitStrings();
     const showCrosshairProperty = new BooleanProperty(true);
+    const showDifferenceToolProperty = new BooleanProperty(false);
 
     // =======================================================================
     // Star field with click-to-select + crosshair + selection markers
@@ -281,13 +282,14 @@ export class AnalyzerScreenView extends ScreenView {
 
     const updateDeltaOverlay = () => {
       const hasMeasurements = model.measurementsProperty.value.length > 0;
-      deltaBar1.visible = hasMeasurements;
-      deltaBar2.visible = hasMeasurements;
-      deltaFill.visible = hasMeasurements;
-      deltaText.visible = hasMeasurements;
-      deltaBar1Hit.visible = hasMeasurements;
-      deltaBar2Hit.visible = hasMeasurements;
-      if (!hasMeasurements) {
+      const showOverlay = hasMeasurements && showDifferenceToolProperty.value;
+      deltaBar1.visible = showOverlay;
+      deltaBar2.visible = showOverlay;
+      deltaFill.visible = showOverlay;
+      deltaText.visible = showOverlay;
+      deltaBar1Hit.visible = showOverlay;
+      deltaBar2Hit.visible = showOverlay;
+      if (!showOverlay) {
         return;
       }
 
@@ -435,7 +437,13 @@ export class AnalyzerScreenView extends ScreenView {
       updateDeltaOverlayAndHits();
     };
     Multilink.multilink(
-      [model.measurementsProperty, model.lightCurveModeProperty, model.trialPeriodProperty, model.phaseOffsetProperty],
+      [
+        model.measurementsProperty,
+        model.lightCurveModeProperty,
+        model.trialPeriodProperty,
+        model.phaseOffsetProperty,
+        showDifferenceToolProperty,
+      ],
       () => updateObservations(),
     );
 
@@ -461,6 +469,18 @@ export class AnalyzerScreenView extends ScreenView {
       { orientation: "horizontal", spacing: 16, radioButtonOptions: { radius: 7 } },
     );
 
+    const phaseOffsetControl = new NumberControl("phase offset (days)", model.phaseOffsetProperty, PHASE_OFFSET_RANGE, {
+      titleNodeOptions: { font: SMALL_FONT },
+      numberDisplayOptions: { textOptions: { font: SMALL_FONT } },
+      sliderOptions: { trackSize: new Dimension2(120, 3) },
+      layoutFunction: NumberControl.createLayoutFunction1(),
+    });
+    const differenceToolCheckbox = new Checkbox(
+      showDifferenceToolProperty,
+      new Text("show difference tool", { font: LABEL_FONT }),
+      { boxWidth: 16 },
+    );
+
     // Assemble observations panel (title, [y-label | chart], x-label, radios).
     const obsChartRow = new HBox({ spacing: 4, align: "center", children: [obsYLabel, obsChart] });
     const obsModeRow = new HBox({
@@ -468,10 +488,15 @@ export class AnalyzerScreenView extends ScreenView {
       align: "center",
       children: [new Text(strings.lightCurveStringProperty, { font: LABEL_FONT }), modeRadioGroup],
     });
+    const obsToolRow = new HBox({
+      spacing: 16,
+      align: "center",
+      children: [phaseOffsetControl, differenceToolCheckbox],
+    });
     const obsColumn = new VBox({
       spacing: 6,
       align: "center",
-      children: [obsTitle, obsChartRow, obsXLabel, obsModeRow],
+      children: [obsTitle, obsChartRow, obsXLabel, obsModeRow, obsToolRow],
     });
     obsColumn.left = leftColumn.right + 30;
     obsColumn.top = VSPConstants.LAYOUT.SCREEN_MARGIN;
@@ -512,9 +537,16 @@ export class AnalyzerScreenView extends ScreenView {
 
     const pdmLine = new LinePlot(pdmTransform, [], { stroke: VSPColors.lightCurveColorProperty, lineWidth: 1.5 });
     const periodMarker = new Line(0, 0, 0, PDM_H, { stroke: VSPColors.pdmMarkerColorProperty, lineWidth: 2 });
+    const pdmZoomSelection = new Rectangle(0, 0, 0, PDM_H, {
+      fill: "rgba(120, 170, 255, 0.22)",
+      stroke: VSPColors.pdmMarkerColorProperty,
+      lineWidth: 1,
+      visible: false,
+      pickable: false,
+    });
     const pdmPlotLayer = new Node({
       clipArea: Shape.rectangle(0, 0, PDM_W, PDM_H),
-      children: [pdmLine, periodMarker],
+      children: [pdmLine, pdmZoomSelection, periodMarker],
     });
 
     const pdmEmptyMsg = new Text(strings.noLightCurveStringProperty, {
@@ -523,18 +555,50 @@ export class AnalyzerScreenView extends ScreenView {
       center: new Vector2(PDM_W / 2, PDM_H / 2),
     });
 
-    // Drag/click on the plot sets the trial period.
+    // Click selects a trial period; drag creates the Flash-style rubber-band zoom window.
     const pdmHit = new Rectangle(0, 0, PDM_W, PDM_H, { fill: "transparent", cursor: "ew-resize" });
-    const setPeriodFromEvent = (event: SceneryEvent) => {
-      const local = pdmHit.globalToLocalPoint(event.pointer.point);
+    const PDM_DRAG_ZOOM_THRESHOLD = 6;
+    let pdmDragStartX = 0;
+    let pdmDragCurrentX = 0;
+    const clampPdmViewX = (x: number) => Math.max(0, Math.min(PDM_W, x));
+    const setPeriodFromViewX = (viewX: number) => {
       const zoom = model.pdmZoomRangeProperty.value;
-      const period = pdmTransform.viewToModelX(local.x);
+      const period = pdmTransform.viewToModelX(viewX);
       model.trialPeriodProperty.value = Math.max(zoom.min, Math.min(zoom.max, period));
+    };
+    const updatePdmZoomSelection = () => {
+      const left = Math.min(pdmDragStartX, pdmDragCurrentX);
+      const width = Math.abs(pdmDragCurrentX - pdmDragStartX);
+      pdmZoomSelection.setRect(left, 0, width, PDM_H);
+      pdmZoomSelection.visible = width >= PDM_DRAG_ZOOM_THRESHOLD;
+    };
+    const pdmViewXFromEvent = (event: SceneryEvent) => {
+      const local = pdmHit.globalToLocalPoint(event.pointer.point);
+      return clampPdmViewX(local.x);
     };
     pdmHit.addInputListener(
       new DragListener({
-        start: (event) => setPeriodFromEvent(event),
-        drag: (event) => setPeriodFromEvent(event),
+        start: (event) => {
+          pdmDragStartX = pdmViewXFromEvent(event);
+          pdmDragCurrentX = pdmDragStartX;
+          pdmZoomSelection.visible = false;
+        },
+        drag: (event) => {
+          pdmDragCurrentX = pdmViewXFromEvent(event);
+          updatePdmZoomSelection();
+        },
+        end: () => {
+          const width = Math.abs(pdmDragCurrentX - pdmDragStartX);
+          pdmZoomSelection.visible = false;
+          if (width >= PDM_DRAG_ZOOM_THRESHOLD) {
+            model.zoomToPeriodRange(
+              pdmTransform.viewToModelX(pdmDragStartX),
+              pdmTransform.viewToModelX(pdmDragCurrentX),
+            );
+          } else {
+            setPeriodFromViewX(pdmDragStartX);
+          }
+        },
       }),
     );
 
@@ -665,6 +729,7 @@ export class AnalyzerScreenView extends ScreenView {
       listener: () => {
         model.reset();
         showCrosshairProperty.reset();
+        showDifferenceToolProperty.reset();
       },
       right: this.layoutBounds.maxX - VSPConstants.LAYOUT.RESET_BUTTON_MARGIN,
       bottom: this.layoutBounds.maxY - VSPConstants.LAYOUT.RESET_BUTTON_MARGIN,
