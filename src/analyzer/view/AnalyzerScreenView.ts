@@ -44,7 +44,7 @@ import { StringManager } from "../../i18n/StringManager.js";
 import type { VSPPreferencesModel } from "../../preferences/VSPPreferencesModel.js";
 import VSPColors from "../../VSPColors.js";
 import VSPConstants from "../../VSPConstants.js";
-import { type AnalyzerModel, type LightCurveMode, PHASE_OFFSET_RANGE } from "../model/AnalyzerModel.js";
+import { type AnalyzerModel, type LightCurveMode, PERIOD_RANGE, PHASE_OFFSET_RANGE } from "../model/AnalyzerModel.js";
 
 const FIELD_W = VSPConstants.FIELD.WIDTH;
 const FIELD_H = VSPConstants.FIELD.HEIGHT;
@@ -128,10 +128,31 @@ export class AnalyzerScreenView extends ScreenView {
     const crosshairV = new Line(0, 0, 0, FIELD_H, { stroke: VSPColors.crosshairColorProperty, lineWidth: 1 });
     const crosshair = new Node({ children: [crosshairH, crosshairV], pickable: false, visible: false });
 
+    // Coordinate readout near the crosshair (matching Flash's xField/yField).
+    const crosshairCoordText = new Text("", {
+      font: new PhetFont({ size: 10, family: "monospace" }),
+      fill: VSPColors.crosshairColorProperty,
+      pickable: false,
+    });
+    const crosshairCoordBg = new Rectangle(0, 0, 1, 1, {
+      fill: VSPColors.controlPanelFillProperty,
+      stroke: VSPColors.crosshairColorProperty,
+      lineWidth: 0.5,
+      cornerRadius: 2,
+      pickable: false,
+    });
+    const crosshairCoords = new Node({
+      children: [crosshairCoordBg, crosshairCoordText],
+      pickable: false,
+      visible: false,
+    });
+
     const hitArea = new Rectangle(0, 0, FIELD_W, FIELD_H, { fill: "transparent", cursor: "crosshair" });
     let pointerInside = false;
     const updateCrosshairVisible = () => {
-      crosshair.visible = showCrosshairProperty.value && pointerInside;
+      const visible = showCrosshairProperty.value && pointerInside;
+      crosshair.visible = visible;
+      crosshairCoords.visible = visible;
     };
     showCrosshairProperty.link(updateCrosshairVisible);
     hitArea.addInputListener({
@@ -147,6 +168,24 @@ export class AnalyzerScreenView extends ScreenView {
         const viewPoint = hitArea.globalToLocalPoint(event.pointer.point);
         crosshairH.y = viewPoint.y;
         crosshairV.x = viewPoint.x;
+
+        // Update coordinate readout (clamped to field bounds like Flash).
+        const px = Math.max(0, Math.min(FIELD_W - 1, Math.round(viewPoint.x)));
+        const py = Math.max(0, Math.min(FIELD_H - 1, Math.round(viewPoint.y)));
+        crosshairCoordText.string = `${px}, ${py}`;
+        crosshairCoordBg.setRect(0, 0, crosshairCoordText.width + 6, crosshairCoordText.height + 4);
+        crosshairCoordText.x = 3;
+        crosshairCoordText.y = 2;
+        // Position to the right of the cursor, or left if too close to the edge.
+        if (viewPoint.x + 15 + crosshairCoordBg.width < FIELD_W) {
+          crosshairCoords.x = viewPoint.x + 15;
+        } else {
+          crosshairCoords.x = viewPoint.x - 15 - crosshairCoordBg.width;
+        }
+        crosshairCoords.y = Math.max(
+          0,
+          Math.min(FIELD_H - crosshairCoordBg.height, viewPoint.y - crosshairCoordBg.height / 2),
+        );
       },
       down: (event: SceneryEvent) => {
         // Convert the pointer position from field-container view space to model
@@ -158,7 +197,7 @@ export class AnalyzerScreenView extends ScreenView {
     });
 
     const fieldContainer = new Node({
-      children: [fieldClip, grid, frame, variableMarker, comparisonMarker, crosshair, hitArea],
+      children: [fieldClip, grid, frame, variableMarker, comparisonMarker, crosshair, crosshairCoords, hitArea],
     });
 
     // Legend + controls beneath the field.
@@ -648,16 +687,28 @@ export class AnalyzerScreenView extends ScreenView {
     model.pdmScanResultsProperty.link(() => updatePdmData());
     model.trialPeriodProperty.link(() => updateMarker());
 
-    // PDM controls: readout + zoom buttons.
-    const periodReadout = new Text(
-      new PatternStringProperty(strings.trialPeriodStringProperty, {
-        period: new DerivedProperty([model.trialPeriodProperty], (p) => p.toFixed(4)),
-        best: new DerivedProperty([model.pdmScanResultsProperty], (scan) => {
-          const best = bestPeriod(scan);
-          return best === null ? "—" : `${best.toFixed(4)} d`;
-        }),
+    // PDM controls: period input + zoom buttons.
+    const periodControl = new NumberControl(
+      strings.trialPeriodStringProperty,
+      model.trialPeriodProperty,
+      PERIOD_RANGE,
+      {
+        titleNodeOptions: { font: LABEL_FONT },
+        numberDisplayOptions: {
+          textOptions: { font: LABEL_FONT },
+          decimalPlaces: 4,
+        },
+        sliderOptions: { trackSize: new Dimension2(120, 3) },
+        layoutFunction: NumberControl.createLayoutFunction1(),
+      },
+    );
+
+    const bestPeriodReadout = new Text(
+      new DerivedProperty([model.pdmScanResultsProperty], (scan) => {
+        const best = bestPeriod(scan);
+        return best === null ? "" : `best: ${best.toFixed(4)} d`;
       }),
-      { font: LABEL_FONT },
+      { font: SMALL_FONT, fill: VSPColors.mutedTextColorProperty },
     );
 
     const zoomInButton = new TextPushButton(strings.zoomInAroundPeriodStringProperty, {
@@ -705,7 +756,7 @@ export class AnalyzerScreenView extends ScreenView {
         new HBox({
           spacing: 20,
           align: "center",
-          children: [new Text(strings.pdmTitleStringProperty, { font: HEADER_FONT }), periodReadout],
+          children: [new Text(strings.pdmTitleStringProperty, { font: HEADER_FONT }), periodControl, bestPeriodReadout],
         }),
         pdmButtonRow,
         new HBox({ spacing: 4, align: "center", children: [pdmYLabel, pdmChart] }),

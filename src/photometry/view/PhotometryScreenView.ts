@@ -17,6 +17,7 @@ import { DerivedProperty, Multilink, PatternStringProperty, type TReadOnlyProper
 import { Bounds2, Dimension2, type Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
 import { ModelViewTransform2 } from "scenerystack/phetcommon";
+import type { SceneryEvent } from "scenerystack/scenery";
 import { CanvasNode, Circle, HBox, Node, Rectangle, RichText, type TColor, Text, VBox } from "scenerystack/scenery";
 import { NumberControl, PhetFont, ResetAllButton } from "scenerystack/scenery-phet";
 import type { ScreenViewOptions } from "scenerystack/sim";
@@ -352,6 +353,67 @@ export class PhotometryScreenView extends ScreenView {
         children: [previewClip, previewFrame, annulusOuterRing, annulusInnerRing, apertureRing],
       });
 
+      // Pixel hover tooltip (matching Flash's PixelInfo overlay).
+      const hoverTooltipText = new Text("", {
+        font: new PhetFont({ size: 10, family: "monospace" }),
+        fill: VSPColors.panelTextColorProperty,
+        pickable: false,
+      });
+      const hoverTooltipBg = new Rectangle(0, 0, 1, 1, {
+        fill: VSPColors.controlPanelFillProperty,
+        stroke: VSPColors.controlPanelStrokeProperty,
+        lineWidth: 0.5,
+        cornerRadius: 2,
+        pickable: false,
+      });
+      const hoverTooltip = new Node({
+        children: [hoverTooltipBg, hoverTooltipText],
+        pickable: false,
+        visible: false,
+      });
+
+      // Transparent hit area for hover detection.
+      const previewHitArea = new Rectangle(0, 0, APERTURE_PREVIEW_SIZE, APERTURE_PREVIEW_SIZE, {
+        fill: "transparent",
+        cursor: "default",
+      });
+
+      previewHitArea.addInputListener({
+        enter: () => {
+          hoverTooltip.visible = true;
+        },
+        exit: () => {
+          hoverTooltip.visible = false;
+        },
+        move: (event: SceneryEvent) => {
+          const local = previewHitArea.globalToLocalPoint(event.pointer.point);
+          // Convert preview coordinates back to field coordinates.
+          const fieldX = Math.round(
+            local.x / APERTURE_PREVIEW_SCALE + centerProperty.value.x - APERTURE_PREVIEW_FIELD_SIZE / 2,
+          );
+          const fieldY = Math.round(
+            local.y / APERTURE_PREVIEW_SCALE + centerProperty.value.y - APERTURE_PREVIEW_FIELD_SIZE / 2,
+          );
+
+          if (fieldX >= 0 && fieldX < FIELD_W && fieldY >= 0 && fieldY < FIELD_H) {
+            const counts = FIELD.getPixelValue(model.epochIndexProperty.value, fieldX, fieldY);
+            hoverTooltipText.string = `(${fieldX}, ${fieldY})  ${counts.toFixed(0)}`;
+            hoverTooltipBg.setRect(0, 0, hoverTooltipText.width + 6, hoverTooltipText.height + 4);
+            hoverTooltipText.x = 3;
+            hoverTooltipText.y = 2;
+            // Position above the cursor, or below if too close to the top.
+            const tooltipY =
+              local.y - hoverTooltipBg.height - 4 >= 0 ? local.y - hoverTooltipBg.height - 4 : local.y + 4;
+            hoverTooltip.x = Math.min(APERTURE_PREVIEW_SIZE - hoverTooltipBg.width, local.x + 8);
+            hoverTooltip.y = tooltipY;
+          }
+        },
+      });
+
+      const previewWithHover = new Node({
+        children: [preview, previewHitArea, hoverTooltip],
+      });
+
       const pattern = (
         patternProperty: TReadOnlyProperty<string>,
         valueProperty: TReadOnlyProperty<string>,
@@ -375,7 +437,7 @@ export class PhotometryScreenView extends ScreenView {
       const previewColumn = new VBox({
         spacing: 4,
         align: "center",
-        children: [preview, centerXText, centerYText],
+        children: [previewWithHover, centerXText, centerYText],
       });
 
       const discPixels = new Text(

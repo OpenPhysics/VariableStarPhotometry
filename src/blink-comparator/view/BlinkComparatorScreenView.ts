@@ -106,12 +106,33 @@ export class BlinkComparatorScreenView extends ScreenView {
     const crosshairV = new Line(0, 0, 0, FIELD_H, { stroke: VSPColors.crosshairColorProperty, lineWidth: 1 });
     const crosshair = new Node({ children: [crosshairH, crosshairV], pickable: false, visible: false });
 
+    // Coordinate readout near the crosshair (matching Flash's xField/yField).
+    const crosshairCoordText = new Text("", {
+      font: new PhetFont({ size: 10, family: "monospace" }),
+      fill: VSPColors.crosshairColorProperty,
+      pickable: false,
+    });
+    const crosshairCoordBg = new Rectangle(0, 0, 1, 1, {
+      fill: VSPColors.controlPanelFillProperty,
+      stroke: VSPColors.crosshairColorProperty,
+      lineWidth: 0.5,
+      cornerRadius: 2,
+      pickable: false,
+    });
+    const crosshairCoords = new Node({
+      children: [crosshairCoordBg, crosshairCoordText],
+      pickable: false,
+      visible: false,
+    });
+
     // Transparent hit target on top of the field that reports mouse position.
     const hitArea = new Rectangle(0, 0, FIELD_W, FIELD_H, { fill: "transparent" });
 
     let pointerInside = false;
     const updateCrosshairVisible = () => {
-      crosshair.visible = model.showCrosshairProperty.value && pointerInside;
+      const visible = model.showCrosshairProperty.value && pointerInside;
+      crosshair.visible = visible;
+      crosshairCoords.visible = visible;
     };
     model.showCrosshairProperty.link(updateCrosshairVisible);
 
@@ -128,10 +149,28 @@ export class BlinkComparatorScreenView extends ScreenView {
         const point = hitArea.globalToLocalPoint(event.pointer.point);
         crosshairH.y = point.y;
         crosshairV.x = point.x;
+
+        // Update coordinate readout (clamped to field bounds like Flash).
+        const px = Math.max(0, Math.min(FIELD_W - 1, Math.round(point.x)));
+        const py = Math.max(0, Math.min(FIELD_H - 1, Math.round(point.y)));
+        crosshairCoordText.string = `${px}, ${py}`;
+        crosshairCoordBg.setRect(0, 0, crosshairCoordText.width + 6, crosshairCoordText.height + 4);
+        crosshairCoordText.x = 3;
+        crosshairCoordText.y = 2;
+        // Position to the right of the cursor, or left if too close to the edge.
+        if (point.x + 15 + crosshairCoordBg.width < FIELD_W) {
+          crosshairCoords.x = point.x + 15;
+        } else {
+          crosshairCoords.x = point.x - 15 - crosshairCoordBg.width;
+        }
+        crosshairCoords.y = Math.max(
+          0,
+          Math.min(FIELD_H - crosshairCoordBg.height, point.y - crosshairCoordBg.height / 2),
+        );
       },
     });
 
-    const fieldContainer = new Node({ children: [fieldClip, grid, frame, crosshair, hitArea] });
+    const fieldContainer = new Node({ children: [fieldClip, grid, frame, crosshair, crosshairCoords, hitArea] });
 
     fieldContainer.scale(FIELD_SCALE);
 
@@ -238,6 +277,7 @@ export class BlinkComparatorScreenView extends ScreenView {
           break;
         }
         const isSelected = obsIndex === selected;
+        const isInQueue = model.blinkQueue.includes(obsIndex);
         const rowBackground = new Rectangle(0, 0, TABLE_WIDTH, TABLE_ROW_HEIGHT, {
           fill: isSelected ? VSPColors.selectionFillProperty : VSPColors.tableRowFillProperty,
           stroke: VSPColors.tableStrokeProperty,
@@ -245,17 +285,29 @@ export class BlinkComparatorScreenView extends ScreenView {
         });
         const epochProp = makeEpochDaysProperty(obsIndex);
         observationRowProps.push(epochProp);
-        const row = new Node({
-          cursor: "pointer",
-          children: [
-            rowBackground,
-            new Text(epochProp, {
+        const rowChildren: Node[] = [rowBackground];
+        // Show a checkmark indicator for observations already in the queue.
+        if (isInQueue) {
+          rowChildren.push(
+            new Text("✓", {
               font: LABEL_FONT,
-              fill: isSelected ? VSPColors.panelTextColorProperty : VSPColors.mutedTextColorProperty,
-              left: 8,
+              fill: VSPColors.queueMarkerColorProperty,
+              left: 2,
               centerY: TABLE_ROW_HEIGHT / 2,
             }),
-          ],
+          );
+        }
+        rowChildren.push(
+          new Text(epochProp, {
+            font: LABEL_FONT,
+            fill: isSelected ? VSPColors.panelTextColorProperty : VSPColors.mutedTextColorProperty,
+            left: isInQueue ? 16 : 8,
+            centerY: TABLE_ROW_HEIGHT / 2,
+          }),
+        );
+        const row = new Node({
+          cursor: "pointer",
+          children: rowChildren,
         });
         row.addInputListener({
           down: () => {
@@ -457,7 +509,10 @@ export class BlinkComparatorScreenView extends ScreenView {
     this.addChild(controlPanel);
 
     model.selectedObsIndexProperty.link(() => rebuildObservationList());
-    model.blinkQueue.lengthProperty.link(rebuildQueueList);
+    model.blinkQueue.lengthProperty.link(() => {
+      rebuildObservationList();
+      rebuildQueueList();
+    });
     model.queuePositionProperty.link(rebuildQueueList);
 
     // -----------------------------------------------------------------------

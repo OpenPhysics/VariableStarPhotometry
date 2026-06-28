@@ -28,6 +28,7 @@ determine the period via PDM analysis (Analyzer).
 | `src/analyzer/model/AnalyzerModel.ts` | Light-curve measurements, PDM scan, zoom history |
 | `src/registration/model/RegistrationModel.ts` | Field overlay offsets, on-top index, invert/transparency flags |
 | `src/preferences/vspQueryParameters.ts` | `QueryStringMachine` parameters (camelCase, lowercase-first filename) |
+| `scripts/decompile-flash.ts` | Extract ActionScript from the NAAP Flash `.swf` sources via JPEXS FFDec (→ `NAAP/decompiled/`) |
 
 ## Screens
 
@@ -70,3 +71,39 @@ Comparator), it uses a SceneryStack scene-graph `scale()` — model coordinate v
 The sim ships with PDOM names and `ResetAllButton` instrumented with tandem. Full a11y wiring
 (screen summary, `pdomOrder`, keyboard help, `accessibleName` on interactive nodes) is in progress.
 Conventions: [../Baton/ACCESSIBILITY.md](../Baton/ACCESSIBILITY.md).
+
+## Decompiling the Flash sources
+
+`npm run decompile` (script: `scripts/decompile-flash.ts`) extracts readable ActionScript
+from the NAAP Flash movies so the ported photometry can be diffed against the originals.
+The `.fla` files are old binary (OLE compound) projects no tool reads directly, so the
+script decompiles their sibling compiled `.swf` (passing a `.fla` resolves to its `.swf`
+automatically) via **JPEXS FFDec**. See `PORTING_PLAN.md` → "Flash simulator inventory" for
+the screen→SWF mapping.
+
+```sh
+npm run decompile                 # the four VSP simulators → NAAP/decompiled/<name>/scripts/*.as
+npm run decompile -- --all        # all VSP-relevant movies (curated list below)
+npm run decompile -- --list       # dry run: print what would be decompiled, run nothing
+npm run decompile -- <path>…      # specific .swf / .fla / folder
+npm run decompile -- --assets     # also export images/shapes/sounds/text
+npm run decompile -- --xfl        # reconstruct an editable XFL project (closest to the .fla)
+```
+
+Output goes to `NAAP/decompiled/` (git-ignored). **One-time setup** — FFDec needs a Java
+runtime:
+
+```sh
+sudo apt install default-jre               # Debian/WSL (or: brew install temurin on macOS)
+npm run decompile -- --setup               # downloads FFDec into tools/ffdec/ (git-ignored)
+# …or point at an existing install instead: export FFDEC_JAR=/path/to/ffdec.jar
+```
+
+Run `npm run decompile -- --help` for all flags. The decompiled AS is a **read-only
+reference** (AS2/AS3, lightly mangled by the compiler) — transcribe the maths into typed TS
+in `src/`; don't vendor it. By default the four primary simulators decompile (one per
+screen): `registrationSimulator`, `blinkComparatorSimulator`, `photometrySimulator`, and
+`variableStarPhotometryAnalyzer`. The curated `--all` set adds the CCD background reading
+(`CCDMiniSim3`), the reusable components (`lightcurveComponentII`, `starFieldComponent`),
+and the concept demos (`variableStarCurves`, `sinusoidLightcurveQuestion`,
+`snCurveExplorer`).

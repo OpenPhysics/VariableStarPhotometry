@@ -130,7 +130,7 @@ export class AnalyzerModel {
         }
         const epochs = measurements.map((m) => m.epoch);
         const mags = measurements.map((m) => m.magnitude);
-        return pdmScan(epochs, mags, zoom.min, zoom.max, PDM_SCAN_STEPS, 5, t0);
+        return pdmScan(epochs, mags, zoom.min, zoom.max, PDM_SCAN_STEPS, t0);
       },
     );
   }

@@ -401,6 +401,19 @@ export class CCDField {
     return { disc, sky, netFlux };
   }
 
+  // -------------------------------------------------------------------------
+  // Public: raw pixel value at (x, y) for a given observation.
+  // Used by the zoom-window hover tooltip to show X, Y, and counts.
+  // -------------------------------------------------------------------------
+  public getPixelValue(obsIndex: number, x: number, y: number): number {
+    if (x < 0 || x >= W || y < 0 || y >= H) {
+      return 0;
+    }
+    const { fieldData, chunkTable } = this.buildFieldData(obsIndex);
+    const m = Math.round(x) + Math.round(y) * W;
+    return this.getFieldValue(m, chunkTable, fieldData);
+  }
+
   /** Field width in pixels (constant). */
   public get width(): number {
     return W;

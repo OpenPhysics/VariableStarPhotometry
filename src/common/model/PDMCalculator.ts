@@ -5,14 +5,17 @@
  * statistic that works on unevenly-sampled, non-sinusoidal light curves
  * (ideal for the RR Lyrae / Cepheid / eclipsing-binary curves in this sim).
  *
- * For a trial period P the observations are phase-folded and binned; θ compares
- * the pooled within-bin variance to the overall variance:
+ * This implementation uses the interleaved-bin strategy from the original
+ * NAAP Flash simulator (Nb bins × Nc phase offsets = M total bins):
  *
  *   φ_i  = ((t_i − t₀) / P) mod 1                       (phase of point i)
- *   bin j gathers points with φ ∈ [j/nBins, (j+1)/nBins)
- *   σ²_j = sample variance within bin j      (divisor n_j − 1)
- *   σ²   = sample variance of all magnitudes (divisor N − 1)
- *   θ    = Σ_j (n_j − 1)·σ²_j  /  [ (N − nBins)·σ² ]
+ *   For each offset k in 0..Nc−1:
+ *     bin j = floor(M × ((φ + k/M) mod 1 + k))          (interleaved bin index)
+ *     sum[j] += Δm_i,  count[j] += 1
+ *   θ = c2 − c1 × Σ_j sum[j]² / count[j]
+ *
+ * where c1 = (N−1) / ((ΣΔm² − (ΣΔm)²/N) × (N×Nc − M))
+ *       c2 = c1 × Nc × ΣΔm²
  *
  * θ → 0 when the trial period coherently folds the data (small scatter within
  * bins); θ ≈ 1 for an incorrect period. The best period minimises θ.
@@ -20,74 +23,84 @@
 
 export type PdmPoint = { period: number; theta: number };
 
+/** Default interleaved-bin parameters matching the NAAP Flash simulator. */
+export const PDM_NB = 5; // number of phase bins
+export const PDM_NC = 2; // number of interleaved phase offsets
+export const PDM_M = PDM_NB * PDM_NC; // total bins = 10
+
 /**
- * Computes the PDM θ statistic for a single trial period.
+ * Computes the PDM θ statistic for a single trial period using
+ * the Flash interleaved-bin strategy.
  *
  * @param epochs  Julian dates (days)
  * @param mags    corresponding magnitudes
  * @param period  trial period (days)
- * @param nBins   number of phase bins (default 5)
  * @param t0      zero-phase reference epoch (default 0)
  * @returns θ ≥ 0 (small → good period); returns 1 when undefined (too few data).
  */
-export function pdmTheta(
-  epochs: readonly number[],
-  mags: readonly number[],
-  period: number,
-  nBins = 5,
-  t0 = 0,
-): number {
+export function pdmTheta(epochs: readonly number[], mags: readonly number[], period: number, t0 = 0): number {
   const N = mags.length;
-  if (N < nBins + 1 || period <= 0) {
+  const Nc = PDM_NC;
+  const M = PDM_M;
+  if (N < M + 1 || period <= 0) {
     return 1;
   }
 
-  // Overall sample variance σ².
-  let sum = 0;
+  // Overall statistics for the normalisation constants c1, c2.
+  let deltaSum = 0;
+  let deltaSumSq = 0;
   for (let i = 0; i < N; i++) {
-    sum += mags[i] as number;
+    const d = mags[i] as number;
+    deltaSum += d;
+    deltaSumSq += d * d;
   }
-  const mean = sum / N;
-  let sse = 0;
-  for (let i = 0; i < N; i++) {
-    const d = (mags[i] as number) - mean;
-    sse += d * d;
-  }
-  const overallVariance = sse / (N - 1);
-  if (overallVariance === 0) {
+
+  // Denominator of c1: (ΣΔm² − (ΣΔm)²/N) × (N×Nc − M)
+  const ssd = deltaSumSq - (deltaSum * deltaSum) / N;
+  const denom = ssd * (N * Nc - M);
+  if (denom === 0) {
     return 1;
   }
+  const c1 = (N - 1) / denom;
+  const c2 = c1 * Nc * deltaSumSq;
 
-  // Per-bin running sums for variance via Σx² − (Σx)²/n.
-  const binCount = new Array<number>(nBins).fill(0);
-  const binSum = new Array<number>(nBins).fill(0);
-  const binSumSq = new Array<number>(nBins).fill(0);
+  // Accumulate per-bin sums for the interleaved binning.
+  const binSum = new Float64Array(M);
+  const binCount = new Float64Array(M);
 
   for (let i = 0; i < N; i++) {
-    let phase = (((epochs[i] as number) - t0) / period) % 1;
+    const epoch = epochs[i] as number;
+    let phase = ((epoch - t0) / period) % 1;
     if (phase < 0) {
       phase += 1;
     }
-    let j = Math.floor(phase * nBins);
-    if (j >= nBins) {
-      j = nBins - 1; // guard against phase exactly 1 from FP rounding
-    }
-    const m = mags[i] as number;
-    binCount[j] = (binCount[j] as number) + 1;
-    binSum[j] = (binSum[j] as number) + m;
-    binSumSq[j] = (binSumSq[j] as number) + m * m;
-  }
 
-  // Σ_j (n_j − 1)·σ²_j = Σ_j [ Σx² − (Σx)²/n_j ].
-  let pooledSse = 0;
-  for (let j = 0; j < nBins; j++) {
-    const n = binCount[j] as number;
-    if (n > 1) {
-      pooledSse += (binSumSq[j] as number) - (binSum[j] as number) ** 2 / n;
+    // Each data point contributes to Nc bins (one per interleaved offset).
+    for (let k = 0; k < Nc; k++) {
+      let binIndex = Math.floor(M * (((phase + k * (1 / M)) % 1) + k));
+      // Guard against floating-point edge cases.
+      if (binIndex < 0) {
+        binIndex = 0;
+      }
+      if (binIndex >= M) {
+        binIndex = M - 1;
+      }
+      binSum[binIndex] = (binSum[binIndex] as number) + (mags[i] as number);
+      binCount[binIndex] = (binCount[binIndex] as number) + 1;
     }
   }
 
-  return pooledSse / ((N - nBins) * overallVariance);
+  // θ = c2 − c1 × Σ_j sum[j]² / count[j]
+  let sumTerm = 0;
+  for (let j = 0; j < M; j++) {
+    const bc = binCount[j] as number;
+    if (bc > 0) {
+      const bs = binSum[j] as number;
+      sumTerm += (bs * bs) / bc;
+    }
+  }
+
+  return c2 - c1 * sumTerm;
 }
 
 /**
@@ -99,7 +112,6 @@ export function pdmScan(
   periodMin: number,
   periodMax: number,
   nSteps: number,
-  nBins = 5,
   t0 = 0,
 ): PdmPoint[] {
   const results: PdmPoint[] = [];
@@ -109,7 +121,7 @@ export function pdmScan(
   const dp = (periodMax - periodMin) / (nSteps - 1);
   for (let i = 0; i < nSteps; i++) {
     const period = periodMin + i * dp;
-    results.push({ period, theta: pdmTheta(epochs, mags, period, nBins, t0) });
+    results.push({ period, theta: pdmTheta(epochs, mags, period, t0) });
   }
   return results;
 }

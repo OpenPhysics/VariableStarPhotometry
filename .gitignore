@@ -40,3 +40,6 @@ Thumbs.db
 
 # Original NAAP Flash-based reference simulation (not tracked)
 NAAP/
+
+# Flash decompilation tooling (npm run decompile) — downloaded FFDec
+tools/ffdec/
