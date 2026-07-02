@@ -61,6 +61,7 @@ export class RegistrationScreenView extends ScreenView {
 
     const tandem = options?.tandem instanceof Tandem ? options.tandem : Tandem.OPT_OUT;
     const strings = StringManager.getInstance().getRegistrationViewStrings();
+    const a11yControls = StringManager.getInstance().getRegistrationA11yStrings().controls;
 
     // -----------------------------------------------------------------------
     // Work Area — three overlaid star fields
@@ -306,8 +307,10 @@ export class RegistrationScreenView extends ScreenView {
       ],
     });
 
-    // Helper: one row of the starfield table
+    // Helper: one row of the starfield table. `number` feeds the accessible names
+    // of the row's controls ("Show star field 2", …).
     function makeStarfieldRow(
+      number: number,
       label: TReadOnlyProperty<string>,
       shownProp: BooleanProperty | null,
       onTopValue: number | null,
@@ -315,6 +318,7 @@ export class RegistrationScreenView extends ScreenView {
       yProp: NumberProperty | null,
       fill: TColor,
     ): Node {
+      const controlName = (pattern: TReadOnlyProperty<string>) => new PatternStringProperty(pattern, { number });
       const labelNode = new Text(label, {
         font: LABEL_FONT,
         fill: VSPColors.panelTextColorProperty,
@@ -325,7 +329,10 @@ export class RegistrationScreenView extends ScreenView {
 
       const shownBox = shownProp
         ? makeTableControlNode(
-            new Checkbox(shownProp, new Text("", { font: LABEL_FONT }), { boxWidth: 16 }),
+            new Checkbox(shownProp, new Text("", { font: LABEL_FONT }), {
+              boxWidth: 16,
+              accessibleName: controlName(a11yControls.shownPatternStringProperty),
+            }),
             shownColumnX,
           )
         : makePlaceholder(strings.fixedStringProperty, shownColumnX);
@@ -335,6 +342,7 @@ export class RegistrationScreenView extends ScreenView {
           ? makeTableControlNode(
               new AquaRadioButton<number>(model.onTopIndexProperty, onTopValue, new Text("", { font: LABEL_FONT }), {
                 radius: 7,
+                accessibleName: controlName(a11yControls.onTopPatternStringProperty),
               }),
               onTopColumnX,
             )
@@ -348,6 +356,7 @@ export class RegistrationScreenView extends ScreenView {
                 color: VSPColors.panelTextColorProperty,
                 incrementFunction: (v) => v + 1,
                 decrementFunction: (v) => v - 1,
+                accessibleName: controlName(a11yControls.xOffsetPatternStringProperty),
               }),
               xOffsetColumnX,
             )
@@ -361,6 +370,7 @@ export class RegistrationScreenView extends ScreenView {
                 color: VSPColors.panelTextColorProperty,
                 incrementFunction: (v) => v + 1,
                 decrementFunction: (v) => v - 1,
+                accessibleName: controlName(a11yControls.yOffsetPatternStringProperty),
               }),
               yOffsetColumnX,
             )
@@ -381,8 +391,9 @@ export class RegistrationScreenView extends ScreenView {
     const starfieldLabel = (number: number) =>
       new PatternStringProperty(strings.starfieldNumberStringProperty, { number });
 
-    const row1 = makeStarfieldRow(starfieldLabel(1), null, null, null, null, VSPColors.tableRowFillProperty);
+    const row1 = makeStarfieldRow(1, starfieldLabel(1), null, null, null, null, VSPColors.tableRowFillProperty);
     const row2 = makeStarfieldRow(
+      2,
       starfieldLabel(2),
       model.shown2Property,
       2,
@@ -391,6 +402,7 @@ export class RegistrationScreenView extends ScreenView {
       VSPColors.tableRowAltFillProperty,
     );
     const row3 = makeStarfieldRow(
+      3,
       starfieldLabel(3),
       model.shown3Property,
       3,
@@ -436,6 +448,7 @@ export class RegistrationScreenView extends ScreenView {
       listener: () => model.switchOnTopField(),
       baseColor: VSPColors.buttonColorProperty,
       minWidth: 170,
+      accessibleName: strings.switchOnTopStringProperty,
     });
 
     const starfieldControlsContent = new VBox({
@@ -464,13 +477,13 @@ export class RegistrationScreenView extends ScreenView {
     const transparentCheckbox = new Checkbox(
       model.topFieldTransparentProperty,
       new Text(strings.makeTopTransparentStringProperty, { font: LABEL_FONT }),
-      { boxWidth: 16 },
+      { boxWidth: 16, accessibleName: strings.makeTopTransparentStringProperty },
     );
 
     const invertCheckbox = new Checkbox(
       model.invertColorsProperty,
       new Text(strings.invertColorsStringProperty, { font: LABEL_FONT }),
-      { boxWidth: 16 },
+      { boxWidth: 16, accessibleName: strings.invertColorsStringProperty },
     );
 
     // Hint text
@@ -522,5 +535,16 @@ export class RegistrationScreenView extends ScreenView {
       tandem: tandem.createTandem("resetAllButton"),
     });
     this.addChild(resetAllButton);
+
+    // -----------------------------------------------------------------------
+    // Accessibility: keyboard / reading traversal order. ScreenView throws if
+    // pdomOrder is set on itself, so a wrapper Node "borrows" the interactive
+    // nodes — table controls first, then the appearance options, Reset All last.
+    // -----------------------------------------------------------------------
+    this.addChild(
+      new Node({
+        pdomOrder: [starfieldTable, switchButton, transparentCheckbox, invertCheckbox, resetAllButton],
+      }),
+    );
   }
 }

@@ -126,7 +126,10 @@
       "undoLastZoom": "deshacer último zoom",
       "snapToMin": "ajustar a mín θ",
       "thetaAxis": "θ (dispersión)",
-      "trialPeriodAxis": "período de prueba (días)"
+      "trialPeriodAxis": "período de prueba (días)",
+      "phaseOffset": "desfase (días)",
+      "showDifferenceTool": "mostrar herramienta de diferencia",
+      "bestPeriodPattern": "mejor: {{value}} d"
     }
   },
   "messages": {
@@ -137,26 +140,62 @@
     "insufficientData": "Datos insuficientes para determinar el período. Agregue más observaciones."
   },
   "a11y": {
-    "screenSummary": {
-      "registration": {
+    "registration": {
+      "screenSummary": {
         "playArea": "El área de juego muestra una imagen CCD de referencia de un campo estelar junto con una segunda imagen tomada en una época diferente.",
         "controlArea": "Los controles permiten desplazar y rotar la segunda imagen para alinearla con la referencia.",
         "interactionHint": "Arrastre la imagen de comparación para alinear los patrones de estrellas."
       },
-      "blinkComparator": {
+      "currentDetailsPattern": "El campo estelar {{number}} está encima, desplazado {{x}} píxeles en horizontal y {{y}} píxeles en vertical.",
+      "controls": {
+        "shownPattern": "Mostrar el campo estelar {{number}}",
+        "onTopPattern": "Poner el campo estelar {{number}} encima",
+        "xOffsetPattern": "Desplazamiento horizontal del campo estelar {{number}}",
+        "yOffsetPattern": "Desplazamiento vertical del campo estelar {{number}}"
+      }
+    },
+    "blinkComparator": {
+      "screenSummary": {
         "playArea": "El área de juego alterna entre dos imágenes CCD registradas del mismo campo estelar.",
         "controlArea": "Ajuste la velocidad de parpadeo y seleccione el par de imágenes a comparar.",
         "interactionHint": "Observe las estrellas que cambian de brillo entre cuadros."
       },
-      "photometry": {
+      "currentDetailsBlinkingPattern": "La cola de parpadeo contiene {{count}} observaciones y está parpadeando.",
+      "currentDetailsPausedPattern": "La cola de parpadeo contiene {{count}} observaciones y no está parpadeando.",
+      "controls": {
+        "scrollUp": "Desplazar las observaciones hacia arriba",
+        "scrollDown": "Desplazar las observaciones hacia abajo",
+        "previous": "Observación anterior de la cola",
+        "next": "Observación siguiente de la cola",
+        "blinkSpeed": "Velocidad de parpadeo",
+        "observationPattern": "Seleccionar la observación de la época {{epoch}}",
+        "queuedObservationPattern": "Ir a la observación en cola de la época {{epoch}}"
+      }
+    },
+    "photometry": {
+      "screenSummary": {
         "playArea": "El área de juego muestra una imagen CCD con aperturas circulares colocadas sobre estrellas.",
         "controlArea": "Establezca los tamaños de apertura y anillo de cielo.",
         "interactionHint": "Haga clic en una estrella para colocar o mover una apertura."
       },
-      "analyzer": {
+      "currentDetailsMeasuredPattern": "Se muestra la observación {{epoch}} de {{total}}. La diferencia de magnitud medida es {{delta}}.",
+      "currentDetailsNoMeasurementPattern": "Se muestra la observación {{epoch}} de {{total}}. Todavía no hay diferencia de magnitud disponible.",
+      "controls": {
+        "epochPicker": "Época de observación",
+        "aperture1": "Apertura 1",
+        "aperture2": "Apertura 2"
+      }
+    },
+    "analyzer": {
+      "screenSummary": {
         "playArea": "El área de juego muestra una curva de luz: magnitud instrumental graficada contra fecha juliana.",
         "controlArea": "Ingrese el período de prueba y ajuste el envolvimiento de fase.",
         "interactionHint": "Ingrese un período de prueba y observe cómo se alinean los puntos de datos."
+      },
+      "currentDetailsWithDataPattern": "La curva de luz tiene {{count}} mediciones. El período de prueba es {{period}} días.",
+      "currentDetailsNoDataPattern": "Todavía no hay curva de luz. Selecciona una estrella variable y una de comparación en el campo estelar.",
+      "controls": {
+        "lightCurveMode": "Modo de curva de luz"
       }
     }
   },

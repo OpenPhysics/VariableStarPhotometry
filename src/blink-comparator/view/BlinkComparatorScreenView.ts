@@ -73,6 +73,7 @@ export class BlinkComparatorScreenView extends ScreenView {
     const tandem = options?.tandem instanceof Tandem ? options.tandem : Tandem.OPT_OUT;
     const strings = StringManager.getInstance().getBlinkViewStrings();
     const unitStrings = StringManager.getInstance().getUnitStrings();
+    const a11yControls = StringManager.getInstance().getBlinkComparatorA11yStrings().controls;
 
     // Localized "{{value}} days" label for a given observation index.
     const makeEpochDaysProperty = (obsIndex: number): ReadOnlyProperty<string> => {
@@ -190,7 +191,7 @@ export class BlinkComparatorScreenView extends ScreenView {
     const crosshairCheckbox = new Checkbox(
       model.showCrosshairProperty,
       new Text(strings.showCrosshairsStringProperty, { font: LABEL_FONT }),
-      { boxWidth: 16 },
+      { boxWidth: 16, accessibleName: strings.showCrosshairsStringProperty },
     );
 
     const fieldFooter = new HBox({
@@ -229,6 +230,7 @@ export class BlinkComparatorScreenView extends ScreenView {
     const addButton = new TextPushButton(strings.addToQueueStringProperty, {
       font: LABEL_FONT,
       baseColor: VSPColors.buttonAddColorProperty,
+      accessibleName: strings.addToQueueStringProperty,
       listener: () => {
         const selected = model.selectedObsIndexProperty.value;
         model.addSelectedToQueue();
@@ -242,6 +244,7 @@ export class BlinkComparatorScreenView extends ScreenView {
     const removeButton = new TextPushButton(strings.removeFromQueueStringProperty, {
       font: LABEL_FONT,
       baseColor: VSPColors.buttonNeutralColorProperty,
+      accessibleName: strings.removeFromQueueStringProperty,
       listener: () => {
         if (model.blinkQueue.length > 0) {
           const obsIndex =
@@ -252,6 +255,52 @@ export class BlinkComparatorScreenView extends ScreenView {
         }
       },
     });
+
+    const makeObservationRow = (obsIndex: number, isSelected: boolean): Node => {
+      const isInQueue = model.blinkQueue.includes(obsIndex);
+      const rowBackground = new Rectangle(0, 0, TABLE_WIDTH, TABLE_ROW_HEIGHT, {
+        fill: isSelected ? VSPColors.selectionFillProperty : VSPColors.tableRowFillProperty,
+        stroke: VSPColors.tableStrokeProperty,
+        lineWidth: 1,
+      });
+      const epochProp = makeEpochDaysProperty(obsIndex);
+      observationRowProps.push(epochProp);
+      const rowChildren: Node[] = [rowBackground];
+      // Show a checkmark indicator for observations already in the queue.
+      if (isInQueue) {
+        rowChildren.push(
+          new Text("✓", {
+            font: LABEL_FONT,
+            fill: VSPColors.queueMarkerColorProperty,
+            left: 2,
+            centerY: TABLE_ROW_HEIGHT / 2,
+          }),
+        );
+      }
+      rowChildren.push(
+        new Text(epochProp, {
+          font: LABEL_FONT,
+          fill: isSelected ? VSPColors.panelTextColorProperty : VSPColors.mutedTextColorProperty,
+          left: isInQueue ? 16 : 8,
+          centerY: TABLE_ROW_HEIGHT / 2,
+        }),
+      );
+      const rowName = new PatternStringProperty(a11yControls.observationPatternStringProperty, {
+        epoch: OBSERVATIONS[obsIndex]?.epoch.toFixed(4) ?? "",
+      });
+      observationRowProps.push(rowName);
+      const row = new Node({
+        cursor: "pointer",
+        children: rowChildren,
+        tagName: "button",
+        accessibleName: rowName,
+      });
+      const selectRow = () => {
+        model.selectedObsIndexProperty.value = obsIndex;
+      };
+      row.addInputListener({ down: selectRow, click: selectRow });
+      return row;
+    };
 
     const rebuildObservationList = () => {
       for (const child of observationRows.children.slice()) {
@@ -276,45 +325,7 @@ export class BlinkComparatorScreenView extends ScreenView {
         if (obsIndex >= OBSERVATIONS.length) {
           break;
         }
-        const isSelected = obsIndex === selected;
-        const isInQueue = model.blinkQueue.includes(obsIndex);
-        const rowBackground = new Rectangle(0, 0, TABLE_WIDTH, TABLE_ROW_HEIGHT, {
-          fill: isSelected ? VSPColors.selectionFillProperty : VSPColors.tableRowFillProperty,
-          stroke: VSPColors.tableStrokeProperty,
-          lineWidth: 1,
-        });
-        const epochProp = makeEpochDaysProperty(obsIndex);
-        observationRowProps.push(epochProp);
-        const rowChildren: Node[] = [rowBackground];
-        // Show a checkmark indicator for observations already in the queue.
-        if (isInQueue) {
-          rowChildren.push(
-            new Text("✓", {
-              font: LABEL_FONT,
-              fill: VSPColors.queueMarkerColorProperty,
-              left: 2,
-              centerY: TABLE_ROW_HEIGHT / 2,
-            }),
-          );
-        }
-        rowChildren.push(
-          new Text(epochProp, {
-            font: LABEL_FONT,
-            fill: isSelected ? VSPColors.panelTextColorProperty : VSPColors.mutedTextColorProperty,
-            left: isInQueue ? 16 : 8,
-            centerY: TABLE_ROW_HEIGHT / 2,
-          }),
-        );
-        const row = new Node({
-          cursor: "pointer",
-          children: rowChildren,
-        });
-        row.addInputListener({
-          down: () => {
-            model.selectedObsIndexProperty.value = obsIndex;
-          },
-        });
-        rows.push(row);
+        rows.push(makeObservationRow(obsIndex, obsIndex === selected));
       }
       observationRows.children = rows;
     };
@@ -331,6 +342,7 @@ export class BlinkComparatorScreenView extends ScreenView {
       xMargin: 3,
       yMargin: 2,
       listener: () => scrollObservationList(-1),
+      accessibleName: a11yControls.scrollUpStringProperty,
     });
     const obsScrollDownButton = new RectangularPushButton({
       content: new Text("▼", { font: SMALL_FONT }),
@@ -338,6 +350,7 @@ export class BlinkComparatorScreenView extends ScreenView {
       xMargin: 3,
       yMargin: 2,
       listener: () => scrollObservationList(1),
+      accessibleName: a11yControls.scrollDownStringProperty,
     });
 
     const observationTable = new HBox({
@@ -392,11 +405,16 @@ export class BlinkComparatorScreenView extends ScreenView {
 
         const row = new Node({ cursor: obsIndex === undefined ? "default" : "pointer", children });
         if (obsIndex !== undefined) {
-          row.addInputListener({
-            down: () => {
-              model.queuePositionProperty.value = i;
-            },
+          const rowName = new PatternStringProperty(a11yControls.queuedObservationPatternStringProperty, {
+            epoch: OBSERVATIONS[obsIndex]?.epoch.toFixed(4) ?? "",
           });
+          queueRowProps.push(rowName);
+          row.tagName = "button";
+          row.accessibleName = rowName;
+          const selectQueueRow = () => {
+            model.queuePositionProperty.value = i;
+          };
+          row.addInputListener({ down: selectQueueRow, click: selectQueueRow });
         }
         rows.push(row);
       }
@@ -412,6 +430,7 @@ export class BlinkComparatorScreenView extends ScreenView {
     const previousButton = new TextPushButton("<", {
       font: LABEL_FONT,
       baseColor: VSPColors.buttonNeutralColorProperty,
+      accessibleName: a11yControls.previousStringProperty,
       listener: () => {
         if (model.blinkQueue.length > 0) {
           model.queuePositionProperty.value =
@@ -422,6 +441,7 @@ export class BlinkComparatorScreenView extends ScreenView {
     const blinkButton = new TextPushButton(strings.blinkStringProperty, {
       font: LABEL_FONT,
       baseColor: VSPColors.buttonNeutralColorProperty,
+      accessibleName: strings.blinkStringProperty,
       listener: () => {
         model.isBlinkingProperty.value = !model.isBlinkingProperty.value;
       },
@@ -432,6 +452,7 @@ export class BlinkComparatorScreenView extends ScreenView {
     const nextButton = new TextPushButton(">", {
       font: LABEL_FONT,
       baseColor: VSPColors.buttonNeutralColorProperty,
+      accessibleName: a11yControls.nextStringProperty,
       listener: () => {
         if (model.blinkQueue.length > 0) {
           model.queuePositionProperty.value = (model.queuePositionProperty.value + 1) % model.blinkQueue.length;
@@ -441,6 +462,7 @@ export class BlinkComparatorScreenView extends ScreenView {
 
     const blinkSpeedSlider = new HSlider(model.blinkIntervalMsProperty, BLINK_INTERVAL_RANGE, {
       tandem: tandem.createTandem("blinkSpeedSlider"),
+      accessibleName: a11yControls.blinkSpeedStringProperty,
     });
     blinkSpeedSlider.addMajorTick(BLINK_INTERVAL_RANGE.min, new Text(strings.fastStringProperty, { font: SMALL_FONT }));
     blinkSpeedSlider.addMajorTick(BLINK_INTERVAL_RANGE.max, new Text(strings.slowStringProperty, { font: SMALL_FONT }));
@@ -535,6 +557,28 @@ export class BlinkComparatorScreenView extends ScreenView {
       tandem: tandem.createTandem("resetAllButton"),
     });
     this.addChild(resetAllButton);
+
+    // -----------------------------------------------------------------------
+    // Accessibility: keyboard / reading traversal order. ScreenView throws if
+    // pdomOrder is set on itself, so a wrapper Node "borrows" the interactive
+    // nodes — list/table controls first, then playback, Reset All last.
+    // -----------------------------------------------------------------------
+    this.addChild(
+      new Node({
+        pdomOrder: [
+          observationTable,
+          addButton,
+          removeButton,
+          queueTable,
+          previousButton,
+          blinkButton,
+          nextButton,
+          blinkSpeedSlider,
+          crosshairCheckbox,
+          resetAllButton,
+        ],
+      }),
+    );
   }
 
   public override step(dt: number): void {

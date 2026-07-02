@@ -266,6 +266,12 @@ const VSPColors = {
     projector: new Color(163, 31, 32, 0.35),
   }),
 
+  /** Translucent rubber-band zoom-selection window on the PDM plot. */
+  pdmZoomSelectionFillProperty: new ProfileColorProperty(VSPNamespace, "pdmZoomSelectionFill", {
+    default: new Color(120, 170, 255, 0.22),
+    projector: new Color(60, 110, 200, 0.18),
+  }),
+
   /** Draggable difference-tool bars on the observations plot. */
   deltaBarColorProperty: new ProfileColorProperty(VSPNamespace, "deltaBar", {
     default: new Color("#909090"),

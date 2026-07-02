@@ -78,6 +78,7 @@ export class AnalyzerScreenView extends ScreenView {
     const tandem = options?.tandem instanceof Tandem ? options.tandem : Tandem.OPT_OUT;
     const strings = StringManager.getInstance().getAnalyzerViewStrings();
     const unitStrings = StringManager.getInstance().getUnitStrings();
+    const a11yControls = StringManager.getInstance().getAnalyzerA11yStrings().controls;
     const showCrosshairProperty = new BooleanProperty(true);
     const showDifferenceToolProperty = new BooleanProperty(false);
 
@@ -229,11 +230,12 @@ export class AnalyzerScreenView extends ScreenView {
       font: SMALL_FONT,
       baseColor: VSPColors.buttonColorProperty,
       listener: () => model.clearSelections(),
+      accessibleName: strings.clearSelectionStringProperty,
     });
     const crosshairCheckbox = new Checkbox(
       showCrosshairProperty,
       new Text(strings.showCrosshairsStringProperty, { font: SMALL_FONT }),
-      { boxWidth: 14 },
+      { boxWidth: 14, accessibleName: strings.showCrosshairsStringProperty },
     );
 
     const leftColumn = new VBox({
@@ -502,22 +504,41 @@ export class AnalyzerScreenView extends ScreenView {
     const modeRadioGroup = new AquaRadioButtonGroup<LightCurveMode>(
       model.lightCurveModeProperty,
       [
-        { value: "time", createNode: () => new Text(strings.timeStringProperty, { font: LABEL_FONT }) },
-        { value: "phase", createNode: () => new Text(strings.phaseStringProperty, { font: LABEL_FONT }) },
+        {
+          value: "time",
+          createNode: () => new Text(strings.timeStringProperty, { font: LABEL_FONT }),
+          options: { accessibleName: strings.timeStringProperty },
+        },
+        {
+          value: "phase",
+          createNode: () => new Text(strings.phaseStringProperty, { font: LABEL_FONT }),
+          options: { accessibleName: strings.phaseStringProperty },
+        },
       ],
-      { orientation: "horizontal", spacing: 16, radioButtonOptions: { radius: 7 } },
+      {
+        orientation: "horizontal",
+        spacing: 16,
+        radioButtonOptions: { radius: 7 },
+        accessibleName: a11yControls.lightCurveModeStringProperty,
+      },
     );
 
-    const phaseOffsetControl = new NumberControl("phase offset (days)", model.phaseOffsetProperty, PHASE_OFFSET_RANGE, {
-      titleNodeOptions: { font: SMALL_FONT },
-      numberDisplayOptions: { textOptions: { font: SMALL_FONT } },
-      sliderOptions: { trackSize: new Dimension2(120, 3) },
-      layoutFunction: NumberControl.createLayoutFunction1(),
-    });
+    const phaseOffsetControl = new NumberControl(
+      strings.phaseOffsetStringProperty,
+      model.phaseOffsetProperty,
+      PHASE_OFFSET_RANGE,
+      {
+        titleNodeOptions: { font: SMALL_FONT },
+        numberDisplayOptions: { textOptions: { font: SMALL_FONT } },
+        sliderOptions: { trackSize: new Dimension2(120, 3) },
+        layoutFunction: NumberControl.createLayoutFunction1(),
+        accessibleName: strings.phaseOffsetStringProperty,
+      },
+    );
     const differenceToolCheckbox = new Checkbox(
       showDifferenceToolProperty,
-      new Text("show difference tool", { font: LABEL_FONT }),
-      { boxWidth: 16 },
+      new Text(strings.showDifferenceToolStringProperty, { font: LABEL_FONT }),
+      { boxWidth: 16, accessibleName: strings.showDifferenceToolStringProperty },
     );
 
     // Assemble observations panel (title, [y-label | chart], x-label, radios).
@@ -577,7 +598,7 @@ export class AnalyzerScreenView extends ScreenView {
     const pdmLine = new LinePlot(pdmTransform, [], { stroke: VSPColors.lightCurveColorProperty, lineWidth: 1.5 });
     const periodMarker = new Line(0, 0, 0, PDM_H, { stroke: VSPColors.pdmMarkerColorProperty, lineWidth: 2 });
     const pdmZoomSelection = new Rectangle(0, 0, 0, PDM_H, {
-      fill: "rgba(120, 170, 255, 0.22)",
+      fill: VSPColors.pdmZoomSelectionFillProperty,
       stroke: VSPColors.pdmMarkerColorProperty,
       lineWidth: 1,
       visible: false,
@@ -700,13 +721,14 @@ export class AnalyzerScreenView extends ScreenView {
         },
         sliderOptions: { trackSize: new Dimension2(120, 3) },
         layoutFunction: NumberControl.createLayoutFunction1(),
+        accessibleName: strings.trialPeriodAxisStringProperty,
       },
     );
 
     const bestPeriodReadout = new Text(
-      new DerivedProperty([model.pdmScanResultsProperty], (scan) => {
+      new DerivedProperty([model.pdmScanResultsProperty, strings.bestPeriodPatternStringProperty], (scan, pattern) => {
         const best = bestPeriod(scan);
-        return best === null ? "" : `best: ${best.toFixed(4)} d`;
+        return best === null ? "" : pattern.replace("{{value}}", best.toFixed(4));
       }),
       { font: SMALL_FONT, fill: VSPColors.mutedTextColorProperty },
     );
@@ -715,25 +737,30 @@ export class AnalyzerScreenView extends ScreenView {
       font: SMALL_FONT,
       baseColor: VSPColors.buttonActiveColorProperty,
       listener: () => model.zoomInAroundPeriod(),
+      accessibleName: strings.zoomInAroundPeriodStringProperty,
     });
     const zoomOutButton = new TextPushButton(strings.zoomOutAroundPeriodStringProperty, {
       font: SMALL_FONT,
       baseColor: VSPColors.buttonActiveColorProperty,
       listener: () => model.zoomOutAroundPeriod(),
+      accessibleName: strings.zoomOutAroundPeriodStringProperty,
     });
     const fullButton = new TextPushButton(strings.zoomToFullStringProperty, {
       font: SMALL_FONT,
       baseColor: VSPColors.buttonColorProperty,
       listener: () => model.zoomToFull(),
+      accessibleName: strings.zoomToFullStringProperty,
     });
     const undoButton = new TextPushButton(strings.undoLastZoomStringProperty, {
       font: SMALL_FONT,
       baseColor: VSPColors.buttonColorProperty,
       listener: () => model.undoLastZoom(),
+      accessibleName: strings.undoLastZoomStringProperty,
     });
     const snapButton = new TextPushButton(strings.snapToMinStringProperty, {
       font: SMALL_FONT,
       baseColor: VSPColors.buttonSnapColorProperty,
+      accessibleName: strings.snapToMinStringProperty,
       listener: () => {
         const best = bestPeriod(model.pdmScanResultsProperty.value);
         if (best !== null) {
@@ -787,5 +814,29 @@ export class AnalyzerScreenView extends ScreenView {
       tandem: tandem.createTandem("resetAllButton"),
     });
     this.addChild(resetAllButton);
+
+    // -----------------------------------------------------------------------
+    // Accessibility: keyboard / reading traversal order. ScreenView throws if
+    // pdomOrder is set on itself, so a wrapper Node "borrows" the interactive
+    // nodes — star-field controls, then plot controls, then PDM, Reset All last.
+    // -----------------------------------------------------------------------
+    this.addChild(
+      new Node({
+        pdomOrder: [
+          clearButton,
+          crosshairCheckbox,
+          modeRadioGroup,
+          phaseOffsetControl,
+          differenceToolCheckbox,
+          periodControl,
+          zoomInButton,
+          zoomOutButton,
+          fullButton,
+          undoButton,
+          snapButton,
+          resetAllButton,
+        ],
+      }),
+    );
   }
 }
