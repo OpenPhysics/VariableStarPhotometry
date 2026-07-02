@@ -7,6 +7,8 @@
  *
  * The whole node is positioned at `centerProperty`; a {@link DragListener}
  * updates that property (clamped to the field bounds) while the student drags.
+ * A {@link KeyboardDragListener} provides the equivalent arrow-key operation
+ * (the node is focusable), per the OpenPhysics accessibility convention.
  */
 
 import type { TReadOnlyProperty } from "scenerystack/axon";
@@ -15,7 +17,7 @@ import type { Bounds2, Vector2, Vector2Property } from "scenerystack/dot";
 import { optionize } from "scenerystack/phet-core";
 import { ModelViewTransform2 } from "scenerystack/phetcommon";
 import type { NodeOptions, TColor } from "scenerystack/scenery";
-import { Circle, DragListener, Node, Text } from "scenerystack/scenery";
+import { Circle, DragListener, KeyboardDragListener, Node, Text } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
 import VSPConstants from "../../VSPConstants.js";
 
@@ -53,6 +55,10 @@ export class ApertureNode extends Node {
         cursor: "pointer",
         // Default to identity — VSP renders the field at 1:1 scale so model px = view px.
         modelViewTransform: ModelViewTransform2.createIdentity(),
+        // Keyboard-operable: focusable in the PDOM so the KeyboardDragListener below
+        // can move the aperture with the arrow keys. Callers pass `accessibleName`.
+        tagName: "div",
+        focusable: true,
       },
       providedOptions,
     );
@@ -119,6 +125,17 @@ export class ApertureNode extends Node {
         dragBoundsProperty: new Property(options.dragBounds),
         transform: mvt,
         useParentOffset: true,
+      }),
+    );
+
+    // Arrow-key dragging (Shift for fine positioning), same model-space clamping.
+    this.addInputListener(
+      new KeyboardDragListener({
+        positionProperty: centerProperty,
+        dragBoundsProperty: new Property(options.dragBounds),
+        transform: mvt,
+        dragSpeed: 100,
+        shiftDragSpeed: 20,
       }),
     );
   }

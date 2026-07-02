@@ -126,7 +126,10 @@
       "undoLastZoom": "undo last zoom",
       "snapToMin": "snap to min θ",
       "thetaAxis": "θ (dispersion)",
-      "trialPeriodAxis": "trial period (days)"
+      "trialPeriodAxis": "trial period (days)",
+      "phaseOffset": "phase offset (days)",
+      "showDifferenceTool": "show difference tool",
+      "bestPeriodPattern": "best: {{value}} d"
     }
   },
   "messages": {
@@ -137,26 +140,62 @@
     "insufficientData": "Insufficient data to determine period. Add more observations."
   },
   "a11y": {
-    "screenSummary": {
-      "registration": {
+    "registration": {
+      "screenSummary": {
         "playArea": "The play area shows a reference CCD image of a star field alongside a second image taken at a different epoch. Both images contain identical stars that can be aligned.",
         "controlArea": "Controls let you shift and rotate the second image to align it with the reference. A Reset All button returns everything to the starting state.",
         "interactionHint": "Drag the comparison image to align the star patterns, then use fine-tune controls for precise registration."
       },
-      "blinkComparator": {
+      "currentDetailsPattern": "Star field {{number}} is on top, offset {{x}} pixels horizontally and {{y}} pixels vertically.",
+      "controls": {
+        "shownPattern": "Show star field {{number}}",
+        "onTopPattern": "Put star field {{number}} on top",
+        "xOffsetPattern": "Star field {{number}} horizontal offset",
+        "yOffsetPattern": "Star field {{number}} vertical offset"
+      }
+    },
+    "blinkComparator": {
+      "screenSummary": {
         "playArea": "The play area alternates between two registered CCD images of the same star field. Variable stars appear to flicker when the images are blinked.",
         "controlArea": "Adjust the blink speed and select which pair of images to compare. Click a star to mark it as a candidate variable.",
         "interactionHint": "Watch for stars that change brightness between frames. Click a blinking star to identify it."
       },
-      "photometry": {
+      "currentDetailsBlinkingPattern": "The blinking queue holds {{count}} observations and is blinking.",
+      "currentDetailsPausedPattern": "The blinking queue holds {{count}} observations and is not blinking.",
+      "controls": {
+        "scrollUp": "Scroll observations up",
+        "scrollDown": "Scroll observations down",
+        "previous": "Previous queued observation",
+        "next": "Next queued observation",
+        "blinkSpeed": "Blink speed",
+        "observationPattern": "Select observation at epoch {{epoch}}",
+        "queuedObservationPattern": "Go to queued observation at epoch {{epoch}}"
+      }
+    },
+    "photometry": {
+      "screenSummary": {
         "playArea": "The play area shows a CCD image with circular apertures placed on stars. Counts within the aperture are summed to measure stellar brightness.",
         "controlArea": "Set aperture and sky annulus sizes. Select one star as the variable and others as comparison stars. Measured instrumental magnitudes appear in the table.",
         "interactionHint": "Click a star to place or move an aperture. Adjust aperture size and measure brightness for the variable and comparison stars."
       },
-      "analyzer": {
+      "currentDetailsMeasuredPattern": "Observation {{epoch}} of {{total}} is displayed. The measured magnitude difference is {{delta}}.",
+      "currentDetailsNoMeasurementPattern": "Observation {{epoch}} of {{total}} is displayed. No magnitude difference is available yet.",
+      "controls": {
+        "epochPicker": "Observation epoch",
+        "aperture1": "Aperture 1",
+        "aperture2": "Aperture 2"
+      }
+    },
+    "analyzer": {
+      "screenSummary": {
         "playArea": "The play area shows a light curve: instrumental magnitude plotted against Julian Date. Use phase-folding to reveal the variability period.",
         "controlArea": "Enter the trial period and adjust phase wrapping to fold the light curve. Best-fit period minimizes scatter in the folded curve.",
         "interactionHint": "Enter a trial period and observe how the data points align. Adjust until the folded light curve is smooth."
+      },
+      "currentDetailsWithDataPattern": "The light curve has {{count}} measurements. The trial period is {{period}} days.",
+      "currentDetailsNoDataPattern": "No light curve yet. Select a variable star and a comparison star in the star field.",
+      "controls": {
+        "lightCurveMode": "Light curve mode"
       }
     }
   },

@@ -126,7 +126,10 @@
       "undoLastZoom": "annuler le dernier zoom",
       "snapToMin": "aligner sur θ min",
       "thetaAxis": "θ (dispersion)",
-      "trialPeriodAxis": "période d'essai (jours)"
+      "trialPeriodAxis": "période d'essai (jours)",
+      "phaseOffset": "décalage de phase (jours)",
+      "showDifferenceTool": "afficher l'outil de différence",
+      "bestPeriodPattern": "meilleur : {{value}} j"
     }
   },
   "messages": {
@@ -137,26 +140,62 @@
     "insufficientData": "Données insuffisantes pour déterminer la période. Ajoutez plus d'observations."
   },
   "a11y": {
-    "screenSummary": {
-      "registration": {
+    "registration": {
+      "screenSummary": {
         "playArea": "La zone de jeu affiche une image CCD de référence d'un champ d'étoiles à côté d'une deuxième image prise à une époque différente.",
         "controlArea": "Les commandes permettent de déplacer et de faire pivoter la deuxième image pour l'aligner sur la référence.",
         "interactionHint": "Faites glisser l'image de comparaison pour aligner les motifs d'étoiles."
       },
-      "blinkComparator": {
+      "currentDetailsPattern": "Le champ d'étoiles {{number}} est au-dessus, décalé de {{x}} pixels horizontalement et de {{y}} pixels verticalement.",
+      "controls": {
+        "shownPattern": "Afficher le champ d'étoiles {{number}}",
+        "onTopPattern": "Placer le champ d'étoiles {{number}} au-dessus",
+        "xOffsetPattern": "Décalage horizontal du champ d'étoiles {{number}}",
+        "yOffsetPattern": "Décalage vertical du champ d'étoiles {{number}}"
+      }
+    },
+    "blinkComparator": {
+      "screenSummary": {
         "playArea": "La zone de jeu alterne entre deux images CCD recalées du même champ d'étoiles.",
         "controlArea": "Réglez la vitesse de clignotement et sélectionnez la paire d'images à comparer.",
         "interactionHint": "Observez les étoiles qui changent de luminosité entre les images."
       },
-      "photometry": {
+      "currentDetailsBlinkingPattern": "La file de clignotement contient {{count}} observations et clignote.",
+      "currentDetailsPausedPattern": "La file de clignotement contient {{count}} observations et ne clignote pas.",
+      "controls": {
+        "scrollUp": "Faire défiler les observations vers le haut",
+        "scrollDown": "Faire défiler les observations vers le bas",
+        "previous": "Observation précédente de la file",
+        "next": "Observation suivante de la file",
+        "blinkSpeed": "Vitesse de clignotement",
+        "observationPattern": "Sélectionner l'observation à l'époque {{epoch}}",
+        "queuedObservationPattern": "Aller à l'observation en file à l'époque {{epoch}}"
+      }
+    },
+    "photometry": {
+      "screenSummary": {
         "playArea": "La zone de jeu affiche une image CCD avec des ouvertures circulaires placées sur des étoiles.",
         "controlArea": "Définissez les tailles d'ouverture et d'anneau de ciel.",
         "interactionHint": "Cliquez sur une étoile pour placer ou déplacer une ouverture."
       },
-      "analyzer": {
+      "currentDetailsMeasuredPattern": "L'observation {{epoch}} sur {{total}} est affichée. La différence de magnitude mesurée est {{delta}}.",
+      "currentDetailsNoMeasurementPattern": "L'observation {{epoch}} sur {{total}} est affichée. Aucune différence de magnitude n'est encore disponible.",
+      "controls": {
+        "epochPicker": "Époque d'observation",
+        "aperture1": "Ouverture 1",
+        "aperture2": "Ouverture 2"
+      }
+    },
+    "analyzer": {
+      "screenSummary": {
         "playArea": "La zone de jeu affiche une courbe de lumière : magnitude instrumentale en fonction de la date julienne.",
         "controlArea": "Entrez la période d'essai et ajustez l'enroulement de phase.",
         "interactionHint": "Entrez une période d'essai et observez comment les points de données s'alignent."
+      },
+      "currentDetailsWithDataPattern": "La courbe de lumière compte {{count}} mesures. La période d'essai est de {{period}} jours.",
+      "currentDetailsNoDataPattern": "Pas encore de courbe de lumière. Sélectionnez une étoile variable et une étoile de comparaison dans le champ d'étoiles.",
+      "controls": {
+        "lightCurveMode": "Mode de courbe de lumière"
       }
     }
   },

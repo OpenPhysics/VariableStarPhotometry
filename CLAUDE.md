@@ -68,9 +68,16 @@ Comparator), it uses a SceneryStack scene-graph `scale()` — model coordinate v
 
 ## Accessibility
 
-The sim ships with PDOM names and `ResetAllButton` instrumented with tandem. Full a11y wiring
-(screen summary, `pdomOrder`, keyboard help, `accessibleName` on interactive nodes) is in progress.
-Conventions: [../Baton/ACCESSIBILITY.md](../Baton/ACCESSIBILITY.md).
+Follows the shared [OpenPhysics accessibility convention](https://github.com/OpenPhysics/Baton/blob/main/ACCESSIBILITY.md).
+Each screen has a `<Screen>ScreenSummaryContent.ts` in its `view/` folder (live
+`currentDetailsContent` derived from the screen model), registered by the `*Screen.ts` wrapper via
+the view's `screenSummaryContent` option. Each `*ScreenView.ts` sets an explicit traversal order
+through a wrapper `Node`'s `pdomOrder` (interactive nodes first, Reset All last), and every
+interactive node carries an `accessibleName`. A11y strings live under per-screen keys in the `a11y`
+block of each locale JSON (`a11y.registration`, `a11y.blinkComparator`, `a11y.photometry`,
+`a11y.analyzer`), exposed via `StringManager.get<Screen>A11yStrings()`. `ApertureNode` is
+keyboard-operable via a `KeyboardDragListener` (arrow keys; Shift for fine steps); the shared
+`VSPKeyboardHelpContent` documents per-screen keys.
 
 ## Decompiling the Flash sources
 

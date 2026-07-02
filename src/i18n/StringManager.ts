@@ -72,6 +72,22 @@ export class StringManager {
     return stringProperties.a11y;
   }
 
+  public getRegistrationA11yStrings(): typeof stringProperties.a11y.registration {
+    return stringProperties.a11y.registration;
+  }
+
+  public getBlinkComparatorA11yStrings(): typeof stringProperties.a11y.blinkComparator {
+    return stringProperties.a11y.blinkComparator;
+  }
+
+  public getPhotometryA11yStrings(): typeof stringProperties.a11y.photometry {
+    return stringProperties.a11y.photometry;
+  }
+
+  public getAnalyzerA11yStrings(): typeof stringProperties.a11y.analyzer {
+    return stringProperties.a11y.analyzer;
+  }
+
   public getPreferences(): typeof stringProperties.preferences {
     return stringProperties.preferences;
   }

@@ -150,6 +150,7 @@ export class PhotometryScreenView extends ScreenView {
     const tandem = options?.tandem instanceof Tandem ? options.tandem : Tandem.OPT_OUT;
     const strings = StringManager.getInstance().getPhotometryViewStrings();
     const unitStrings = StringManager.getInstance().getUnitStrings();
+    const a11yControls = StringManager.getInstance().getPhotometryA11yStrings().controls;
 
     // -----------------------------------------------------------------------
     // Star field + aperture overlays
@@ -190,6 +191,7 @@ export class PhotometryScreenView extends ScreenView {
         label: "1",
         labelVisibleProperty: model.labelAperturesProperty,
         modelViewTransform: fieldMVT,
+        accessibleName: a11yControls.aperture1StringProperty,
       },
     );
     const aperture2 = new ApertureNode(
@@ -203,6 +205,7 @@ export class PhotometryScreenView extends ScreenView {
         label: "2",
         labelVisibleProperty: model.labelAperturesProperty,
         modelViewTransform: fieldMVT,
+        accessibleName: a11yControls.aperture2StringProperty,
       },
     );
 
@@ -216,6 +219,7 @@ export class PhotometryScreenView extends ScreenView {
       color: VSPColors.panelTextColorProperty,
       incrementFunction: (v) => v + 1,
       decrementFunction: (v) => v - 1,
+      accessibleName: a11yControls.epochPickerStringProperty,
     });
 
     const epochDaysProperty = new PatternStringProperty(unitStrings.daysPatternStringProperty, {
@@ -246,25 +250,25 @@ export class PhotometryScreenView extends ScreenView {
       strings.apertureDiameterStringProperty,
       model.apertureDiameterProperty,
       APERTURE_DIAMETER_RANGE,
-      numberControlOptions,
+      { ...numberControlOptions, accessibleName: strings.apertureDiameterStringProperty },
     );
     const skyInnerControl = new NumberControl(
       strings.skyInnerRadiusStringProperty,
       model.annulusInnerRadiusProperty,
       ANNULUS_INNER_RANGE,
-      numberControlOptions,
+      { ...numberControlOptions, accessibleName: strings.skyInnerRadiusStringProperty },
     );
     const skyOuterControl = new NumberControl(
       strings.skyOuterRadiusStringProperty,
       model.annulusOuterRadiusProperty,
       ANNULUS_OUTER_RANGE,
-      numberControlOptions,
+      { ...numberControlOptions, accessibleName: strings.skyOuterRadiusStringProperty },
     );
 
     const labelCheckbox = new Checkbox(
       model.labelAperturesProperty,
       new Text(strings.labelAperturesStringProperty, { font: LABEL_FONT }),
-      { boxWidth: 16 },
+      { boxWidth: 16, accessibleName: strings.labelAperturesStringProperty },
     );
 
     const fieldControls = new VBox({
@@ -582,5 +586,25 @@ export class PhotometryScreenView extends ScreenView {
       tandem: tandem.createTandem("resetAllButton"),
     });
     this.addChild(resetAllButton);
+
+    // -----------------------------------------------------------------------
+    // Accessibility: keyboard / reading traversal order. ScreenView throws if
+    // pdomOrder is set on itself, so a wrapper Node "borrows" the interactive
+    // nodes — apertures first, then the field controls, Reset All last.
+    // -----------------------------------------------------------------------
+    this.addChild(
+      new Node({
+        pdomOrder: [
+          aperture1,
+          aperture2,
+          epochPicker,
+          apertureControl,
+          skyInnerControl,
+          skyOuterControl,
+          labelCheckbox,
+          resetAllButton,
+        ],
+      }),
+    );
   }
 }
