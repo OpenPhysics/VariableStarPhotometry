@@ -35,6 +35,7 @@ import type { ScreenViewOptions } from "scenerystack/sim";
 import { ScreenView } from "scenerystack/sim";
 import { AquaRadioButton, Checkbox, NumberPicker, Panel, TextPushButton } from "scenerystack/sun";
 import { Tandem } from "scenerystack/tandem";
+import { FLAT_RECTANGULAR_BUTTON_OPTIONS, FLAT_RESET_ALL_BUTTON_OPTIONS } from "../../common/VSPButtonOptions.js";
 import { FieldGridNode } from "../../common/view/FieldGridNode.js";
 import { StarFieldNode } from "../../common/view/StarFieldNode.js";
 import { StringManager } from "../../i18n/StringManager.js";
@@ -449,6 +450,7 @@ export class RegistrationScreenView extends ScreenView {
       baseColor: VSPColors.buttonColorProperty,
       minWidth: 170,
       accessibleName: strings.switchOnTopStringProperty,
+      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
     });
 
     const starfieldControlsContent = new VBox({
@@ -533,6 +535,7 @@ export class RegistrationScreenView extends ScreenView {
       right: this.layoutBounds.maxX - VSPConstants.LAYOUT.RESET_BUTTON_MARGIN,
       bottom: this.layoutBounds.maxY - VSPConstants.LAYOUT.RESET_BUTTON_MARGIN,
       tandem: tandem.createTandem("resetAllButton"),
+      ...FLAT_RESET_ALL_BUTTON_OPTIONS,
     });
     this.addChild(resetAllButton);
 

@@ -29,6 +29,7 @@ import { ScreenView } from "scenerystack/sim";
 import { Checkbox, HSlider, Panel, RectangularPushButton, TextPushButton } from "scenerystack/sun";
 import { Tandem } from "scenerystack/tandem";
 import { OBSERVATIONS } from "../../common/model/StarFieldData.js";
+import { FLAT_RECTANGULAR_BUTTON_OPTIONS, FLAT_RESET_ALL_BUTTON_OPTIONS } from "../../common/VSPButtonOptions.js";
 import { FieldGridNode } from "../../common/view/FieldGridNode.js";
 import { StarFieldNode } from "../../common/view/StarFieldNode.js";
 import { StringManager } from "../../i18n/StringManager.js";
@@ -231,6 +232,7 @@ export class BlinkComparatorScreenView extends ScreenView {
       font: LABEL_FONT,
       baseColor: VSPColors.buttonAddColorProperty,
       accessibleName: strings.addToQueueStringProperty,
+      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
       listener: () => {
         const selected = model.selectedObsIndexProperty.value;
         model.addSelectedToQueue();
@@ -245,6 +247,7 @@ export class BlinkComparatorScreenView extends ScreenView {
       font: LABEL_FONT,
       baseColor: VSPColors.buttonNeutralColorProperty,
       accessibleName: strings.removeFromQueueStringProperty,
+      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
       listener: () => {
         if (model.blinkQueue.length > 0) {
           const obsIndex =
@@ -343,6 +346,7 @@ export class BlinkComparatorScreenView extends ScreenView {
       yMargin: 2,
       listener: () => scrollObservationList(-1),
       accessibleName: a11yControls.scrollUpStringProperty,
+      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
     });
     const obsScrollDownButton = new RectangularPushButton({
       content: new Text("▼", { font: SMALL_FONT }),
@@ -351,6 +355,7 @@ export class BlinkComparatorScreenView extends ScreenView {
       yMargin: 2,
       listener: () => scrollObservationList(1),
       accessibleName: a11yControls.scrollDownStringProperty,
+      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
     });
 
     const observationTable = new HBox({
@@ -431,6 +436,7 @@ export class BlinkComparatorScreenView extends ScreenView {
       font: LABEL_FONT,
       baseColor: VSPColors.buttonNeutralColorProperty,
       accessibleName: a11yControls.previousStringProperty,
+      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
       listener: () => {
         if (model.blinkQueue.length > 0) {
           model.queuePositionProperty.value =
@@ -442,6 +448,7 @@ export class BlinkComparatorScreenView extends ScreenView {
       font: LABEL_FONT,
       baseColor: VSPColors.buttonNeutralColorProperty,
       accessibleName: strings.blinkStringProperty,
+      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
       listener: () => {
         model.isBlinkingProperty.value = !model.isBlinkingProperty.value;
       },
@@ -453,6 +460,7 @@ export class BlinkComparatorScreenView extends ScreenView {
       font: LABEL_FONT,
       baseColor: VSPColors.buttonNeutralColorProperty,
       accessibleName: a11yControls.nextStringProperty,
+      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
       listener: () => {
         if (model.blinkQueue.length > 0) {
           model.queuePositionProperty.value = (model.queuePositionProperty.value + 1) % model.blinkQueue.length;
@@ -555,6 +563,7 @@ export class BlinkComparatorScreenView extends ScreenView {
       right: this.layoutBounds.maxX - VSPConstants.LAYOUT.RESET_BUTTON_MARGIN,
       bottom: this.layoutBounds.maxY - VSPConstants.LAYOUT.RESET_BUTTON_MARGIN,
       tandem: tandem.createTandem("resetAllButton"),
+      ...FLAT_RESET_ALL_BUTTON_OPTIONS,
     });
     this.addChild(resetAllButton);
 

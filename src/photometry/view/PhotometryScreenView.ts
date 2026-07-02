@@ -26,6 +26,7 @@ import { Checkbox, NumberPicker, Panel } from "scenerystack/sun";
 import { Tandem } from "scenerystack/tandem";
 import { CCDField } from "../../common/model/CCDField.js";
 import { OBSERVATIONS } from "../../common/model/StarFieldData.js";
+import { FLAT_RESET_ALL_BUTTON_OPTIONS } from "../../common/VSPButtonOptions.js";
 import { ApertureNode } from "../../common/view/ApertureNode.js";
 import { FieldGridNode } from "../../common/view/FieldGridNode.js";
 import { StarFieldNode } from "../../common/view/StarFieldNode.js";
@@ -228,19 +229,27 @@ export class PhotometryScreenView extends ScreenView {
         return obs ? obs.epoch.toFixed(4) : "";
       }),
     });
+    // This readout, and the other plain Text/NumberControl-title nodes in this
+    // leftColumn, sit directly on the dark screen background (leftColumn is not
+    // wrapped in a panel), so they use textColorProperty (light-on-dark) rather
+    // than the default black or panelTextColorProperty (designed for light panels).
     const epochReadout = new Text(
       new PatternStringProperty(strings.epochValueStringProperty, { value: epochDaysProperty }),
-      { font: LABEL_FONT },
+      { font: LABEL_FONT, fill: VSPColors.textColorProperty },
     );
 
     const epochRow = new HBox({
       spacing: 8,
       align: "center",
-      children: [new Text(strings.observationStringProperty, { font: LABEL_FONT }), epochPicker, epochReadout],
+      children: [
+        new Text(strings.observationStringProperty, { font: LABEL_FONT, fill: VSPColors.textColorProperty }),
+        epochPicker,
+        epochReadout,
+      ],
     });
 
     const numberControlOptions = {
-      titleNodeOptions: { font: LABEL_FONT },
+      titleNodeOptions: { font: LABEL_FONT, fill: VSPColors.textColorProperty },
       numberDisplayOptions: { textOptions: { font: LABEL_FONT } },
       sliderOptions: { trackSize: new Dimension2(120, 3) },
       layoutFunction: NumberControl.createLayoutFunction1(),
@@ -267,7 +276,7 @@ export class PhotometryScreenView extends ScreenView {
 
     const labelCheckbox = new Checkbox(
       model.labelAperturesProperty,
-      new Text(strings.labelAperturesStringProperty, { font: LABEL_FONT }),
+      new Text(strings.labelAperturesStringProperty, { font: LABEL_FONT, fill: VSPColors.textColorProperty }),
       { boxWidth: 16, accessibleName: strings.labelAperturesStringProperty },
     );
 
@@ -584,6 +593,7 @@ export class PhotometryScreenView extends ScreenView {
       right: this.layoutBounds.maxX - VSPConstants.LAYOUT.RESET_BUTTON_MARGIN,
       bottom: this.layoutBounds.maxY - VSPConstants.LAYOUT.RESET_BUTTON_MARGIN,
       tandem: tandem.createTandem("resetAllButton"),
+      ...FLAT_RESET_ALL_BUTTON_OPTIONS,
     });
     this.addChild(resetAllButton);
 
