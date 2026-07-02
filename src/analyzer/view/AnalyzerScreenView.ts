@@ -38,6 +38,7 @@ import { ScreenView } from "scenerystack/sim";
 import { AquaRadioButtonGroup, Checkbox, TextPushButton } from "scenerystack/sun";
 import { Tandem } from "scenerystack/tandem";
 import { bestPeriod } from "../../common/model/PDMCalculator.js";
+import { FLAT_RECTANGULAR_BUTTON_OPTIONS, FLAT_RESET_ALL_BUTTON_OPTIONS } from "../../common/VSPButtonOptions.js";
 import { FieldGridNode } from "../../common/view/FieldGridNode.js";
 import { StarFieldNode } from "../../common/view/StarFieldNode.js";
 import { StringManager } from "../../i18n/StringManager.js";
@@ -209,32 +210,36 @@ export class AnalyzerScreenView extends ScreenView {
           spacing: 5,
           children: [
             new Circle(6, { stroke: VSPColors.variableStarColorProperty, lineWidth: 2 }),
-            new Text(strings.variableStringProperty, { font: SMALL_FONT }),
+            new Text(strings.variableStringProperty, { font: SMALL_FONT, fill: VSPColors.textColorProperty }),
           ],
         }),
         new HBox({
           spacing: 5,
           children: [
             new Rectangle(-5, -5, 10, 10, { stroke: VSPColors.comparisonStarColorProperty, lineWidth: 2 }),
-            new Text(strings.comparisonStringProperty, { font: SMALL_FONT }),
+            new Text(strings.comparisonStringProperty, { font: SMALL_FONT, fill: VSPColors.textColorProperty }),
           ],
         }),
       ],
     });
 
+    // NOTE: this Text sits directly on the dark screen background (leftColumn is
+    // not wrapped in a panel), so it uses textColorProperty (light-on-dark) rather
+    // than mutedTextColorProperty (which is designed for light panel surfaces).
     const instructions = new Text(strings.selectHintStringProperty, {
       font: SMALL_FONT,
-      fill: VSPColors.mutedTextColorProperty,
+      fill: VSPColors.textColorProperty,
     });
     const clearButton = new TextPushButton(strings.clearSelectionStringProperty, {
       font: SMALL_FONT,
       baseColor: VSPColors.buttonColorProperty,
       listener: () => model.clearSelections(),
       accessibleName: strings.clearSelectionStringProperty,
+      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
     });
     const crosshairCheckbox = new Checkbox(
       showCrosshairProperty,
-      new Text(strings.showCrosshairsStringProperty, { font: SMALL_FONT }),
+      new Text(strings.showCrosshairsStringProperty, { font: SMALL_FONT, fill: VSPColors.textColorProperty }),
       { boxWidth: 14, accessibleName: strings.showCrosshairsStringProperty },
     );
 
@@ -278,13 +283,16 @@ export class AnalyzerScreenView extends ScreenView {
     });
     const obsTickX = new TickMarkSet(obsTransform, Orientation.HORIZONTAL, 5, { edge: "min" });
     const obsTickY = new TickMarkSet(obsTransform, Orientation.VERTICAL, 0.2, { edge: "min" });
+    // Tick labels are positioned just outside the chart rectangle (bamboo's
+    // TickLabelSet convention for edge="min"), so they render on the dark screen
+    // background rather than the chart's white fill — use textColorProperty.
     const obsLabelX = new TickLabelSet(obsTransform, Orientation.HORIZONTAL, 5, {
       edge: "min",
-      createLabel: (v: number) => new Text(v.toFixed(0), { font: TICK_FONT }),
+      createLabel: (v: number) => new Text(v.toFixed(0), { font: TICK_FONT, fill: VSPColors.textColorProperty }),
     });
     const obsLabelY = new TickLabelSet(obsTransform, Orientation.VERTICAL, 0.2, {
       edge: "min",
-      createLabel: (v: number) => new Text(v.toFixed(2), { font: TICK_FONT }),
+      createLabel: (v: number) => new Text(v.toFixed(2), { font: TICK_FONT, fill: VSPColors.textColorProperty }),
     });
 
     const scatter = new ScatterPlot(obsTransform, [], { radius: 2.5, fill: VSPColors.scatterPointColorProperty });
@@ -457,20 +465,26 @@ export class AnalyzerScreenView extends ScreenView {
       obsGridY.setSpacing(ySpacing);
       obsTickY.setSpacing(ySpacing);
       obsLabelY.setSpacing(ySpacing);
-      obsLabelY.setCreateLabel((v: number) => new Text(v.toFixed(yd), { font: TICK_FONT }));
+      obsLabelY.setCreateLabel(
+        (v: number) => new Text(v.toFixed(yd), { font: TICK_FONT, fill: VSPColors.textColorProperty }),
+      );
 
       if (mode === "time") {
         obsTransform.setModelXRange(OBS_TIME_RANGE.copy());
         obsGridX.setSpacing(5);
         obsTickX.setSpacing(5);
         obsLabelX.setSpacing(5);
-        obsLabelX.setCreateLabel((v: number) => new Text(v.toFixed(0), { font: TICK_FONT }));
+        obsLabelX.setCreateLabel(
+          (v: number) => new Text(v.toFixed(0), { font: TICK_FONT, fill: VSPColors.textColorProperty }),
+        );
       } else {
         obsTransform.setModelXRange(new Range(0, 1));
         obsGridX.setSpacing(0.25);
         obsTickX.setSpacing(0.25);
         obsLabelX.setSpacing(0.25);
-        obsLabelX.setCreateLabel((v: number) => new Text(v.toFixed(2), { font: TICK_FONT }));
+        obsLabelX.setCreateLabel(
+          (v: number) => new Text(v.toFixed(2), { font: TICK_FONT, fill: VSPColors.textColorProperty }),
+        );
       }
 
       updatePeriodMultipleMarkers();
@@ -488,17 +502,21 @@ export class AnalyzerScreenView extends ScreenView {
       () => updateObservations(),
     );
 
-    const obsTitle = new Text(strings.observationsStringProperty, { font: HEADER_FONT });
+    const obsTitle = new Text(strings.observationsStringProperty, {
+      font: HEADER_FONT,
+      fill: VSPColors.textColorProperty,
+    });
     const obsYLabel = new Text(strings.differentialMagnitudeStringProperty, {
       font: SMALL_FONT,
       rotation: -Math.PI / 2,
+      fill: VSPColors.textColorProperty,
     });
     const obsXLabel = new Text(
       new DerivedProperty(
         [model.lightCurveModeProperty, strings.julianDateStringProperty, strings.phaseStringProperty],
         (mode, julianDate, phase) => (mode === "time" ? julianDate : phase),
       ),
-      { font: SMALL_FONT },
+      { font: SMALL_FONT, fill: VSPColors.textColorProperty },
     );
 
     const modeRadioGroup = new AquaRadioButtonGroup<LightCurveMode>(
@@ -506,12 +524,14 @@ export class AnalyzerScreenView extends ScreenView {
       [
         {
           value: "time",
-          createNode: () => new Text(strings.timeStringProperty, { font: LABEL_FONT }),
+          createNode: () =>
+            new Text(strings.timeStringProperty, { font: LABEL_FONT, fill: VSPColors.textColorProperty }),
           options: { accessibleName: strings.timeStringProperty },
         },
         {
           value: "phase",
-          createNode: () => new Text(strings.phaseStringProperty, { font: LABEL_FONT }),
+          createNode: () =>
+            new Text(strings.phaseStringProperty, { font: LABEL_FONT, fill: VSPColors.textColorProperty }),
           options: { accessibleName: strings.phaseStringProperty },
         },
       ],
@@ -528,7 +548,10 @@ export class AnalyzerScreenView extends ScreenView {
       model.phaseOffsetProperty,
       PHASE_OFFSET_RANGE,
       {
-        titleNodeOptions: { font: SMALL_FONT },
+        // titleNodeOptions has no background (unlike numberDisplayOptions, which draws
+        // its own white box) and this control sits directly on the dark screen
+        // background, so its title needs the light textColorProperty fill.
+        titleNodeOptions: { font: SMALL_FONT, fill: VSPColors.textColorProperty },
         numberDisplayOptions: { textOptions: { font: SMALL_FONT } },
         sliderOptions: { trackSize: new Dimension2(120, 3) },
         layoutFunction: NumberControl.createLayoutFunction1(),
@@ -537,7 +560,7 @@ export class AnalyzerScreenView extends ScreenView {
     );
     const differenceToolCheckbox = new Checkbox(
       showDifferenceToolProperty,
-      new Text(strings.showDifferenceToolStringProperty, { font: LABEL_FONT }),
+      new Text(strings.showDifferenceToolStringProperty, { font: LABEL_FONT, fill: VSPColors.textColorProperty }),
       { boxWidth: 16, accessibleName: strings.showDifferenceToolStringProperty },
     );
 
@@ -546,7 +569,10 @@ export class AnalyzerScreenView extends ScreenView {
     const obsModeRow = new HBox({
       spacing: 8,
       align: "center",
-      children: [new Text(strings.lightCurveStringProperty, { font: LABEL_FONT }), modeRadioGroup],
+      children: [
+        new Text(strings.lightCurveStringProperty, { font: LABEL_FONT, fill: VSPColors.textColorProperty }),
+        modeRadioGroup,
+      ],
     });
     const obsToolRow = new HBox({
       spacing: 16,
@@ -588,11 +614,11 @@ export class AnalyzerScreenView extends ScreenView {
     const pdmTickY = new TickMarkSet(pdmTransform, Orientation.VERTICAL, 0.2, { edge: "min" });
     const pdmLabelX = new TickLabelSet(pdmTransform, Orientation.HORIZONTAL, 1, {
       edge: "min",
-      createLabel: (v: number) => new Text(v.toFixed(1), { font: TICK_FONT }),
+      createLabel: (v: number) => new Text(v.toFixed(1), { font: TICK_FONT, fill: VSPColors.textColorProperty }),
     });
     const pdmLabelY = new TickLabelSet(pdmTransform, Orientation.VERTICAL, 0.2, {
       edge: "min",
-      createLabel: (v: number) => new Text(v.toFixed(1), { font: TICK_FONT }),
+      createLabel: (v: number) => new Text(v.toFixed(1), { font: TICK_FONT, fill: VSPColors.textColorProperty }),
     });
 
     const pdmLine = new LinePlot(pdmTransform, [], { stroke: VSPColors.lightCurveColorProperty, lineWidth: 1.5 });
@@ -685,7 +711,9 @@ export class AnalyzerScreenView extends ScreenView {
       pdmGridX.setSpacing(spacing);
       pdmTickX.setSpacing(spacing);
       pdmLabelX.setSpacing(spacing);
-      pdmLabelX.setCreateLabel((v: number) => new Text(v.toFixed(xd), { font: TICK_FONT }));
+      pdmLabelX.setCreateLabel(
+        (v: number) => new Text(v.toFixed(xd), { font: TICK_FONT, fill: VSPColors.textColorProperty }),
+      );
     };
 
     const updatePdmData = () => {
@@ -714,7 +742,7 @@ export class AnalyzerScreenView extends ScreenView {
       model.trialPeriodProperty,
       PERIOD_RANGE,
       {
-        titleNodeOptions: { font: LABEL_FONT },
+        titleNodeOptions: { font: LABEL_FONT, fill: VSPColors.textColorProperty },
         numberDisplayOptions: {
           textOptions: { font: LABEL_FONT },
           decimalPlaces: 4,
@@ -725,12 +753,15 @@ export class AnalyzerScreenView extends ScreenView {
       },
     );
 
+    // This readout sits directly on the dark screen background (pdmColumn is not
+    // wrapped in a panel), so it uses textColorProperty rather than
+    // mutedTextColorProperty (designed for light panel surfaces).
     const bestPeriodReadout = new Text(
       new DerivedProperty([model.pdmScanResultsProperty, strings.bestPeriodPatternStringProperty], (scan, pattern) => {
         const best = bestPeriod(scan);
         return best === null ? "" : pattern.replace("{{value}}", best.toFixed(4));
       }),
-      { font: SMALL_FONT, fill: VSPColors.mutedTextColorProperty },
+      { font: SMALL_FONT, fill: VSPColors.textColorProperty },
     );
 
     const zoomInButton = new TextPushButton(strings.zoomInAroundPeriodStringProperty, {
@@ -738,29 +769,34 @@ export class AnalyzerScreenView extends ScreenView {
       baseColor: VSPColors.buttonActiveColorProperty,
       listener: () => model.zoomInAroundPeriod(),
       accessibleName: strings.zoomInAroundPeriodStringProperty,
+      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
     });
     const zoomOutButton = new TextPushButton(strings.zoomOutAroundPeriodStringProperty, {
       font: SMALL_FONT,
       baseColor: VSPColors.buttonActiveColorProperty,
       listener: () => model.zoomOutAroundPeriod(),
       accessibleName: strings.zoomOutAroundPeriodStringProperty,
+      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
     });
     const fullButton = new TextPushButton(strings.zoomToFullStringProperty, {
       font: SMALL_FONT,
       baseColor: VSPColors.buttonColorProperty,
       listener: () => model.zoomToFull(),
       accessibleName: strings.zoomToFullStringProperty,
+      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
     });
     const undoButton = new TextPushButton(strings.undoLastZoomStringProperty, {
       font: SMALL_FONT,
       baseColor: VSPColors.buttonColorProperty,
       listener: () => model.undoLastZoom(),
       accessibleName: strings.undoLastZoomStringProperty,
+      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
     });
     const snapButton = new TextPushButton(strings.snapToMinStringProperty, {
       font: SMALL_FONT,
       baseColor: VSPColors.buttonSnapColorProperty,
       accessibleName: strings.snapToMinStringProperty,
+      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
       listener: () => {
         const best = bestPeriod(model.pdmScanResultsProperty.value);
         if (best !== null) {
@@ -773,8 +809,15 @@ export class AnalyzerScreenView extends ScreenView {
       spacing: 8,
       children: [zoomInButton, zoomOutButton, fullButton, undoButton, snapButton],
     });
-    const pdmYLabel = new Text(strings.thetaAxisStringProperty, { font: SMALL_FONT, rotation: -Math.PI / 2 });
-    const pdmXLabel = new Text(strings.trialPeriodAxisStringProperty, { font: SMALL_FONT });
+    const pdmYLabel = new Text(strings.thetaAxisStringProperty, {
+      font: SMALL_FONT,
+      rotation: -Math.PI / 2,
+      fill: VSPColors.textColorProperty,
+    });
+    const pdmXLabel = new Text(strings.trialPeriodAxisStringProperty, {
+      font: SMALL_FONT,
+      fill: VSPColors.textColorProperty,
+    });
 
     const pdmColumn = new VBox({
       spacing: 6,
@@ -783,7 +826,11 @@ export class AnalyzerScreenView extends ScreenView {
         new HBox({
           spacing: 20,
           align: "center",
-          children: [new Text(strings.pdmTitleStringProperty, { font: HEADER_FONT }), periodControl, bestPeriodReadout],
+          children: [
+            new Text(strings.pdmTitleStringProperty, { font: HEADER_FONT, fill: VSPColors.textColorProperty }),
+            periodControl,
+            bestPeriodReadout,
+          ],
         }),
         pdmButtonRow,
         new HBox({ spacing: 4, align: "center", children: [pdmYLabel, pdmChart] }),
@@ -812,6 +859,7 @@ export class AnalyzerScreenView extends ScreenView {
       right: this.layoutBounds.maxX - VSPConstants.LAYOUT.RESET_BUTTON_MARGIN,
       bottom: this.layoutBounds.maxY - VSPConstants.LAYOUT.RESET_BUTTON_MARGIN,
       tandem: tandem.createTandem("resetAllButton"),
+      ...FLAT_RESET_ALL_BUTTON_OPTIONS,
     });
     this.addChild(resetAllButton);
 
