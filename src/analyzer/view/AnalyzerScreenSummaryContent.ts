@@ -7,6 +7,7 @@
  * period — so a non-visual user can re-read the state at any time.
  */
 import { DerivedProperty } from "scenerystack/axon";
+import { toFixed } from "scenerystack/dot";
 import { ScreenSummaryContent } from "scenerystack/sim";
 import { StringManager } from "../../i18n/StringManager.js";
 import type { AnalyzerModel } from "../model/AnalyzerModel.js";
@@ -27,7 +28,7 @@ export class AnalyzerScreenSummaryContent extends ScreenSummaryContent {
           ? noDataPattern
           : withDataPattern
               .replace("{{count}}", String(measurements.length))
-              .replace("{{period}}", trialPeriod.toFixed(4)),
+              .replace("{{period}}", toFixed(trialPeriod, 4)),
     );
 
     super({

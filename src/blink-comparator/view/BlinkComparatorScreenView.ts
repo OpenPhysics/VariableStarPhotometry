@@ -20,6 +20,7 @@ import {
   type ReadOnlyProperty,
   type TReadOnlyProperty,
 } from "scenerystack/axon";
+import { toFixed } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
 import type { SceneryEvent } from "scenerystack/scenery";
 import { Circle, HBox, KeyboardListener, Line, Node, Rectangle, Text, VBox } from "scenerystack/scenery";
@@ -80,7 +81,7 @@ export class BlinkComparatorScreenView extends ScreenView {
     const makeEpochDaysProperty = (obsIndex: number): ReadOnlyProperty<string> => {
       const obs = OBSERVATIONS[obsIndex];
       return obs
-        ? new PatternStringProperty(unitStrings.daysPatternStringProperty, { value: obs.epoch.toFixed(4) })
+        ? new PatternStringProperty(unitStrings.daysPatternStringProperty, { value: toFixed(obs.epoch, 4) })
         : strings.noEpochStringProperty;
     };
 
@@ -181,7 +182,7 @@ export class BlinkComparatorScreenView extends ScreenView {
     const displayedEpochDaysProperty = new PatternStringProperty(unitStrings.daysPatternStringProperty, {
       value: new DerivedProperty([model.displayedObsIndexProperty], (index) => {
         const obs = OBSERVATIONS[index];
-        return obs ? obs.epoch.toFixed(4) : "";
+        return obs ? toFixed(obs.epoch, 4) : "";
       }),
     });
     const epochReadout = new Text(
@@ -289,7 +290,7 @@ export class BlinkComparatorScreenView extends ScreenView {
         }),
       );
       const rowName = new PatternStringProperty(a11yControls.observationPatternStringProperty, {
-        epoch: OBSERVATIONS[obsIndex]?.epoch.toFixed(4) ?? "",
+        epoch: OBSERVATIONS[obsIndex] !== undefined ? toFixed(OBSERVATIONS[obsIndex].epoch, 4) : "",
       });
       observationRowProps.push(rowName);
       const row = new Node({
@@ -410,8 +411,9 @@ export class BlinkComparatorScreenView extends ScreenView {
 
         const row = new Node({ cursor: obsIndex === undefined ? "default" : "pointer", children });
         if (obsIndex !== undefined) {
+          const observation = OBSERVATIONS[obsIndex];
           const rowName = new PatternStringProperty(a11yControls.queuedObservationPatternStringProperty, {
-            epoch: OBSERVATIONS[obsIndex]?.epoch.toFixed(4) ?? "",
+            epoch: observation !== undefined ? toFixed(observation.epoch, 4) : "",
           });
           queueRowProps.push(rowName);
           row.tagName = "button";

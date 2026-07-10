@@ -13,7 +13,7 @@ src/
   common/
     model/
       CCDField.ts               — singleton; pixel rendering + per-epoch ImageData cache
-      StarFieldData.ts          — star catalogue + 21 epoch records
+      StarFieldData.ts          — star catalogue + 113 epoch records
       PDMCalculator.ts          — pure PDM computation (no axon dependencies)
     view/
       ApertureNode.ts           — draggable aperture + sky-annulus overlay
@@ -45,7 +45,7 @@ converts via `node.globalToLocalPoint()` for any hit detection that needs model 
 
 ### CCDField singleton + ImageData caching
 
-`CCDField` renders each of the 21 epochs once and caches the `ImageData`. Because pixel rendering
+`CCDField` renders each of the 113 epochs once and caches the `ImageData`. Because pixel rendering
 involves a per-pixel PSF convolution (O(N_stars × PSF_area) per epoch), lazy caching on first
 access keeps startup cost low while ensuring subsequent repaints are instant. All screens share
 the same singleton and cache.
@@ -78,7 +78,7 @@ SceneryStack animation loop.
 
 ### PDM scan is synchronous
 
-The PDM scan runs synchronously on the main thread when measurements change. With 21 data points
+The PDM scan runs synchronously on the main thread when measurements change. With 113 data points
 and ~400 trial periods the computation is sub-millisecond. If the dataset grows, the scan should
 be moved to a Web Worker.
 

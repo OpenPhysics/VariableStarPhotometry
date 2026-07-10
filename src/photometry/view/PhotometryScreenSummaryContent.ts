@@ -7,6 +7,7 @@
  * difference — so a non-visual user can re-read the state at any time.
  */
 import { DerivedProperty } from "scenerystack/axon";
+import { toFixed } from "scenerystack/dot";
 import { ScreenSummaryContent } from "scenerystack/sim";
 import { OBSERVATIONS } from "../../common/model/StarFieldData.js";
 import { StringManager } from "../../i18n/StringManager.js";
@@ -28,7 +29,7 @@ export class PhotometryScreenSummaryContent extends ScreenSummaryContent {
         return pattern
           .replace("{{epoch}}", String(epochIndex + 1))
           .replace("{{total}}", String(OBSERVATIONS.length))
-          .replace("{{delta}}", deltaM === null ? "" : deltaM.toFixed(3));
+          .replace("{{delta}}", deltaM === null ? "" : toFixed(deltaM, 3));
       },
     );
 

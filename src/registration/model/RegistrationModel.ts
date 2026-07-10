@@ -79,16 +79,30 @@ export class RegistrationModel {
 
     this.topFieldTransparentProperty = new BooleanProperty(false, t("topFieldTransparentProperty"));
 
-    // invertColors and showGrid follow the global preferences but remain locally
-    // toggleable on this screen (the preference change re-drives them).
+    // invertColors and showGrid stay in sync with global preferences in both
+    // directions so this screen's checkboxes update Blink / Photometry / Analyzer.
     this.invertColorsProperty = new BooleanProperty(preferences.invertImagesProperty.value, t("invertColorsProperty"));
     preferences.invertImagesProperty.link((invert) => {
-      this.invertColorsProperty.value = invert;
+      if (this.invertColorsProperty.value !== invert) {
+        this.invertColorsProperty.value = invert;
+      }
+    });
+    this.invertColorsProperty.link((invert) => {
+      if (preferences.invertImagesProperty.value !== invert) {
+        preferences.invertImagesProperty.value = invert;
+      }
     });
 
     this.showGridProperty = new BooleanProperty(preferences.showGridProperty.value, t("showGridProperty"));
     preferences.showGridProperty.link((show) => {
-      this.showGridProperty.value = show;
+      if (this.showGridProperty.value !== show) {
+        this.showGridProperty.value = show;
+      }
+    });
+    this.showGridProperty.link((show) => {
+      if (preferences.showGridProperty.value !== show) {
+        preferences.showGridProperty.value = show;
+      }
     });
   }
 

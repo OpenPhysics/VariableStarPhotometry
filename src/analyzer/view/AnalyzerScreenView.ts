@@ -26,7 +26,7 @@ import {
   TickLabelSet,
   TickMarkSet,
 } from "scenerystack/bamboo";
-import { Dimension2, Range, Vector2 } from "scenerystack/dot";
+import { Dimension2, Range, toFixed, Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
 import { Orientation } from "scenerystack/phet-core";
 import { ModelViewTransform2 } from "scenerystack/phetcommon";
@@ -288,11 +288,11 @@ export class AnalyzerScreenView extends ScreenView {
     // background rather than the chart's white fill — use textColorProperty.
     const obsLabelX = new TickLabelSet(obsTransform, Orientation.HORIZONTAL, 5, {
       edge: "min",
-      createLabel: (v: number) => new Text(v.toFixed(0), { font: TICK_FONT, fill: VSPColors.textColorProperty }),
+      createLabel: (v: number) => new Text(toFixed(v, 0), { font: TICK_FONT, fill: VSPColors.textColorProperty }),
     });
     const obsLabelY = new TickLabelSet(obsTransform, Orientation.VERTICAL, 0.2, {
       edge: "min",
-      createLabel: (v: number) => new Text(v.toFixed(2), { font: TICK_FONT, fill: VSPColors.textColorProperty }),
+      createLabel: (v: number) => new Text(toFixed(v, 2), { font: TICK_FONT, fill: VSPColors.textColorProperty }),
     });
 
     const scatter = new ScatterPlot(obsTransform, [], { radius: 2.5, fill: VSPColors.scatterPointColorProperty });
@@ -320,7 +320,7 @@ export class AnalyzerScreenView extends ScreenView {
     const deltaMagProperty = new NumberProperty(0);
     const deltaText = new Text(
       new PatternStringProperty(unitStrings.magPatternStringProperty, {
-        value: new DerivedProperty([deltaMagProperty], (v) => v.toFixed(2)),
+        value: new DerivedProperty([deltaMagProperty], (v) => toFixed(v, 2)),
       }),
       {
         font: SMALL_FONT,
@@ -466,7 +466,7 @@ export class AnalyzerScreenView extends ScreenView {
       obsTickY.setSpacing(ySpacing);
       obsLabelY.setSpacing(ySpacing);
       obsLabelY.setCreateLabel(
-        (v: number) => new Text(v.toFixed(yd), { font: TICK_FONT, fill: VSPColors.textColorProperty }),
+        (v: number) => new Text(toFixed(v, yd), { font: TICK_FONT, fill: VSPColors.textColorProperty }),
       );
 
       if (mode === "time") {
@@ -475,7 +475,7 @@ export class AnalyzerScreenView extends ScreenView {
         obsTickX.setSpacing(5);
         obsLabelX.setSpacing(5);
         obsLabelX.setCreateLabel(
-          (v: number) => new Text(v.toFixed(0), { font: TICK_FONT, fill: VSPColors.textColorProperty }),
+          (v: number) => new Text(toFixed(v, 0), { font: TICK_FONT, fill: VSPColors.textColorProperty }),
         );
       } else {
         obsTransform.setModelXRange(new Range(0, 1));
@@ -483,7 +483,7 @@ export class AnalyzerScreenView extends ScreenView {
         obsTickX.setSpacing(0.25);
         obsLabelX.setSpacing(0.25);
         obsLabelX.setCreateLabel(
-          (v: number) => new Text(v.toFixed(2), { font: TICK_FONT, fill: VSPColors.textColorProperty }),
+          (v: number) => new Text(toFixed(v, 2), { font: TICK_FONT, fill: VSPColors.textColorProperty }),
         );
       }
 
@@ -614,11 +614,11 @@ export class AnalyzerScreenView extends ScreenView {
     const pdmTickY = new TickMarkSet(pdmTransform, Orientation.VERTICAL, 0.2, { edge: "min" });
     const pdmLabelX = new TickLabelSet(pdmTransform, Orientation.HORIZONTAL, 1, {
       edge: "min",
-      createLabel: (v: number) => new Text(v.toFixed(1), { font: TICK_FONT, fill: VSPColors.textColorProperty }),
+      createLabel: (v: number) => new Text(toFixed(v, 1), { font: TICK_FONT, fill: VSPColors.textColorProperty }),
     });
     const pdmLabelY = new TickLabelSet(pdmTransform, Orientation.VERTICAL, 0.2, {
       edge: "min",
-      createLabel: (v: number) => new Text(v.toFixed(1), { font: TICK_FONT, fill: VSPColors.textColorProperty }),
+      createLabel: (v: number) => new Text(toFixed(v, 1), { font: TICK_FONT, fill: VSPColors.textColorProperty }),
     });
 
     const pdmLine = new LinePlot(pdmTransform, [], { stroke: VSPColors.lightCurveColorProperty, lineWidth: 1.5 });
@@ -712,7 +712,7 @@ export class AnalyzerScreenView extends ScreenView {
       pdmTickX.setSpacing(spacing);
       pdmLabelX.setSpacing(spacing);
       pdmLabelX.setCreateLabel(
-        (v: number) => new Text(v.toFixed(xd), { font: TICK_FONT, fill: VSPColors.textColorProperty }),
+        (v: number) => new Text(toFixed(v, xd), { font: TICK_FONT, fill: VSPColors.textColorProperty }),
       );
     };
 
@@ -759,7 +759,7 @@ export class AnalyzerScreenView extends ScreenView {
     const bestPeriodReadout = new Text(
       new DerivedProperty([model.pdmScanResultsProperty, strings.bestPeriodPatternStringProperty], (scan, pattern) => {
         const best = bestPeriod(scan);
-        return best === null ? "" : pattern.replace("{{value}}", best.toFixed(4));
+        return best === null ? "" : pattern.replace("{{value}}", toFixed(best, 4));
       }),
       { font: SMALL_FONT, fill: VSPColors.textColorProperty },
     );

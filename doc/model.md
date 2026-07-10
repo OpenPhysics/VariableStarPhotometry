@@ -14,7 +14,7 @@ using Phase Dispersion Minimization.
 `src/common/model/StarFieldData.ts` stores a catalogue of stars with:
 - CCD pixel position (x, y) within the 380 × 290 px field
 - Apparent magnitude and pulsation amplitude (for the target variable)
-- 21 observation epochs, each recording a Julian date offset from the reference epoch (JD 1.7215 d)
+- 113 observation epochs, each recording a Julian date offset from the reference epoch (JD 1.7215 d)
 
 ### Rendering (`CCDField`)
 
@@ -81,8 +81,9 @@ once the interval is reached, which updates `displayedObsIndexProperty` and the 
 
 The student clicks the star field to designate a variable star and a comparison star
 (`variableStarPositionProperty`, `comparisonStarPositionProperty`). Once both are set, the model
-computes Δm for every epoch using the nearest-pixel ADU values from the CCD cache (not the full
-aperture integral). This produces `measurementsProperty`: an array of `{ epoch, magnitude }` records.
+computes Δm for every epoch with the same aperture-photometry integral used on the Photometry
+screen (fixed default aperture / annulus radii from the sim constants). This produces
+`measurementsProperty`: an array of `{ epoch, magnitude }` records.
 
 ### Light curve modes
 

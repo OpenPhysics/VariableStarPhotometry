@@ -14,7 +14,7 @@
  *                                                       [Reset All]
  */
 import { DerivedProperty, Multilink, PatternStringProperty, type TReadOnlyProperty } from "scenerystack/axon";
-import { Bounds2, Dimension2, type Vector2 } from "scenerystack/dot";
+import { Bounds2, Dimension2, toFixed, type Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
 import { ModelViewTransform2 } from "scenerystack/phetcommon";
 import type { SceneryEvent } from "scenerystack/scenery";
@@ -226,7 +226,7 @@ export class PhotometryScreenView extends ScreenView {
     const epochDaysProperty = new PatternStringProperty(unitStrings.daysPatternStringProperty, {
       value: new DerivedProperty([model.epochIndexProperty], (index) => {
         const obs = OBSERVATIONS[index];
-        return obs ? obs.epoch.toFixed(4) : "";
+        return obs ? toFixed(obs.epoch, 4) : "";
       }),
     });
     // This readout, and the other plain Text/NumberControl-title nodes in this
@@ -410,7 +410,7 @@ export class PhotometryScreenView extends ScreenView {
 
           if (fieldX >= 0 && fieldX < FIELD_W && fieldY >= 0 && fieldY < FIELD_H) {
             const counts = FIELD.getPixelValue(model.epochIndexProperty.value, fieldX, fieldY);
-            hoverTooltipText.string = `(${fieldX}, ${fieldY})  ${counts.toFixed(0)}`;
+            hoverTooltipText.string = `(${fieldX}, ${fieldY})  ${toFixed(counts, 0)}`;
             hoverTooltipBg.setRect(0, 0, hoverTooltipText.width + 6, hoverTooltipText.height + 4);
             hoverTooltipText.x = 3;
             hoverTooltipText.y = 2;
@@ -463,14 +463,14 @@ export class PhotometryScreenView extends ScreenView {
       const discCounts = new Text(
         pattern(
           strings.countsValueStringProperty,
-          new DerivedProperty([photometryProperty], (r) => r.disc.totalCounts.toFixed(0)),
+          new DerivedProperty([photometryProperty], (r) => toFixed(r.disc.totalCounts, 0)),
         ),
         { font: LABEL_FONT },
       );
       const discAverage = new Text(
         pattern(
           strings.averageValueStringProperty,
-          new DerivedProperty([photometryProperty], (r) => r.disc.average.toFixed(2)),
+          new DerivedProperty([photometryProperty], (r) => toFixed(r.disc.average, 2)),
         ),
         { font: LABEL_FONT },
       );
@@ -484,14 +484,14 @@ export class PhotometryScreenView extends ScreenView {
       const skyCounts = new Text(
         pattern(
           strings.countsValueStringProperty,
-          new DerivedProperty([photometryProperty], (r) => r.sky.totalCounts.toFixed(0)),
+          new DerivedProperty([photometryProperty], (r) => toFixed(r.sky.totalCounts, 0)),
         ),
         { font: LABEL_FONT },
       );
       const skyAverage = new Text(
         pattern(
           strings.averageValueStringProperty,
-          new DerivedProperty([photometryProperty], (r) => r.sky.average.toFixed(2)),
+          new DerivedProperty([photometryProperty], (r) => toFixed(r.sky.average, 2)),
         ),
         { font: LABEL_FONT },
       );
@@ -551,12 +551,12 @@ export class PhotometryScreenView extends ScreenView {
       ],
       (p1, p2, deltaMag, countsWord, magWord, netFluxNonPositive) => {
         const lines = [
-          `f<sub>1</sub> = ${p1.netFlux.toFixed(0)} ${countsWord}`,
-          `f<sub>2</sub> = ${p2.netFlux.toFixed(0)} ${countsWord}`,
+          `f<sub>1</sub> = ${toFixed(p1.netFlux, 0)} ${countsWord}`,
+          `f<sub>2</sub> = ${toFixed(p2.netFlux, 0)} ${countsWord}`,
           `m<sub>1</sub> − m<sub>2</sub> = −2.5 log<sub>10</sub>(f<sub>1</sub>/f<sub>2</sub>)`,
           deltaMag === null
             ? `         = — (${netFluxNonPositive})`
-            : `         = ${deltaMag >= 0 ? "+" : ""}${deltaMag.toFixed(3)} ${magWord}`,
+            : `         = ${deltaMag >= 0 ? "+" : ""}${toFixed(deltaMag, 3)} ${magWord}`,
         ];
         magnitudeText.string = lines.join("<br>");
       },
