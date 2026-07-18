@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Variable Star Photometry — a SceneryStack port of the NAAP Variable Star Photometry Lab.",
+  "description": "Variable Star Photometry \u2014 a SceneryStack port of the NAAP Variable Star Photometry Lab.",
   "license": "AGPL-3.0-or-later",
   "repository": {
     "type": "git",
@@ -46,6 +46,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.5.4",
     "@types/node": "^26.1.1",
+    "happy-dom": "^20.11.0",
     "jsdom": "^29.1.1",
     "png-to-ico": "^3.0.2",
     "sharp": "^0.35.3",
