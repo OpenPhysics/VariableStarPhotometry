@@ -42,7 +42,7 @@ const VariableStarPhotometryColors = {
     "aperturePreviewBackground",
     {
       default: new Color("#202020"),
-      projector: new Color("#202020"),
+      projector: new Color("#e8e8e8"),
     },
   ),
 
