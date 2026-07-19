@@ -2,6 +2,7 @@ import { type EmptySelfOptions, optionize } from "scenerystack/phet-core";
 import type { ScreenOptions } from "scenerystack/sim";
 import { Screen } from "scenerystack/sim";
 import type { Tandem } from "scenerystack/tandem";
+import { createBlinkComparatorIcon } from "../common/VariableStarPhotometryScreenIcons.js";
 import { VSPKeyboardHelpContent } from "../common/view/VSPKeyboardHelpContent.js";
 import { StringManager } from "../i18n/StringManager.js";
 import type { VSPPreferencesModel } from "../preferences/VSPPreferencesModel.js";
@@ -27,6 +28,8 @@ export class BlinkComparatorScreen extends Screen<BlinkComparatorModel, BlinkCom
           backgroundColorProperty: VSPColors.backgroundColorProperty,
           createKeyboardHelpNode: () => new VSPKeyboardHelpContent("blink"),
           screenButtonsHelpText: summaryStrings.interactionHintStringProperty,
+          homeScreenIcon: createBlinkComparatorIcon(),
+          navigationBarIcon: createBlinkComparatorIcon(),
         },
         options,
       ),

@@ -2,6 +2,7 @@ import { type EmptySelfOptions, optionize } from "scenerystack/phet-core";
 import type { ScreenOptions } from "scenerystack/sim";
 import { Screen } from "scenerystack/sim";
 import type { Tandem } from "scenerystack/tandem";
+import { createPhotometryIcon } from "../common/VariableStarPhotometryScreenIcons.js";
 import { VSPKeyboardHelpContent } from "../common/view/VSPKeyboardHelpContent.js";
 import { StringManager } from "../i18n/StringManager.js";
 import type { VSPPreferencesModel } from "../preferences/VSPPreferencesModel.js";
@@ -27,6 +28,8 @@ export class PhotometryScreen extends Screen<PhotometryModel, PhotometryScreenVi
           backgroundColorProperty: VSPColors.backgroundColorProperty,
           createKeyboardHelpNode: () => new VSPKeyboardHelpContent("photometry"),
           screenButtonsHelpText: summaryStrings.interactionHintStringProperty,
+          homeScreenIcon: createPhotometryIcon(),
+          navigationBarIcon: createPhotometryIcon(),
         },
         options,
       ),

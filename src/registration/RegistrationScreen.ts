@@ -2,6 +2,7 @@ import { type EmptySelfOptions, optionize } from "scenerystack/phet-core";
 import type { ScreenOptions } from "scenerystack/sim";
 import { Screen } from "scenerystack/sim";
 import type { Tandem } from "scenerystack/tandem";
+import { createRegistrationIcon } from "../common/VariableStarPhotometryScreenIcons.js";
 import { VSPKeyboardHelpContent } from "../common/view/VSPKeyboardHelpContent.js";
 import { StringManager } from "../i18n/StringManager.js";
 import type { VSPPreferencesModel } from "../preferences/VSPPreferencesModel.js";
@@ -27,6 +28,8 @@ export class RegistrationScreen extends Screen<RegistrationModel, RegistrationSc
           backgroundColorProperty: VSPColors.backgroundColorProperty,
           createKeyboardHelpNode: () => new VSPKeyboardHelpContent("registration"),
           screenButtonsHelpText: summaryStrings.interactionHintStringProperty,
+          homeScreenIcon: createRegistrationIcon(),
+          navigationBarIcon: createRegistrationIcon(),
         },
         options,
       ),
