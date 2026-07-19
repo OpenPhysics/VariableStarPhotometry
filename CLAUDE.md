@@ -79,6 +79,21 @@ block of each locale JSON (`a11y.registration`, `a11y.blinkComparator`, `a11y.ph
 keyboard-operable via a `KeyboardDragListener` (arrow keys; Shift for fine steps); the shared
 `VSPKeyboardHelpContent` documents per-screen keys.
 
+## Testing
+
+Fleet-standard Vitest layout:
+
+| Path | Purpose |
+|---|---|
+| `vitest.config.ts` | Test environment + `setupFiles` when present; `execArgv: ["--expose-gc"]` with memory-leak suite |
+| `tests/setup.ts` | Canvas / AudioContext mocks + `init({ name: "…" })` before SceneryStack imports (when required) |
+| `tests/**/*.test.ts` | Model/physics unit tests — mirror `src/` under `tests/` |
+| `tests/memory-leak.test.ts` | WeakRef + `forceGC` dispose regression (fleet pattern) |
+
+- Put unit tests only under root `tests/` (never co-locate or use `__tests__/`).
+- Run `npm test`. CI runs the suite when a `test` script is present.
+- Expand `memory-leak.test.ts` for components that add/remove nodes or link Properties at runtime (see OpticsLab).
+
 ## Decompiling the Flash sources
 
 `npm run decompile` (script: `scripts/decompile-flash.ts`) extracts readable ActionScript
