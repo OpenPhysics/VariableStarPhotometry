@@ -1,17 +1,22 @@
 /**
  * main.ts
  *
- * Entry point for Variable Star Photometry.
+ * Entry point for the simulation. Initializes SceneryStack, creates the
+ * screens, and starts the main event loop.
  *
  * !! CRITICAL IMPORT ORDER !!
- * brand.js MUST be the first import. It triggers the full bootstrap chain:
+ * brand.js MUST be the first import. Each module imports the next, so the import nesting is
  *
- *   brand.ts → splash.ts → assert.ts → init.ts
+ *   main → brand → splash → assert → init
+ *
+ * and therefore the actual EXECUTION order (deepest import runs first) is the reverse:
+ *
+ *   init → assert → splash → brand → main
  *
  * SceneryStack requires this exact load order. Never reorder these imports.
  */
 
-// brand.js MUST be first — triggers: brand.ts → splash.ts → assert.ts → init.ts
+// brand.js MUST be first; importing it runs the whole chain (init→assert→splash→brand) before main.
 import "./brand.js";
 
 import { onReadyToLaunch, PreferencesModel, Sim } from "scenerystack/sim";
