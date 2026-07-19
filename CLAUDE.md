@@ -4,80 +4,47 @@ Sim-specific context for AI assistants. General SceneryStack guidance: [OpenPhys
 
 ## Project
 
-SceneryStack port of the NAAP Variable Star Photometry Lab. Students work through a four-screen
-workflow to discover a variable star's period: align CCD frames (Registration), identify the
-variable by blinking (Blink Comparator), measure differential magnitudes (Photometry), and
-determine the period via PDM analysis (Analyzer).
+SceneryStack port of the NAAP **Variable Star Photometry** lab. Four screens walk through a CCD photometry workflow to find a pulsating star's period (based on **δ Cephei**): align frames, blink to identify the variable, measure differential magnitudes, and run PDM analysis. Architecture and formulas: [doc/model.md](doc/model.md), [doc/implementation-notes.md](doc/implementation-notes.md).
+
+- **Registration** (`src/registration/`) — overlay and align three fixed CCD epochs.
+- **Blink Comparator** (`src/blink-comparator/`) — queue observations and blink through them.
+- **Photometry** (`src/photometry/`) — dual apertures, net flux, Δm per epoch.
+- **Analyzer** (`src/analyzer/`) — light curve plot and Phase Dispersion Minimization scan.
 
 ## Key files
 
-| File | Purpose |
+| Area | Location |
 |---|---|
-| `src/VSPColors.ts` | All `ProfileColorProperty` instances (default + projector profiles) |
-| `src/VSPConstants.ts` | Named numeric constants grouped by concern (FIELD, APERTURE, TIME, LAYOUT, FONT_SIZE) |
-| `src/VSPNamespace.ts` | Namespace used by every class/object via `.register()` |
-| `src/i18n/StringManager.ts` | Singleton localized string accessor; per-screen typed getters |
-| `src/main.ts` | Entry point; registers all four screens with the Sim |
-| `src/common/model/CCDField.ts` | Singleton; renders synthetic CCD `ImageData` per epoch (cached) |
-| `src/common/model/StarFieldData.ts` | Star catalogue + 21 observation epoch records |
-| `src/common/model/PDMCalculator.ts` | Pure Phase Dispersion Minimization computation |
-| `src/common/view/ApertureNode.ts` | Draggable aperture + sky-annulus overlay node |
-| `src/common/view/StarFieldNode.ts` | `CanvasNode` rendering a single observation epoch |
-| `src/photometry/model/PhotometryModel.ts` | Aperture photometry state; `DerivedProperty` for net flux and Δm |
-| `src/blink-comparator/model/BlinkComparatorModel.ts` | Epoch queue, blink timer, crosshair toggle |
-| `src/analyzer/model/AnalyzerModel.ts` | Light-curve measurements, PDM scan, zoom history |
-| `src/registration/model/RegistrationModel.ts` | Field overlay offsets, on-top index, invert/transparency flags |
-| `src/preferences/vspQueryParameters.ts` | `QueryStringMachine` parameters (camelCase, lowercase-first filename) |
-| `scripts/decompile-flash.ts` | Extract ActionScript from the NAAP Flash `.swf` sources via JPEXS FFDec (→ `NAAP/decompiled/`) |
+| Screens | `src/registration/RegistrationScreen.ts`, `src/blink-comparator/BlinkComparatorScreen.ts`, `src/photometry/PhotometryScreen.ts`, `src/analyzer/AnalyzerScreen.ts` |
+| Shared model | `src/common/model/StarFieldData.ts`, `LightCurveLibrary.ts`, `CCDField.ts`, `AperturePhotometry.ts`, `PDMCalculator.ts` |
+| Shared views | `src/common/view/StarFieldNode.ts`, `ApertureNode.ts`, `FieldGridNode.ts`, `VSPKeyboardHelpContent.ts` |
+| Per-screen models | `registration/model/RegistrationModel.ts`, `blink-comparator/model/BlinkComparatorModel.ts`, `photometry/model/PhotometryModel.ts`, `analyzer/model/AnalyzerModel.ts` |
+| Colors / constants | `src/VSPColors.ts`, `src/VSPConstants.ts` |
+| Strings | `src/i18n/StringManager.ts` |
+| Preferences / query params | `src/preferences/vspQueryParameters.ts` (`showGrid`, `invertImages`, blink interval, aperture diameter, trial period, light-curve mode) |
+| Entry | `src/main.ts` |
 
-## Screens
+## Model
 
-Four screens registered in `src/main.ts` in this order:
+Four **independent** screen models — **no cross-screen state** (registration offsets, blink queue, aperture positions, and analyzer selections reset independently on each screen, matching standalone NAAP Flash labs).
 
-1. **Registration** (`src/registration/`) — overlay three CCD epochs and align them with XY offsets or arrow keys
-2. **Blink Comparator** (`src/blink-comparator/`) — queue observations and blink through them to identify the variable
-3. **Photometry** (`src/photometry/`) — place two apertures on variable and comparison stars; compute Δm per epoch
-4. **Analyzer** (`src/analyzer/`) — plot the differential light curve and run PDM to find the period
+| Screen | Model | Notes |
+|---|---|---|
+| **Registration** | `RegistrationModel` | Three **fixed** epoch indices with XY offsets (±100 px), on-top selection, transparency; arrow-key nudge |
+| **Blink Comparator** | `BlinkComparatorModel` | Observation queue + blink timer; default queue `[0, 36]`; blinking advances in `step(dt)`, not `setInterval` |
+| **Photometry** | `PhotometryModel` | Two draggable apertures; sky annulus subtraction; Δm = −2.5 log₁₀(f₁/f₂) on **raw counts** (before display γ) |
+| **Analyzer** | `AnalyzerModel` | Light-curve measurements, PDM θ scan (minimum θ = best period), zoom history |
 
-## Notable deviations from TemplateSingleSim
+**Shared gotchas**
 
-### VSPConstants grouped-object pattern
-
-`src/VSPConstants.ts` uses nested `as const` objects (`FIELD`, `APERTURE`, `TIME`, `LAYOUT`,
-`FONT_SIZE`) rather than a single flat namespace. This is intentional: the domain has five distinct
-concerns and flat-prefixed names (e.g. `FIELD_WIDTH`, `LAYOUT_SCREEN_MARGIN`) would be verbose.
-All groups are frozen, so the convention of "no magic numbers in model or view" is still upheld.
-The file lives at `src/` root as required by CONVENTIONS.md.
-
-### ModelViewTransform2 is identity
-
-Model and view share the same coordinate space: CCD pixel coordinates, 380 × 290 px, origin
-top-left. A `ModelViewTransform2.createIdentity()` is used in `PhotometryScreenView` and
-`AnalyzerScreenView` (passed to `ApertureNode` and used for selection-marker placement) to make
-the model→view boundary explicit and allow future scale changes in one place. The transform is
-also wired into `ApertureNode`'s `DragListener` via the `transform` option so drags update the
-aperture `centerProperty` in model space. When a screen scales the star field (e.g., Blink
-Comparator), it uses a SceneryStack scene-graph `scale()` — model coordinate values are unchanged.
-
-## Physics notes
-
-- Star brightness follows the magnitude/flux relation: Δm = −2.5 log₁₀(f₁/f₂)
-- Sky background (sky annulus mean × disc pixel count) is subtracted before net flux is reported
-- Period finding uses PDM: θ(T) = within-bin variance / total variance; minimum θ = best period
-- The target variable is based on δ Cephei; the dataset spans ~21 days, covering multiple periods
+- Synthetic field: **380 × 290 px**, 26 stars, **109 epochs**; `CCDField` singleton caches `ImageData` per `(obsIndex, invert)` and stamps **Airy-disc** PSFs (not Gaussian).
+- Model and view share **pixel coordinates** — `ModelViewTransform2.createIdentity()` in Photometry/Analyzer; Blink view may `scale(1.25)` on the view container only.
+- Target variable **δ Cep** at pixel (308, 175); dataset spans ~1.72–21.99 days.
 
 ## Accessibility
 
 Follows the shared [OpenPhysics accessibility convention](https://github.com/OpenPhysics/Baton/blob/main/ACCESSIBILITY.md).
-Each screen has a `<Screen>ScreenSummaryContent.ts` in its `view/` folder (live
-`currentDetailsContent` derived from the screen model), registered by the `*Screen.ts` wrapper via
-the view's `screenSummaryContent` option. Each `*ScreenView.ts` sets an explicit traversal order
-through a wrapper `Node`'s `pdomOrder` (interactive nodes first, Reset All last), and every
-interactive node carries an `accessibleName`. A11y strings live under per-screen keys in the `a11y`
-block of each locale JSON (`a11y.registration`, `a11y.blinkComparator`, `a11y.photometry`,
-`a11y.analyzer`), exposed via `StringManager.get<Screen>A11yStrings()`. `ApertureNode` is
-keyboard-operable via a `KeyboardDragListener` (arrow keys; Shift for fine steps); the shared
-`VSPKeyboardHelpContent` documents per-screen keys.
+Each screen registers `*ScreenSummaryContent` via its `*Screen.ts` wrapper and sets explicit `pdomOrder` on a wrapper `Node`. A11y strings live under `a11y.registration`, `a11y.blinkComparator`, `a11y.photometry`, and `a11y.analyzer` in each locale JSON, via `StringManager.getRegistrationA11yStrings()` / `getBlinkComparatorA11yStrings()` / `getPhotometryA11yStrings()` / `getAnalyzerA11yStrings()`. `ApertureNode` is keyboard-operable via `KeyboardDragListener` (arrow keys; Shift for fine steps).
 
 ## Testing
 
@@ -85,47 +52,28 @@ Fleet-standard Vitest layout:
 
 | Path | Purpose |
 |---|---|
-| `vitest.config.ts` | Test environment + `setupFiles` when present; `execArgv: ["--expose-gc"]` with memory-leak suite |
-| `tests/setup.ts` | Canvas / AudioContext mocks + `init({ name: "…" })` before SceneryStack imports (when required) |
-| `tests/**/*.test.ts` | Model/physics unit tests — mirror `src/` under `tests/` |
+| `vitest.config.ts` | Test environment + `setupFiles`; `execArgv: ["--expose-gc"]` with memory-leak suite |
+| `tests/setup.ts` | Canvas / AudioContext mocks + `init({ name: "…" })` before SceneryStack imports |
+| `tests/**/*.test.ts` | Model/physics unit tests |
 | `tests/memory-leak.test.ts` | WeakRef + `forceGC` dispose regression (fleet pattern) |
+
+| File | Covers |
+|---|---|
+| `AperturePhotometry.test.ts` | Net flux, differential magnitude |
+| `PDMCalculator.test.ts` | NAAP θ scan, best period |
+| `memory-leak.test.ts` | Dispose regression |
 
 - Put unit tests only under root `tests/` (never co-locate or use `__tests__/`).
 - Run `npm test`. CI runs the suite when a `test` script is present.
-- Expand `memory-leak.test.ts` for components that add/remove nodes or link Properties at runtime (see OpticsLab).
 
-## Decompiling the Flash sources
+## Commands
 
-`npm run decompile` (script: `scripts/decompile-flash.ts`) extracts readable ActionScript
-from the NAAP Flash movies so the ported photometry can be diffed against the originals.
-The `.fla` files are old binary (OLE compound) projects no tool reads directly, so the
-script decompiles their sibling compiled `.swf` (passing a `.fla` resolves to its `.swf`
-automatically) via **JPEXS FFDec**. See `PORTING_PLAN.md` → "Flash simulator inventory" for
-the screen→SWF mapping.
-
-```sh
-npm run decompile                 # the four VSP simulators → NAAP/decompiled/<name>/scripts/*.as
-npm run decompile -- --all        # all VSP-relevant movies (curated list below)
-npm run decompile -- --list       # dry run: print what would be decompiled, run nothing
-npm run decompile -- <path>…      # specific .swf / .fla / folder
-npm run decompile -- --assets     # also export images/shapes/sounds/text
-npm run decompile -- --xfl        # reconstruct an editable XFL project (closest to the .fla)
+```bash
+npm run lint && npm run check && npm run build && npm test
 ```
 
-Output goes to `NAAP/decompiled/` (git-ignored). **One-time setup** — FFDec needs a Java
-runtime:
+## Development notes
 
-```sh
-sudo apt install default-jre               # Debian/WSL (or: brew install temurin on macOS)
-npm run decompile -- --setup               # downloads FFDec into tools/ffdec/ (git-ignored)
-# …or point at an existing install instead: export FFDEC_JAR=/path/to/ffdec.jar
-```
-
-Run `npm run decompile -- --help` for all flags. The decompiled AS is a **read-only
-reference** (AS2/AS3, lightly mangled by the compiler) — transcribe the maths into typed TS
-in `src/`; don't vendor it. By default the four primary simulators decompile (one per
-screen): `registrationSimulator`, `blinkComparatorSimulator`, `photometrySimulator`, and
-`variableStarPhotometryAnalyzer`. The curated `--all` set adds the CCD background reading
-(`CCDMiniSim3`), the reusable components (`lightcurveComponentII`, `starFieldComponent`),
-and the concept demos (`variableStarCurves`, `sinusoidLightcurveQuestion`,
-`snCurveExplorer`).
+- **`VSPConstants.ts`** uses nested frozen `as const` groups (`FIELD`, `APERTURE`, `TIME`, `LAYOUT`, `PDM`) instead of a flat namespace — intentional for five distinct concerns; still no magic numbers in model/view code.
+- **`npm run decompile`** extracts NAAP Flash ActionScript via JPEXS FFDec into gitignored `NAAP/decompiled/` — read-only reference.
+- After `npm run build`, the sim is installable offline via Workbox (`dist/manifest.webmanifest`).

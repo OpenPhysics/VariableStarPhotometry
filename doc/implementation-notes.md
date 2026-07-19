@@ -1,105 +1,104 @@
-# Implementation Notes — Variable Star Photometry
+# Implementation Notes - Variable Star Photometry
 
-## Architecture
+Developer-facing notes on the architecture. Educator-facing workflow and physics are in
+[model.md](./model.md).
 
-The sim follows the standard OpenPhysics multi-screen structure:
+## Architecture Overview
+
+Four independent screens; no `VSPSimulationContext` or cross-screen state (planned in historical
+`PORTING_PLAN.md` but not built).
 
 ```
-src/
-  main.ts                       — entry point; Sim + four Screen instances
-  VSPColors.ts                  — ProfileColorProperty instances (default + projector)
-  VSPConstants.ts               — frozen grouped constants (FIELD, APERTURE, TIME, LAYOUT, FONT_SIZE)
-  VSPNamespace.ts               — Namespace for register()
-  common/
-    model/
-      CCDField.ts               — singleton; pixel rendering + per-epoch ImageData cache
-      StarFieldData.ts          — star catalogue + 113 epoch records
-      PDMCalculator.ts          — pure PDM computation (no axon dependencies)
-    view/
-      ApertureNode.ts           — draggable aperture + sky-annulus overlay
-      StarFieldNode.ts          — CanvasNode for a single observation epoch
-  {screen}/
-    model/{Screen}Model.ts
-    view/{Screen}ScreenView.ts
-  i18n/
-    StringManager.ts            — singleton; typed per-screen string getters
-    strings_en.json
-    strings_es.json
-    strings_fr.json
-  preferences/
-    vspQueryParameters.ts       — QueryStringMachine parameters
+src/main.ts                          Sim, 4 screens, VSPPreferencesModel
+src/init.ts                          locales en/es/fr, colorProfiles, no sound
+src/VSPConstants.ts                  FIELD, APERTURE, TIME, LAYOUT, PDM (SCAN_STEPS: 400)
+src/VSPColors.ts, VSPNamespace.ts, brand/splash/assert
+
+src/common/model/
+  StarFieldData.ts                   26 stars, 109 obs, pulsating/eclipsing presets
+  LightCurveLibrary.ts               getPulsatingMagnitude, getEclipsingMagnitude
+  CCDField.ts                        singleton render + getPhotometry + cache
+  AperturePhotometry.ts              measureAperture, differentialMagnitude
+  PDMCalculator.ts                   NAAP interleaved PDM (PDM_NB=5, PDM_NC=2, PDM_M=10)
+
+src/common/view/
+  StarFieldNode.ts                   CanvasNode + offscreen buffer
+  ApertureNode.ts                    DragListener + KeyboardDragListener + identity MVT
+  FieldGridNode.ts                   optional grid overlay
+  VSPKeyboardHelpContent.ts
+
+src/{registration,blink-comparator,photometry,analyzer}/
+  model/*Model.ts
+  view/*ScreenView.ts, *ScreenSummaryContent.ts
+  *Screen.ts
+
+src/preferences/
+  VSPPreferencesModel.ts             showGrid, invertImages
+  VSPPreferencesNode.ts
+  vspQueryParameters.ts              showGrid, invertImages, blinkIntervalMs, showCrosshair,
+                                     apertureDiameter, trialPeriod, lightCurveMode
 ```
 
-## Key Design Decisions
+Data flows Model → View via AXON `Property` / `DerivedProperty` / `Multilink`.
 
-### Coordinate system — no ModelViewTransform2
+## Key design decisions
 
-Model and view share CCD pixel coordinates (origin top-left, x right, y down, 380 × 290 px).
-This mirrors the raw sensor readout convention and matches the NAAP Flash original. A
-`ModelViewTransform2` would be an identity transform and is intentionally absent to avoid
-unnecessary indirection.
+1. **Identity `ModelViewTransform2`** — `ModelViewTransform2.createIdentity()` in `PhotometryScreenView`,
+   `AnalyzerScreenView`, and `ApertureNode`; model coords are pixel space. Blink view uses
+   `FIELD_SCALE = 1.25` on the view container only.
+2. **CCDField singleton** — caches `ImageData` per `(obsIndex, invert)` and `buildFieldData` for photometry
+   loops. Photometry uses **raw counts**, not gamma-mapped display pixels.
+3. **Airy disc PSF + chunked noise shuffle** — not Gaussian PSF or per-render random noise.
+4. **Blink via `step(dt)`** — accumulates time; may advance multiple frames after long pauses; requires
+   queue length ≥ 2.
+5. **PDM synchronous on main thread** — ~109 × 400 evaluations; acceptable cost.
+6. **Registration preference sync** — bidirectional links on invert/grid with `VSPPreferencesModel`.
+7. **Query params seed screen models** — preferences hold grid/invert only; other params initialize models
+   at construction.
 
-When a screen needs a different display size (e.g., Blink Comparator uses `FIELD_SCALE = 1.25`),
-the star field `Node` is scaled in the scene graph. Model coordinates are unaffected — the view
-converts via `node.globalToLocalPoint()` for any hit detection that needs model coordinates.
+## Screen models
 
-### CCDField singleton + ImageData caching
+### RegistrationModel(preferences)
 
-`CCDField` renders each of the 113 epochs once and caches the `ImageData`. Because pixel rendering
-involves a per-pixel PSF convolution (O(N_stars × PSF_area) per epoch), lazy caching on first
-access keeps startup cost low while ensuring subsequent repaints are instant. All screens share
-the same singleton and cache.
+Fixed `obsIndex1/2/3`; offsets ±100; `nudgeOnTopField(dx, dy)`; preference sync for invert/grid.
 
-### VSPConstants grouped structure
+### BlinkComparatorModel
 
-Rather than a flat constant object, `VSPConstants` groups constants by domain. The grouped
-structure is a documented deviation from the flat TemplateSingleSim pattern (see CLAUDE.md).
-The file lives at `src/VSPConstants.ts` as required by CONVENTIONS.md.
+Queue ops: `addSelectedToQueue`, `removeFromQueue`, `clearQueue`. `displayedObsIndexProperty` derived
+from queue vs selection.
 
-### Axon property discipline
+### PhotometryModel
 
-All mutable state is held in axon `Property` subclasses or `ObservableArray`. Derived quantities
-(aperture photometry results, magnitude difference, PDM scan, phase data) are `DerivedProperty`
-instances. Views subscribe via `.link()` or `Multilink.multilink()` — no manual refresh calls
-anywhere.
+Slider-backed aperture geometry; `epochIndexProperty`; two `Vector2Property` centres.
 
-### ApertureNode dragging
+### AnalyzerModel
 
-`ApertureNode` uses SceneryStack `DragListener` with a `dragBounds` constraint. The aperture
-centre is stored in a `Vector2Property`; the view renders three concentric circles (disc, inner
-annulus, outer annulus) as SVG-like `Circle` nodes whose radii are bound to
-`DerivedProperty<number>` values derived from the model's slider properties.
+`selectStarAt`, `clearSelections`, zoom/undo methods, `getPhase`. `FULL_PDM_RANGE = [0.2, 10]`.
+`measurementsProperty` derived from both star positions; filters null Δm.
 
-### Blink timer in `step(dt)`
+## Common components
 
-Blinking is implemented via accumulated time in `BlinkComparatorModel.step(dt)` rather than a
-browser `setInterval`. This keeps time advances frame-rate-aware and consistent with the
-SceneryStack animation loop.
+- `VSPPreferencesModel`, `VSPPreferencesNode`.
+- `ApertureNode` — radii bound via `.link()` on `NumberProperty` from model sliders.
 
-### PDM scan is synchronous
+## Disposal
 
-The PDM scan runs synchronously on the main thread when measurements change. With 113 data points
-and ~400 trial periods the computation is sub-millisecond. If the dataset grows, the scan should
-be moved to a Web Worker.
+Screen-lifetime architecture.
 
-### Query parameters
+## Testing
 
-`src/preferences/vspQueryParameters.ts` registers parameters via `QueryStringMachine`. The
-filename follows the lowercase-first camelCase convention. Parameters are read once at startup
-before `main.ts` runs.
+```
+npm test
+```
 
-## Localization
+| File | Covers |
+|---|---|
+| `AperturePhotometry.test.ts` | Net flux, differential magnitude |
+| `PDMCalculator.test.ts` | NAAP θ scan, best period |
+| `memory-leak.test.ts` | Dispose regression |
 
-Three locales: `en`, `es`, `fr`. Each JSON file mirrors the same key tree. `StringManager` falls
-back to English for any missing key. Screen names are registered in `init.ts` and displayed in
-the tab bar. A11y strings live under the `a11y` key and are returned by `getA11yStrings()`.
+Not tested: view nodes, full screen integration, CCDField render parity with Flash.
 
-## PWA
+## Multi-screen
 
-`vite-plugin-pwa` generates a Workbox service worker and `dist/manifest.webmanifest` at build
-time. The sim is installable and offline-capable after `npm run build && npm run preview`.
-
-## CI
-
-Shared GitHub Actions workflows are inherited from `OpenPhysics/Baton` (TypeScript check, Biome
-lint, Vite build). No sim-specific CI overrides are needed.
+Four NAAP labs as separate simulators sharing `src/common/` only. No shared root model.
