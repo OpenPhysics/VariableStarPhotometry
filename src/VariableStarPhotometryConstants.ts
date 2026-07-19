@@ -1,5 +1,5 @@
 /**
- * VSPConstants.ts
+ * VariableStarPhotometryConstants.ts
  *
  * Named numeric constants for the Variable Star Photometry simulation, grouped
  * into frozen `as const` objects by concern. Magic numbers are never inlined in
@@ -10,7 +10,7 @@
  * days (d); blink interval in milliseconds (ms); layout/font values in view
  * pixels (px). Each value carries a unit comment.
  */
-import VSPNamespace from "./VSPNamespace.js";
+import VariableStarPhotometryNamespace from "./VariableStarPhotometryNamespace.js";
 
 /** Synthetic CCD star-field geometry and detector model (mirrors NAAP settings.xml). */
 const FIELD = {
@@ -60,7 +60,7 @@ const PDM = {
   SCAN_STEPS: 400, // number of trial periods evaluated per scan pass
 } as const;
 
-const VSPConstants = {
+const VariableStarPhotometryConstants = {
   FIELD,
   APERTURE,
   TIME,
@@ -69,6 +69,6 @@ const VSPConstants = {
   PDM,
 } as const;
 
-VSPNamespace.register("VSPConstants", VSPConstants);
+VariableStarPhotometryNamespace.register("VariableStarPhotometryConstants", VariableStarPhotometryConstants);
 
-export default VSPConstants;
+export default VariableStarPhotometryConstants;

@@ -3,21 +3,21 @@ import { PhetFont } from "scenerystack/scenery-phet";
 import { Checkbox } from "scenerystack/sun";
 import type { Tandem } from "scenerystack/tandem";
 import { StringManager } from "../i18n/StringManager.js";
-import VSPColors from "../VSPColors.js";
-import VSPNamespace from "../VSPNamespace.js";
-import type { VSPPreferencesModel } from "./VSPPreferencesModel.js";
+import VariableStarPhotometryColors from "../VariableStarPhotometryColors.js";
+import VariableStarPhotometryNamespace from "../VariableStarPhotometryNamespace.js";
+import type { VariableStarPhotometryPreferencesModel } from "./VariableStarPhotometryPreferencesModel.js";
 
-export class VSPPreferencesNode extends VBox {
-  public constructor(preferencesModel: VSPPreferencesModel, tandem?: Tandem) {
+export class VariableStarPhotometryPreferencesNode extends VBox {
+  public constructor(preferencesModel: VariableStarPhotometryPreferencesModel, tandem?: Tandem) {
     const prefStrings = StringManager.getInstance().getPreferences();
 
     const header = new Text(prefStrings.titleStringProperty, {
       font: new PhetFont({ size: 18, weight: "bold" }),
-      fill: VSPColors.textColorProperty,
+      fill: VariableStarPhotometryColors.textColorProperty,
     });
 
     const makeCheckbox = (
-      property: VSPPreferencesModel["showGridProperty"],
+      property: VariableStarPhotometryPreferencesModel["showGridProperty"],
       labelProperty: typeof prefStrings.showGridStringProperty,
       tandemName: string,
     ): Checkbox =>
@@ -25,11 +25,11 @@ export class VSPPreferencesNode extends VBox {
         property,
         new Text(labelProperty, {
           font: new PhetFont(14),
-          fill: VSPColors.textColorProperty,
+          fill: VariableStarPhotometryColors.textColorProperty,
         }),
         {
-          checkboxColor: VSPColors.textColorProperty,
-          checkboxColorBackground: VSPColors.panelBackgroundColorProperty,
+          checkboxColor: VariableStarPhotometryColors.textColorProperty,
+          checkboxColorBackground: VariableStarPhotometryColors.panelBackgroundColorProperty,
           spacing: 8,
           ...(tandem && { tandem: tandem.createTandem(tandemName) }),
         },
@@ -51,4 +51,7 @@ export class VSPPreferencesNode extends VBox {
   }
 }
 
-VSPNamespace.register("VSPPreferencesNode", VSPPreferencesNode);
+VariableStarPhotometryNamespace.register(
+  "VariableStarPhotometryPreferencesNode",
+  VariableStarPhotometryPreferencesNode,
+);

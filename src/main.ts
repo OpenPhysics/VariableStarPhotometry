@@ -20,34 +20,34 @@ import { AnalyzerScreen } from "./analyzer/AnalyzerScreen.js";
 import { BlinkComparatorScreen } from "./blink-comparator/BlinkComparatorScreen.js";
 import { StringManager } from "./i18n/StringManager.js";
 import { PhotometryScreen } from "./photometry/PhotometryScreen.js";
-import { VSPPreferencesModel } from "./preferences/VSPPreferencesModel.js";
-import { VSPPreferencesNode } from "./preferences/VSPPreferencesNode.js";
+import { VariableStarPhotometryPreferencesModel } from "./preferences/VariableStarPhotometryPreferencesModel.js";
+import { VariableStarPhotometryPreferencesNode } from "./preferences/VariableStarPhotometryPreferencesNode.js";
 import { RegistrationScreen } from "./registration/RegistrationScreen.js";
 
 onReadyToLaunch(() => {
   const stringManager = StringManager.getInstance();
   const screenNames = stringManager.getScreenNames();
 
-  const vspPreferences = new VSPPreferencesModel(Tandem.ROOT.createTandem("preferences"));
+  const preferences = new VariableStarPhotometryPreferencesModel(Tandem.ROOT.createTandem("preferences"));
 
   const screens = [
     new RegistrationScreen({
-      preferences: vspPreferences,
+      preferences: preferences,
       name: screenNames.registrationStringProperty,
       tandem: Tandem.ROOT.createTandem("registrationScreen"),
     }),
     new BlinkComparatorScreen({
-      preferences: vspPreferences,
+      preferences: preferences,
       name: screenNames.blinkComparatorStringProperty,
       tandem: Tandem.ROOT.createTandem("blinkComparatorScreen"),
     }),
     new PhotometryScreen({
-      preferences: vspPreferences,
+      preferences: preferences,
       name: screenNames.photometryStringProperty,
       tandem: Tandem.ROOT.createTandem("photometryScreen"),
     }),
     new AnalyzerScreen({
-      preferences: vspPreferences,
+      preferences: preferences,
       name: screenNames.analyzerStringProperty,
       tandem: Tandem.ROOT.createTandem("analyzerScreen"),
     }),
@@ -62,7 +62,7 @@ onReadyToLaunch(() => {
       simulationOptions: {
         customPreferences: [
           {
-            createContent: (tandem: Tandem) => new VSPPreferencesNode(vspPreferences, tandem),
+            createContent: (tandem: Tandem) => new VariableStarPhotometryPreferencesNode(preferences, tandem),
           },
         ],
       },

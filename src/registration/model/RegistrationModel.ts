@@ -9,8 +9,8 @@
 import { BooleanProperty, NumberProperty } from "scenerystack/axon";
 import { Range } from "scenerystack/dot";
 import type { Tandem } from "scenerystack/tandem";
-import type { VSPPreferencesModel } from "../../preferences/VSPPreferencesModel.js";
-import VSPNamespace from "../../VSPNamespace.js";
+import type { VariableStarPhotometryPreferencesModel } from "../../preferences/VariableStarPhotometryPreferencesModel.js";
+import VariableStarPhotometryNamespace from "../../VariableStarPhotometryNamespace.js";
 
 // Fixed observation indices chosen to sample early, mid, and late epochs.
 // index 0  → epoch  1.7215 d  (reference)
@@ -44,7 +44,7 @@ export class RegistrationModel {
   public readonly invertColorsProperty: BooleanProperty;
   public readonly showGridProperty: BooleanProperty;
 
-  public constructor(preferences: VSPPreferencesModel, tandem?: Tandem) {
+  public constructor(preferences: VariableStarPhotometryPreferencesModel, tandem?: Tandem) {
     const t = (name: string) => (tandem ? { tandem: tandem.createTandem(name) } : {});
 
     this.shown2Property = new BooleanProperty(true, t("shown2Property"));
@@ -146,4 +146,4 @@ export class RegistrationModel {
   }
 }
 
-VSPNamespace.register("RegistrationModel", RegistrationModel);
+VariableStarPhotometryNamespace.register("RegistrationModel", RegistrationModel);

@@ -10,9 +10,9 @@ import {
 } from "scenerystack/scenery-phet";
 import { StringManager } from "../../i18n/StringManager.js";
 
-export type VSPKeyboardHelpScreen = "registration" | "blink" | "photometry" | "analyzer";
+export type VariableStarPhotometryKeyboardHelpScreen = "registration" | "blink" | "photometry" | "analyzer";
 
-const createLeftSections = (screen: VSPKeyboardHelpScreen) => {
+const createLeftSections = (screen: VariableStarPhotometryKeyboardHelpScreen) => {
   switch (screen) {
     case "registration":
     case "photometry":
@@ -24,7 +24,7 @@ const createLeftSections = (screen: VSPKeyboardHelpScreen) => {
   }
 };
 
-const createRightSections = (screen: VSPKeyboardHelpScreen) => {
+const createRightSections = (screen: VariableStarPhotometryKeyboardHelpScreen) => {
   switch (screen) {
     case "photometry":
       return [new SliderControlsKeyboardHelpSection()];
@@ -43,8 +43,8 @@ const createRightSections = (screen: VSPKeyboardHelpScreen) => {
   }
 };
 
-export class VSPKeyboardHelpContent extends TwoColumnKeyboardHelpContent {
-  public constructor(screen: VSPKeyboardHelpScreen) {
+export class VariableStarPhotometryKeyboardHelpContent extends TwoColumnKeyboardHelpContent {
+  public constructor(screen: VariableStarPhotometryKeyboardHelpScreen) {
     super(createLeftSections(screen), createRightSections(screen));
   }
 }

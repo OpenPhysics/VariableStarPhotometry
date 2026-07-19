@@ -17,11 +17,11 @@ SceneryStack port of the NAAP **Variable Star Photometry** lab. Four screens wal
 |---|---|
 | Screens | `src/registration/RegistrationScreen.ts`, `src/blink-comparator/BlinkComparatorScreen.ts`, `src/photometry/PhotometryScreen.ts`, `src/analyzer/AnalyzerScreen.ts` |
 | Shared model | `src/common/model/StarFieldData.ts`, `LightCurveLibrary.ts`, `CCDField.ts`, `AperturePhotometry.ts`, `PDMCalculator.ts` |
-| Shared views | `src/common/view/StarFieldNode.ts`, `ApertureNode.ts`, `FieldGridNode.ts`, `VSPKeyboardHelpContent.ts` |
+| Shared views | `src/common/view/StarFieldNode.ts`, `ApertureNode.ts`, `FieldGridNode.ts`, `VariableStarPhotometryKeyboardHelpContent.ts` |
 | Per-screen models | `registration/model/RegistrationModel.ts`, `blink-comparator/model/BlinkComparatorModel.ts`, `photometry/model/PhotometryModel.ts`, `analyzer/model/AnalyzerModel.ts` |
-| Colors / constants | `src/VSPColors.ts`, `src/VSPConstants.ts` |
+| Colors / constants | `src/VariableStarPhotometryColors.ts`, `src/VariableStarPhotometryConstants.ts` |
 | Strings | `src/i18n/StringManager.ts` |
-| Preferences / query params | `src/preferences/vspQueryParameters.ts` (`showGrid`, `invertImages`, blink interval, aperture diameter, trial period, light-curve mode) |
+| Preferences / query params | `src/preferences/variableStarPhotometryQueryParameters.ts` (`showGrid`, `invertImages`, blink interval, aperture diameter, trial period, light-curve mode) |
 | Entry | `src/main.ts` |
 
 ## Model
@@ -74,6 +74,6 @@ npm run lint && npm run check && npm run build && npm test
 
 ## Development notes
 
-- **`VSPConstants.ts`** uses nested frozen `as const` groups (`FIELD`, `APERTURE`, `TIME`, `LAYOUT`, `PDM`) instead of a flat namespace — intentional for five distinct concerns; still no magic numbers in model/view code.
+- **`VariableStarPhotometryConstants.ts`** uses nested frozen `as const` groups (`FIELD`, `APERTURE`, `TIME`, `LAYOUT`, `PDM`) instead of a flat namespace — intentional for five distinct concerns; still no magic numbers in model/view code.
 - **`npm run decompile`** extracts NAAP Flash ActionScript via JPEXS FFDec into gitignored `NAAP/decompiled/` — read-only reference.
 - After `npm run build`, the sim is installable offline via Workbox (`dist/manifest.webmanifest`).

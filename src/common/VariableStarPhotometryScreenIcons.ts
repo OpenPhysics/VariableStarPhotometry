@@ -2,7 +2,7 @@
  * VariableStarPhotometryScreenIcons.ts
  *
  * Programmatic home-screen / navigation-bar icons for the four Variable Star
- * Photometry screens. Drawn on the standard PhET 548 × 373 canvas using VSPColors.
+ * Photometry screens. Drawn on the standard PhET 548 × 373 canvas using VariableStarPhotometryColors.
  *
  *   Registration    — star field with a registration crosshair.
  *   Blink Comparator — two overlapping frames with blink markers.
@@ -12,7 +12,7 @@
 import { Shape } from "scenerystack/kite";
 import { Circle, Line, Node, Path, Rectangle } from "scenerystack/scenery";
 import { ScreenIcon } from "scenerystack/sim";
-import VSPColors from "../VSPColors.js";
+import VariableStarPhotometryColors from "../VariableStarPhotometryColors.js";
 
 const W = 548;
 const H = 373;
@@ -20,20 +20,20 @@ const CX = W / 2;
 const CY = H / 2;
 
 function background(): Rectangle {
-  return new Rectangle(0, 0, W, H, { fill: VSPColors.backgroundColorProperty });
+  return new Rectangle(0, 0, W, H, { fill: VariableStarPhotometryColors.backgroundColorProperty });
 }
 
 function iconFrom(content: Node): ScreenIcon {
   return new ScreenIcon(content, {
     maxIconWidthProportion: 1,
     maxIconHeightProportion: 1,
-    fill: VSPColors.backgroundColorProperty,
+    fill: VariableStarPhotometryColors.backgroundColorProperty,
   });
 }
 
 function fieldStar(x: number, y: number, r: number): Circle {
   return new Circle(r, {
-    fill: VSPColors.comparisonStarColorProperty,
+    fill: VariableStarPhotometryColors.comparisonStarColorProperty,
     opacity: 0.75,
     centerX: x,
     centerY: y,
@@ -46,8 +46,8 @@ function starField(seedStars: Array<[number, number, number]>): Node[] {
 
 export function createRegistrationIcon(): ScreenIcon {
   const frame = new Rectangle(70, 40, W - 140, H - 80, 8, 8, {
-    fill: VSPColors.fieldBackgroundColorProperty,
-    stroke: VSPColors.fieldBorderHighlightColorProperty,
+    fill: VariableStarPhotometryColors.fieldBackgroundColorProperty,
+    stroke: VariableStarPhotometryColors.fieldBorderHighlightColorProperty,
     lineWidth: 4,
   });
   const stars = starField([
@@ -61,16 +61,16 @@ export function createRegistrationIcon(): ScreenIcon {
     [260, 220, 3],
   ]);
   const target = new Circle(10, {
-    fill: VSPColors.variableStarColorProperty,
+    fill: VariableStarPhotometryColors.variableStarColorProperty,
     centerX: CX,
     centerY: CY,
   });
   const crossV = new Line(CX, CY - 50, CX, CY + 50, {
-    stroke: VSPColors.crosshairColorProperty,
+    stroke: VariableStarPhotometryColors.crosshairColorProperty,
     lineWidth: 3,
   });
   const crossH = new Line(CX - 50, CY, CX + 50, CY, {
-    stroke: VSPColors.crosshairColorProperty,
+    stroke: VariableStarPhotometryColors.crosshairColorProperty,
     lineWidth: 3,
   });
 
@@ -79,13 +79,13 @@ export function createRegistrationIcon(): ScreenIcon {
 
 export function createBlinkComparatorIcon(): ScreenIcon {
   const left = new Rectangle(50, 50, 210, 270, 8, 8, {
-    fill: VSPColors.fieldBackgroundColorProperty,
-    stroke: VSPColors.fieldBorderColorProperty,
+    fill: VariableStarPhotometryColors.fieldBackgroundColorProperty,
+    stroke: VariableStarPhotometryColors.fieldBorderColorProperty,
     lineWidth: 3,
   });
   const right = new Rectangle(288, 50, 210, 270, 8, 8, {
-    fill: VSPColors.fieldBackgroundColorProperty,
-    stroke: VSPColors.fieldBorderHighlightColorProperty,
+    fill: VariableStarPhotometryColors.fieldBackgroundColorProperty,
+    stroke: VariableStarPhotometryColors.fieldBorderHighlightColorProperty,
     lineWidth: 4,
   });
   const leftStars = starField([
@@ -102,18 +102,18 @@ export function createBlinkComparatorIcon(): ScreenIcon {
   ]);
   // Variable star brighter in the right frame.
   const leftVar = new Circle(8, {
-    fill: VSPColors.variableStarColorProperty,
+    fill: VariableStarPhotometryColors.variableStarColorProperty,
     opacity: 0.45,
     centerX: 160,
     centerY: 200,
   });
   const rightVar = new Circle(11, {
-    fill: VSPColors.variableStarColorProperty,
+    fill: VariableStarPhotometryColors.variableStarColorProperty,
     centerX: 398,
     centerY: 200,
   });
   const marker = new Circle(8, {
-    fill: VSPColors.queueMarkerColorProperty,
+    fill: VariableStarPhotometryColors.queueMarkerColorProperty,
     centerX: 393,
     centerY: 70,
   });
@@ -125,8 +125,8 @@ export function createBlinkComparatorIcon(): ScreenIcon {
 
 export function createPhotometryIcon(): ScreenIcon {
   const frame = new Rectangle(70, 40, W - 140, H - 80, 8, 8, {
-    fill: VSPColors.fieldBackgroundColorProperty,
-    stroke: VSPColors.fieldBorderColorProperty,
+    fill: VariableStarPhotometryColors.fieldBackgroundColorProperty,
+    stroke: VariableStarPhotometryColors.fieldBorderColorProperty,
     lineWidth: 3,
   });
   const stars = starField([
@@ -137,21 +137,21 @@ export function createPhotometryIcon(): ScreenIcon {
     [300, 100, 3],
   ]);
   const primary = new Circle(14, {
-    fill: VSPColors.variableStarColorProperty,
+    fill: VariableStarPhotometryColors.variableStarColorProperty,
     centerX: CX - 40,
     centerY: CY,
   });
   const secondary = new Circle(10, {
-    fill: VSPColors.comparisonStarColorProperty,
+    fill: VariableStarPhotometryColors.comparisonStarColorProperty,
     centerX: CX + 90,
     centerY: CY + 30,
   });
   const aperture1 = new Path(Shape.ellipse(CX - 40, CY, 48, 48, 0), {
-    stroke: VSPColors.aperturePrimaryColorProperty,
+    stroke: VariableStarPhotometryColors.aperturePrimaryColorProperty,
     lineWidth: 5,
   });
   const aperture2 = new Path(Shape.ellipse(CX + 90, CY + 30, 36, 36, 0), {
-    stroke: VSPColors.apertureSecondaryColorProperty,
+    stroke: VariableStarPhotometryColors.apertureSecondaryColorProperty,
     lineWidth: 5,
   });
 
@@ -160,12 +160,12 @@ export function createPhotometryIcon(): ScreenIcon {
 
 export function createAnalyzerIcon(): ScreenIcon {
   const chart = new Rectangle(50, 50, W - 100, H - 100, 10, 10, {
-    fill: VSPColors.chartBackgroundColorProperty,
-    stroke: VSPColors.chartStrokeColorProperty,
+    fill: VariableStarPhotometryColors.chartBackgroundColorProperty,
+    stroke: VariableStarPhotometryColors.chartStrokeColorProperty,
     lineWidth: 3,
   });
   const gridH = new Line(70, H / 2, W - 70, H / 2, {
-    stroke: VSPColors.chartGridColorProperty,
+    stroke: VariableStarPhotometryColors.chartGridColorProperty,
     lineWidth: 2,
   });
   const samples = 40;
@@ -181,13 +181,13 @@ export function createAnalyzerIcon(): ScreenIcon {
     }
   }
   const curve = new Path(shape, {
-    stroke: VSPColors.lightCurveColorProperty,
+    stroke: VariableStarPhotometryColors.lightCurveColorProperty,
     lineWidth: 5,
     lineCap: "round",
     lineJoin: "round",
   });
   const marker = new Line(CX + 40, 70, CX + 40, H - 70, {
-    stroke: VSPColors.pdmMarkerColorProperty,
+    stroke: VariableStarPhotometryColors.pdmMarkerColorProperty,
     lineWidth: 4,
   });
 

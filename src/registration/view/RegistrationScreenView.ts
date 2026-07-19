@@ -35,20 +35,23 @@ import type { ScreenViewOptions } from "scenerystack/sim";
 import { ScreenView } from "scenerystack/sim";
 import { AquaRadioButton, Checkbox, NumberPicker, Panel, TextPushButton } from "scenerystack/sun";
 import { Tandem } from "scenerystack/tandem";
-import { FLAT_RECTANGULAR_BUTTON_OPTIONS, FLAT_RESET_ALL_BUTTON_OPTIONS } from "../../common/VSPButtonOptions.js";
+import {
+  FLAT_RECTANGULAR_BUTTON_OPTIONS,
+  FLAT_RESET_ALL_BUTTON_OPTIONS,
+} from "../../common/VariableStarPhotometryButtonOptions.js";
 import { FieldGridNode } from "../../common/view/FieldGridNode.js";
 import { StarFieldNode } from "../../common/view/StarFieldNode.js";
 import { StringManager } from "../../i18n/StringManager.js";
-import VSPColors from "../../VSPColors.js";
-import VSPConstants from "../../VSPConstants.js";
+import VariableStarPhotometryColors from "../../VariableStarPhotometryColors.js";
+import VariableStarPhotometryConstants from "../../VariableStarPhotometryConstants.js";
 import type { RegistrationModel } from "../model/RegistrationModel.js";
 
-const FIELD_W = VSPConstants.FIELD.WIDTH;
-const FIELD_H = VSPConstants.FIELD.HEIGHT;
+const FIELD_W = VariableStarPhotometryConstants.FIELD.WIDTH;
+const FIELD_H = VariableStarPhotometryConstants.FIELD.HEIGHT;
 
-const LABEL_FONT = new PhetFont(VSPConstants.FONT_SIZE.LABEL);
-const SMALL_FONT = new PhetFont(VSPConstants.FONT_SIZE.SMALL);
-const HEADER_FONT = new PhetFont({ size: VSPConstants.FONT_SIZE.HEADER, weight: "bold" });
+const LABEL_FONT = new PhetFont(VariableStarPhotometryConstants.FONT_SIZE.LABEL);
+const SMALL_FONT = new PhetFont(VariableStarPhotometryConstants.FONT_SIZE.SMALL);
+const HEADER_FONT = new PhetFont({ size: VariableStarPhotometryConstants.FONT_SIZE.HEADER, weight: "bold" });
 
 const WORK_PANEL_MARGIN = 12;
 const WORK_PANEL_TITLE_HEIGHT = 26;
@@ -74,7 +77,7 @@ export class RegistrationScreenView extends ScreenView {
     // Each field group: star image + coloured border
     function makeBorderRect(): Rectangle {
       return new Rectangle(0, 0, FIELD_W, FIELD_H, {
-        stroke: VSPColors.fieldBorderColorProperty,
+        stroke: VariableStarPhotometryColors.fieldBorderColorProperty,
         lineWidth: 2,
         fill: null,
         pickable: false,
@@ -97,7 +100,7 @@ export class RegistrationScreenView extends ScreenView {
 
     // Outer frame for the movable star fields.
     const workFrame = new Rectangle(0, 0, FIELD_W, FIELD_H, {
-      stroke: VSPColors.mutedTextColorProperty,
+      stroke: VariableStarPhotometryColors.mutedTextColorProperty,
       lineWidth: 1,
       fill: null,
     });
@@ -111,13 +114,13 @@ export class RegistrationScreenView extends ScreenView {
     const workPanelW = FIELD_W + 2 * WORK_PANEL_MARGIN;
     const workPanelH = FIELD_H + WORK_PANEL_TITLE_HEIGHT + WORK_PANEL_MARGIN;
     const workPanelFrame = new Rectangle(0, 0, workPanelW, workPanelH, {
-      fill: VSPColors.controlPanelFillProperty,
-      stroke: VSPColors.controlPanelStrokeProperty,
+      fill: VariableStarPhotometryColors.controlPanelFillProperty,
+      stroke: VariableStarPhotometryColors.controlPanelStrokeProperty,
       lineWidth: 1,
     });
     const workTitle = new Text(strings.workAreaStringProperty, {
       font: HEADER_FONT,
-      fill: VSPColors.panelTextColorProperty,
+      fill: VariableStarPhotometryColors.panelTextColorProperty,
       left: WORK_PANEL_MARGIN,
       centerY: WORK_PANEL_TITLE_HEIGHT / 2,
     });
@@ -131,7 +134,7 @@ export class RegistrationScreenView extends ScreenView {
 
     const workArea = new Node({
       children: [workPanelFrame, workTitle, fieldContainer],
-      left: VSPConstants.LAYOUT.SCREEN_MARGIN,
+      left: VariableStarPhotometryConstants.LAYOUT.SCREEN_MARGIN,
       top: this.layoutBounds.centerY - workPanelH / 2,
     });
     this.addChild(workArea);
@@ -164,9 +167,15 @@ export class RegistrationScreenView extends ScreenView {
 
     // "On top" → border colour + z-order
     model.onTopIndexProperty.link((idx) => {
-      border2.stroke = idx === 2 ? VSPColors.fieldBorderHighlightColorProperty : VSPColors.fieldBorderColorProperty;
+      border2.stroke =
+        idx === 2
+          ? VariableStarPhotometryColors.fieldBorderHighlightColorProperty
+          : VariableStarPhotometryColors.fieldBorderColorProperty;
       border2.lineWidth = idx === 2 ? 3 : 2;
-      border3.stroke = idx === 3 ? VSPColors.fieldBorderHighlightColorProperty : VSPColors.fieldBorderColorProperty;
+      border3.stroke =
+        idx === 3
+          ? VariableStarPhotometryColors.fieldBorderHighlightColorProperty
+          : VariableStarPhotometryColors.fieldBorderColorProperty;
       border3.lineWidth = idx === 3 ? 3 : 2;
 
       // Bring the on-top group to the front
@@ -269,7 +278,7 @@ export class RegistrationScreenView extends ScreenView {
     const makeColumnHeader = (label: TReadOnlyProperty<string>, centerX: number) =>
       new Text(label, {
         font: SMALL_FONT,
-        fill: VSPColors.mutedTextColorProperty,
+        fill: VariableStarPhotometryColors.mutedTextColorProperty,
         centerX,
         centerY: CONTROL_HEADER_H / 2,
       });
@@ -277,7 +286,7 @@ export class RegistrationScreenView extends ScreenView {
     const makePlaceholder = (label: TReadOnlyProperty<string>, centerX: number) =>
       new Text(label, {
         font: LABEL_FONT,
-        fill: VSPColors.mutedTextColorProperty,
+        fill: VariableStarPhotometryColors.mutedTextColorProperty,
         centerX,
         centerY: CONTROL_ROW_H / 2,
       });
@@ -290,7 +299,7 @@ export class RegistrationScreenView extends ScreenView {
 
     const createDivider = (x: number) =>
       new Rectangle(x, 0, 1, CONTROL_HEADER_H + 3 * CONTROL_ROW_H, {
-        fill: VSPColors.dividerColorProperty,
+        fill: VariableStarPhotometryColors.dividerColorProperty,
       });
 
     const shownColumnX = 96;
@@ -300,7 +309,9 @@ export class RegistrationScreenView extends ScreenView {
 
     const tableHeader = new Node({
       children: [
-        new Rectangle(0, 0, CONTROL_TABLE_W, CONTROL_HEADER_H, { fill: VSPColors.tableHeaderFillProperty }),
+        new Rectangle(0, 0, CONTROL_TABLE_W, CONTROL_HEADER_H, {
+          fill: VariableStarPhotometryColors.tableHeaderFillProperty,
+        }),
         makeColumnHeader(strings.shownStringProperty, shownColumnX),
         makeColumnHeader(strings.onTopStringProperty, onTopColumnX),
         makeColumnHeader(strings.xOffsetStringProperty, xOffsetColumnX),
@@ -322,7 +333,7 @@ export class RegistrationScreenView extends ScreenView {
       const controlName = (pattern: TReadOnlyProperty<string>) => new PatternStringProperty(pattern, { number });
       const labelNode = new Text(label, {
         font: LABEL_FONT,
-        fill: VSPColors.panelTextColorProperty,
+        fill: VariableStarPhotometryColors.panelTextColorProperty,
         maxWidth: 82,
         left: 6,
         centerY: CONTROL_ROW_H / 2,
@@ -354,7 +365,7 @@ export class RegistrationScreenView extends ScreenView {
           ? makeTableControlNode(
               new NumberPicker(xProp, xProp.rangeProperty, {
                 font: LABEL_FONT,
-                color: VSPColors.panelTextColorProperty,
+                color: VariableStarPhotometryColors.panelTextColorProperty,
                 incrementFunction: (v) => v + 1,
                 decrementFunction: (v) => v - 1,
                 accessibleName: controlName(a11yControls.xOffsetPatternStringProperty),
@@ -368,7 +379,7 @@ export class RegistrationScreenView extends ScreenView {
           ? makeTableControlNode(
               new NumberPicker(yProp, yProp.rangeProperty, {
                 font: LABEL_FONT,
-                color: VSPColors.panelTextColorProperty,
+                color: VariableStarPhotometryColors.panelTextColorProperty,
                 incrementFunction: (v) => v + 1,
                 decrementFunction: (v) => v - 1,
                 accessibleName: controlName(a11yControls.yOffsetPatternStringProperty),
@@ -392,7 +403,15 @@ export class RegistrationScreenView extends ScreenView {
     const starfieldLabel = (number: number) =>
       new PatternStringProperty(strings.starfieldNumberStringProperty, { number });
 
-    const row1 = makeStarfieldRow(1, starfieldLabel(1), null, null, null, null, VSPColors.tableRowFillProperty);
+    const row1 = makeStarfieldRow(
+      1,
+      starfieldLabel(1),
+      null,
+      null,
+      null,
+      null,
+      VariableStarPhotometryColors.tableRowFillProperty,
+    );
     const row2 = makeStarfieldRow(
       2,
       starfieldLabel(2),
@@ -400,7 +419,7 @@ export class RegistrationScreenView extends ScreenView {
       2,
       model.xOffset2Property,
       model.yOffset2Property,
-      VSPColors.tableRowAltFillProperty,
+      VariableStarPhotometryColors.tableRowAltFillProperty,
     );
     const row3 = makeStarfieldRow(
       3,
@@ -409,7 +428,7 @@ export class RegistrationScreenView extends ScreenView {
       3,
       model.xOffset3Property,
       model.yOffset3Property,
-      VSPColors.tableRowFillProperty,
+      VariableStarPhotometryColors.tableRowFillProperty,
     );
 
     row1.top = CONTROL_HEADER_H;
@@ -418,7 +437,7 @@ export class RegistrationScreenView extends ScreenView {
 
     const tableFrame = new Rectangle(0, 0, CONTROL_TABLE_W, CONTROL_HEADER_H + 3 * CONTROL_ROW_H, {
       fill: null,
-      stroke: VSPColors.tableStrokeProperty,
+      stroke: VariableStarPhotometryColors.tableStrokeProperty,
       lineWidth: 1,
     });
     const starfieldTable = new Node({
@@ -439,7 +458,7 @@ export class RegistrationScreenView extends ScreenView {
       new PatternStringProperty(strings.moveHintStringProperty, { number: model.onTopIndexProperty }),
       {
         font: SMALL_FONT,
-        fill: VSPColors.mutedTextColorProperty,
+        fill: VariableStarPhotometryColors.mutedTextColorProperty,
         maxWidth: CONTROL_TABLE_W,
       },
     );
@@ -447,7 +466,7 @@ export class RegistrationScreenView extends ScreenView {
     const switchButton = new TextPushButton(strings.switchOnTopStringProperty, {
       font: LABEL_FONT,
       listener: () => model.switchOnTopField(),
-      baseColor: VSPColors.buttonColorProperty,
+      baseColor: VariableStarPhotometryColors.buttonColorProperty,
       minWidth: 170,
       accessibleName: strings.switchOnTopStringProperty,
       ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
@@ -459,7 +478,7 @@ export class RegistrationScreenView extends ScreenView {
       children: [
         new Text(strings.starfieldControlsStringProperty, {
           font: HEADER_FONT,
-          fill: VSPColors.panelTextColorProperty,
+          fill: VariableStarPhotometryColors.panelTextColorProperty,
         }),
         starfieldTable,
         selectedFieldText,
@@ -468,8 +487,8 @@ export class RegistrationScreenView extends ScreenView {
     });
 
     const starfieldControlsPanel = new Panel(starfieldControlsContent, {
-      fill: VSPColors.controlPanelFillProperty,
-      stroke: VSPColors.controlPanelStrokeProperty,
+      fill: VariableStarPhotometryColors.controlPanelFillProperty,
+      stroke: VariableStarPhotometryColors.controlPanelStrokeProperty,
       cornerRadius: 0,
       xMargin: 10,
       yMargin: 10,
@@ -491,7 +510,7 @@ export class RegistrationScreenView extends ScreenView {
     // Hint text
     const hintText = new Text(strings.tipStringProperty, {
       font: SMALL_FONT,
-      fill: VSPColors.mutedTextColorProperty,
+      fill: VariableStarPhotometryColors.mutedTextColorProperty,
       maxWidth: CONTROL_TABLE_W,
     });
 
@@ -501,7 +520,7 @@ export class RegistrationScreenView extends ScreenView {
       children: [
         new Text(strings.appearanceOptionsStringProperty, {
           font: HEADER_FONT,
-          fill: VSPColors.panelTextColorProperty,
+          fill: VariableStarPhotometryColors.panelTextColorProperty,
         }),
         transparentCheckbox,
         invertCheckbox,
@@ -510,8 +529,8 @@ export class RegistrationScreenView extends ScreenView {
     });
 
     const appearancePanel = new Panel(appearanceContent, {
-      fill: VSPColors.controlPanelFillProperty,
-      stroke: VSPColors.controlPanelStrokeProperty,
+      fill: VariableStarPhotometryColors.controlPanelFillProperty,
+      stroke: VariableStarPhotometryColors.controlPanelStrokeProperty,
       cornerRadius: 0,
       xMargin: 10,
       yMargin: 10,
@@ -532,8 +551,8 @@ export class RegistrationScreenView extends ScreenView {
     // -----------------------------------------------------------------------
     const resetAllButton = new ResetAllButton({
       listener: () => model.reset(),
-      right: this.layoutBounds.maxX - VSPConstants.LAYOUT.RESET_BUTTON_MARGIN,
-      bottom: this.layoutBounds.maxY - VSPConstants.LAYOUT.RESET_BUTTON_MARGIN,
+      right: this.layoutBounds.maxX - VariableStarPhotometryConstants.LAYOUT.RESET_BUTTON_MARGIN,
+      bottom: this.layoutBounds.maxY - VariableStarPhotometryConstants.LAYOUT.RESET_BUTTON_MARGIN,
       tandem: tandem.createTandem("resetAllButton"),
       ...FLAT_RESET_ALL_BUTTON_OPTIONS,
     });

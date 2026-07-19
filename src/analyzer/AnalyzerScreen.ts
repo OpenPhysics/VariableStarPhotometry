@@ -3,15 +3,15 @@ import type { ScreenOptions } from "scenerystack/sim";
 import { Screen } from "scenerystack/sim";
 import type { Tandem } from "scenerystack/tandem";
 import { createAnalyzerIcon } from "../common/VariableStarPhotometryScreenIcons.js";
-import { VSPKeyboardHelpContent } from "../common/view/VSPKeyboardHelpContent.js";
+import { VariableStarPhotometryKeyboardHelpContent } from "../common/view/VariableStarPhotometryKeyboardHelpContent.js";
 import { StringManager } from "../i18n/StringManager.js";
-import type { VSPPreferencesModel } from "../preferences/VSPPreferencesModel.js";
-import VSPColors from "../VSPColors.js";
+import type { VariableStarPhotometryPreferencesModel } from "../preferences/VariableStarPhotometryPreferencesModel.js";
+import VariableStarPhotometryColors from "../VariableStarPhotometryColors.js";
 import { AnalyzerModel } from "./model/AnalyzerModel.js";
 import { AnalyzerScreenSummaryContent } from "./view/AnalyzerScreenSummaryContent.js";
 import { AnalyzerScreenView } from "./view/AnalyzerScreenView.js";
 
-type AnalyzerScreenOptions = ScreenOptions & { tandem: Tandem; preferences: VSPPreferencesModel };
+type AnalyzerScreenOptions = ScreenOptions & { tandem: Tandem; preferences: VariableStarPhotometryPreferencesModel };
 
 export class AnalyzerScreen extends Screen<AnalyzerModel, AnalyzerScreenView> {
   public constructor(options: AnalyzerScreenOptions) {
@@ -25,8 +25,8 @@ export class AnalyzerScreen extends Screen<AnalyzerModel, AnalyzerScreenView> {
         }),
       optionize<AnalyzerScreenOptions, EmptySelfOptions, ScreenOptions>()(
         {
-          backgroundColorProperty: VSPColors.backgroundColorProperty,
-          createKeyboardHelpNode: () => new VSPKeyboardHelpContent("analyzer"),
+          backgroundColorProperty: VariableStarPhotometryColors.backgroundColorProperty,
+          createKeyboardHelpNode: () => new VariableStarPhotometryKeyboardHelpContent("analyzer"),
           screenButtonsHelpText: summaryStrings.interactionHintStringProperty,
           homeScreenIcon: createAnalyzerIcon(),
           navigationBarIcon: createAnalyzerIcon(),

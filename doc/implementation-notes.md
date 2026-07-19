@@ -9,10 +9,10 @@ Four independent screens; no `VSPSimulationContext` or cross-screen state (plann
 `PORTING_PLAN.md` but not built).
 
 ```
-src/main.ts                          Sim, 4 screens, VSPPreferencesModel
+src/main.ts                          Sim, 4 screens, VariableStarPhotometryPreferencesModel
 src/init.ts                          locales en/es/fr, colorProfiles, no sound
-src/VSPConstants.ts                  FIELD, APERTURE, TIME, LAYOUT, PDM (SCAN_STEPS: 400)
-src/VSPColors.ts, VSPNamespace.ts, brand/splash/assert
+src/VariableStarPhotometryConstants.ts                  FIELD, APERTURE, TIME, LAYOUT, PDM (SCAN_STEPS: 400)
+src/VariableStarPhotometryColors.ts, VariableStarPhotometryNamespace.ts, brand/splash/assert
 
 src/common/model/
   StarFieldData.ts                   26 stars, 109 obs, pulsating/eclipsing presets
@@ -25,7 +25,7 @@ src/common/view/
   StarFieldNode.ts                   CanvasNode + offscreen buffer
   ApertureNode.ts                    DragListener + KeyboardDragListener + identity MVT
   FieldGridNode.ts                   optional grid overlay
-  VSPKeyboardHelpContent.ts
+  VariableStarPhotometryKeyboardHelpContent.ts
 
 src/{registration,blink-comparator,photometry,analyzer}/
   model/*Model.ts
@@ -33,9 +33,9 @@ src/{registration,blink-comparator,photometry,analyzer}/
   *Screen.ts
 
 src/preferences/
-  VSPPreferencesModel.ts             showGrid, invertImages
-  VSPPreferencesNode.ts
-  vspQueryParameters.ts              showGrid, invertImages, blinkIntervalMs, showCrosshair,
+  VariableStarPhotometryPreferencesModel.ts             showGrid, invertImages
+  VariableStarPhotometryPreferencesNode.ts
+  variableStarPhotometryQueryParameters.ts              showGrid, invertImages, blinkIntervalMs, showCrosshair,
                                      apertureDiameter, trialPeriod, lightCurveMode
 ```
 
@@ -52,7 +52,7 @@ Data flows Model → View via AXON `Property` / `DerivedProperty` / `Multilink`.
 4. **Blink via `step(dt)`** — accumulates time; may advance multiple frames after long pauses; requires
    queue length ≥ 2.
 5. **PDM synchronous on main thread** — ~109 × 400 evaluations; acceptable cost.
-6. **Registration preference sync** — bidirectional links on invert/grid with `VSPPreferencesModel`.
+6. **Registration preference sync** — bidirectional links on invert/grid with `VariableStarPhotometryPreferencesModel`.
 7. **Query params seed screen models** — preferences hold grid/invert only; other params initialize models
    at construction.
 
@@ -78,7 +78,7 @@ Slider-backed aperture geometry; `epochIndexProperty`; two `Vector2Property` cen
 
 ## Common components
 
-- `VSPPreferencesModel`, `VSPPreferencesNode`.
+- `VariableStarPhotometryPreferencesModel`, `VariableStarPhotometryPreferencesNode`.
 - `ApertureNode` — radii bound via `.link()` on `NumberProperty` from model sliders.
 
 ## Disposal

@@ -3,15 +3,18 @@ import type { ScreenOptions } from "scenerystack/sim";
 import { Screen } from "scenerystack/sim";
 import type { Tandem } from "scenerystack/tandem";
 import { createBlinkComparatorIcon } from "../common/VariableStarPhotometryScreenIcons.js";
-import { VSPKeyboardHelpContent } from "../common/view/VSPKeyboardHelpContent.js";
+import { VariableStarPhotometryKeyboardHelpContent } from "../common/view/VariableStarPhotometryKeyboardHelpContent.js";
 import { StringManager } from "../i18n/StringManager.js";
-import type { VSPPreferencesModel } from "../preferences/VSPPreferencesModel.js";
-import VSPColors from "../VSPColors.js";
+import type { VariableStarPhotometryPreferencesModel } from "../preferences/VariableStarPhotometryPreferencesModel.js";
+import VariableStarPhotometryColors from "../VariableStarPhotometryColors.js";
 import { BlinkComparatorModel } from "./model/BlinkComparatorModel.js";
 import { BlinkComparatorScreenSummaryContent } from "./view/BlinkComparatorScreenSummaryContent.js";
 import { BlinkComparatorScreenView } from "./view/BlinkComparatorScreenView.js";
 
-type BlinkComparatorScreenOptions = ScreenOptions & { tandem: Tandem; preferences: VSPPreferencesModel };
+type BlinkComparatorScreenOptions = ScreenOptions & {
+  tandem: Tandem;
+  preferences: VariableStarPhotometryPreferencesModel;
+};
 
 export class BlinkComparatorScreen extends Screen<BlinkComparatorModel, BlinkComparatorScreenView> {
   public constructor(options: BlinkComparatorScreenOptions) {
@@ -25,8 +28,8 @@ export class BlinkComparatorScreen extends Screen<BlinkComparatorModel, BlinkCom
         }),
       optionize<BlinkComparatorScreenOptions, EmptySelfOptions, ScreenOptions>()(
         {
-          backgroundColorProperty: VSPColors.backgroundColorProperty,
-          createKeyboardHelpNode: () => new VSPKeyboardHelpContent("blink"),
+          backgroundColorProperty: VariableStarPhotometryColors.backgroundColorProperty,
+          createKeyboardHelpNode: () => new VariableStarPhotometryKeyboardHelpContent("blink"),
           screenButtonsHelpText: summaryStrings.interactionHintStringProperty,
           homeScreenIcon: createBlinkComparatorIcon(),
           navigationBarIcon: createBlinkComparatorIcon(),

@@ -19,7 +19,7 @@ import { ModelViewTransform2 } from "scenerystack/phetcommon";
 import type { NodeOptions, TColor } from "scenerystack/scenery";
 import { Circle, DragListener, KeyboardDragListener, Node, Text } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
-import VSPConstants from "../../VSPConstants.js";
+import VariableStarPhotometryConstants from "../../VariableStarPhotometryConstants.js";
 
 type ApertureNodeSelfOptions = {
   /** Field-pixel bounds the centre is clamped to while dragging (model space). */
@@ -40,7 +40,7 @@ type ApertureNodeSelfOptions = {
 
 export type ApertureNodeOptions = ApertureNodeSelfOptions & NodeOptions;
 
-const LABEL_FONT = new PhetFont({ size: VSPConstants.FONT_SIZE.LABEL, weight: "bold" });
+const LABEL_FONT = new PhetFont({ size: VariableStarPhotometryConstants.FONT_SIZE.LABEL, weight: "bold" });
 
 export class ApertureNode extends Node {
   public constructor(

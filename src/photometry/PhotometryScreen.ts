@@ -3,15 +3,15 @@ import type { ScreenOptions } from "scenerystack/sim";
 import { Screen } from "scenerystack/sim";
 import type { Tandem } from "scenerystack/tandem";
 import { createPhotometryIcon } from "../common/VariableStarPhotometryScreenIcons.js";
-import { VSPKeyboardHelpContent } from "../common/view/VSPKeyboardHelpContent.js";
+import { VariableStarPhotometryKeyboardHelpContent } from "../common/view/VariableStarPhotometryKeyboardHelpContent.js";
 import { StringManager } from "../i18n/StringManager.js";
-import type { VSPPreferencesModel } from "../preferences/VSPPreferencesModel.js";
-import VSPColors from "../VSPColors.js";
+import type { VariableStarPhotometryPreferencesModel } from "../preferences/VariableStarPhotometryPreferencesModel.js";
+import VariableStarPhotometryColors from "../VariableStarPhotometryColors.js";
 import { PhotometryModel } from "./model/PhotometryModel.js";
 import { PhotometryScreenSummaryContent } from "./view/PhotometryScreenSummaryContent.js";
 import { PhotometryScreenView } from "./view/PhotometryScreenView.js";
 
-type PhotometryScreenOptions = ScreenOptions & { tandem: Tandem; preferences: VSPPreferencesModel };
+type PhotometryScreenOptions = ScreenOptions & { tandem: Tandem; preferences: VariableStarPhotometryPreferencesModel };
 
 export class PhotometryScreen extends Screen<PhotometryModel, PhotometryScreenView> {
   public constructor(options: PhotometryScreenOptions) {
@@ -25,8 +25,8 @@ export class PhotometryScreen extends Screen<PhotometryModel, PhotometryScreenVi
         }),
       optionize<PhotometryScreenOptions, EmptySelfOptions, ScreenOptions>()(
         {
-          backgroundColorProperty: VSPColors.backgroundColorProperty,
-          createKeyboardHelpNode: () => new VSPKeyboardHelpContent("photometry"),
+          backgroundColorProperty: VariableStarPhotometryColors.backgroundColorProperty,
+          createKeyboardHelpNode: () => new VariableStarPhotometryKeyboardHelpContent("photometry"),
           screenButtonsHelpText: summaryStrings.interactionHintStringProperty,
           homeScreenIcon: createPhotometryIcon(),
           navigationBarIcon: createPhotometryIcon(),

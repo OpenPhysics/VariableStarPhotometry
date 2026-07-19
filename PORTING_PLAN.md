@@ -11,18 +11,18 @@ ALSO the very USEFUL NAAP/flash-source  for the fla files.
 | File | Status |
 |---|---|
 | `main.ts` | Complete — 4 screens wired, preferences, credits |
-| `VSPColors.ts` | Complete — default + projector profiles |
-| `VSPConstants.ts` | Complete — matches settings.xml field params |
-| `VSPNamespace.ts` | Complete |
+| `VariableStarPhotometryColors.ts` | Complete — default + projector profiles |
+| `VariableStarPhotometryConstants.ts` | Complete — matches settings.xml field params |
+| `VariableStarPhotometryNamespace.ts` | Complete |
 | `brand.ts / splash.ts / init.ts / assert.ts` | Complete |
 | `i18n/StringManager.ts` + `strings_*.json` | Complete — en/es/fr |
-| `preferences/VSPPreferencesModel.ts` | Complete — showGrid, invertImages |
-| `preferences/VSPPreferencesNode.ts` | Complete |
-| `preferences/vspQueryParameters.ts` | Complete |
+| `preferences/VariableStarPhotometryPreferencesModel.ts` | Complete — showGrid, invertImages |
+| `preferences/VariableStarPhotometryPreferencesNode.ts` | Complete |
+| `preferences/variableStarPhotometryQueryParameters.ts` | Complete |
 | `{screen}/model/*.ts` (×4) | Skeleton — Properties defined, logic TODO |
 | `{screen}/view/*.ts` (×4) | Stub — placeholder Node + ResetAllButton only |
-| `common/VSPConstants.ts` | Complete |
-| `common/view/VSPKeyboardHelpContent.ts` | Stub — BasicActionsKeyboardHelpSection only |
+| `common/VariableStarPhotometryConstants.ts` | Complete |
+| `common/view/VariableStarPhotometryKeyboardHelpContent.ts` | Stub — BasicActionsKeyboardHelpSection only |
 
 ---
 
@@ -201,7 +201,7 @@ Key implementation notes:
   via SceneryStack's `matrix` option to shift by the current offset.
 - Transparency is applied by setting `opacity` on the top `StarFieldNode`.
 
-### 2.3  `VSPKeyboardHelpContent` — Registration section
+### 2.3  `VariableStarPhotometryKeyboardHelpContent` — Registration section
 
 Add a "Move Working Image" keyboard help section with arrow-key rows.
 
@@ -502,7 +502,7 @@ Pass `VSPSimulationContext` as a constructor argument to each Model.
 
 ## Phase 7 — Accessibility and polish
 
-- **Keyboard help**: expand `VSPKeyboardHelpContent` with screen-specific
+- **Keyboard help**: expand `VariableStarPhotometryKeyboardHelpContent` with screen-specific
   sections (move working image arrows, blink play/pause Space, aperture
   nudge arrows, period increment/decrement).
 - **Interactive highlights**: all draggable elements (apertures, star-field
@@ -510,7 +510,7 @@ Pass `VSPSimulationContext` as a constructor argument to each Model.
 - **Alt text / PDOM**: each screen's `accessibleParagraph` should describe
   the current state (which star is selected, current period, etc.).
 - **Projector mode**: `StarFieldNode.paintCanvas()` checks
-  `VSPPreferencesModel.invertImagesProperty` and calls
+  `VariableStarPhotometryPreferencesModel.invertImagesProperty` and calls
   `CCDField.renderField(i, invert=true)`.
 - **Responsive layout**: the 1024×768 SceneryStack layout should gracefully
   scale down for narrower viewports — use `ScreenView.layoutBounds` constants.

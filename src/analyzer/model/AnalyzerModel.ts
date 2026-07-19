@@ -21,9 +21,9 @@ import type { Tandem } from "scenerystack/tandem";
 import { differentialMagnitude, measureAperture } from "../../common/model/AperturePhotometry.js";
 import { type PdmPoint, pdmScan } from "../../common/model/PDMCalculator.js";
 import { OBSERVATIONS } from "../../common/model/StarFieldData.js";
-import vspQueryParameters from "../../preferences/vspQueryParameters.js";
-import VSPConstants from "../../VSPConstants.js";
-import VSPNamespace from "../../VSPNamespace.js";
+import variableStarPhotometryQueryParameters from "../../preferences/variableStarPhotometryQueryParameters.js";
+import VariableStarPhotometryConstants from "../../VariableStarPhotometryConstants.js";
+import VariableStarPhotometryNamespace from "../../VariableStarPhotometryNamespace.js";
 
 export const PERIOD_RANGE = new Range(0.1, 100);
 export const PHASE_OFFSET_RANGE = new Range(
@@ -38,15 +38,15 @@ export type LightCurveMode = "time" | "phase";
 export type DiffMag = { epoch: number; magnitude: number };
 
 /** Fixed aperture geometry used for the automated per-observation photometry. */
-const ANALYZER_APERTURE_RADIUS = VSPConstants.APERTURE.DEFAULT_DIAMETER / 2;
-const ANALYZER_SKY_INNER = VSPConstants.APERTURE.DEFAULT_ANNULUS_INNER;
-const ANALYZER_SKY_OUTER = VSPConstants.APERTURE.DEFAULT_ANNULUS_OUTER;
+const ANALYZER_APERTURE_RADIUS = VariableStarPhotometryConstants.APERTURE.DEFAULT_DIAMETER / 2;
+const ANALYZER_SKY_INNER = VariableStarPhotometryConstants.APERTURE.DEFAULT_ANNULUS_INNER;
+const ANALYZER_SKY_OUTER = VariableStarPhotometryConstants.APERTURE.DEFAULT_ANNULUS_OUTER;
 
 /** Initial (full) PDM period-scan window, in days. */
 const FULL_PDM_RANGE = new Range(0.2, 10);
 
 /** Number of trial periods evaluated per scan (resolution adapts to zoom). */
-const PDM_SCAN_STEPS = VSPConstants.PDM.SCAN_STEPS;
+const PDM_SCAN_STEPS = VariableStarPhotometryConstants.PDM.SCAN_STEPS;
 
 export class AnalyzerModel {
   /** Trial period for phase-folding and the PDM marker, in days. */
@@ -75,12 +75,14 @@ export class AnalyzerModel {
   private readonly pdmZoomHistory: Range[] = [];
 
   public constructor(_tandem?: Tandem) {
-    this.trialPeriodProperty = new NumberProperty(vspQueryParameters.trialPeriod ?? 1.0, { range: PERIOD_RANGE });
+    this.trialPeriodProperty = new NumberProperty(variableStarPhotometryQueryParameters.trialPeriod ?? 1.0, {
+      range: PERIOD_RANGE,
+    });
 
     this.phaseOffsetProperty = new NumberProperty(0.0, { range: PHASE_OFFSET_RANGE });
 
     this.lightCurveModeProperty = new StringUnionProperty<LightCurveMode>(
-      vspQueryParameters.lightCurveMode as LightCurveMode,
+      variableStarPhotometryQueryParameters.lightCurveMode as LightCurveMode,
       { validValues: ["time", "phase"] },
     );
 
@@ -226,4 +228,4 @@ export class AnalyzerModel {
   }
 }
 
-VSPNamespace.register("AnalyzerModel", AnalyzerModel);
+VariableStarPhotometryNamespace.register("AnalyzerModel", AnalyzerModel);

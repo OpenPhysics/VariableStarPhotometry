@@ -1,20 +1,20 @@
 import { BooleanProperty } from "scenerystack/axon";
 import type { Tandem } from "scenerystack/tandem";
-import VSPNamespace from "../VSPNamespace.js";
-import vspQueryParameters from "./vspQueryParameters.js";
+import VariableStarPhotometryNamespace from "../VariableStarPhotometryNamespace.js";
+import variableStarPhotometryQueryParameters from "./variableStarPhotometryQueryParameters.js";
 
-export class VSPPreferencesModel {
+export class VariableStarPhotometryPreferencesModel {
   public readonly showGridProperty: BooleanProperty;
   public readonly invertImagesProperty: BooleanProperty;
 
   public constructor(tandem?: Tandem) {
     this.showGridProperty = new BooleanProperty(
-      vspQueryParameters.showGrid,
+      variableStarPhotometryQueryParameters.showGrid,
       tandem ? { tandem: tandem.createTandem("showGridProperty") } : undefined,
     );
 
     this.invertImagesProperty = new BooleanProperty(
-      vspQueryParameters.invertImages,
+      variableStarPhotometryQueryParameters.invertImages,
       tandem ? { tandem: tandem.createTandem("invertImagesProperty") } : undefined,
     );
   }
@@ -25,4 +25,7 @@ export class VSPPreferencesModel {
   }
 }
 
-VSPNamespace.register("VSPPreferencesModel", VSPPreferencesModel);
+VariableStarPhotometryNamespace.register(
+  "VariableStarPhotometryPreferencesModel",
+  VariableStarPhotometryPreferencesModel,
+);

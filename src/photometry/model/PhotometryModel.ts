@@ -22,9 +22,9 @@ import {
   type PhotometryResult,
 } from "../../common/model/AperturePhotometry.js";
 import { OBSERVATIONS } from "../../common/model/StarFieldData.js";
-import vspQueryParameters from "../../preferences/vspQueryParameters.js";
-import VSPConstants from "../../VSPConstants.js";
-import VSPNamespace from "../../VSPNamespace.js";
+import variableStarPhotometryQueryParameters from "../../preferences/variableStarPhotometryQueryParameters.js";
+import VariableStarPhotometryConstants from "../../VariableStarPhotometryConstants.js";
+import VariableStarPhotometryNamespace from "../../VariableStarPhotometryNamespace.js";
 
 export const APERTURE_DIAMETER_RANGE = new Range(6, 30);
 export const ANNULUS_INNER_RANGE = new Range(8, 25);
@@ -68,17 +68,24 @@ export class PhotometryModel {
 
   public constructor(_tandem?: Tandem) {
     this.apertureDiameterProperty = new NumberProperty(
-      vspQueryParameters.apertureDiameter ?? VSPConstants.APERTURE.DEFAULT_DIAMETER,
+      variableStarPhotometryQueryParameters.apertureDiameter ??
+        VariableStarPhotometryConstants.APERTURE.DEFAULT_DIAMETER,
       { range: APERTURE_DIAMETER_RANGE },
     );
 
-    this.annulusInnerRadiusProperty = new NumberProperty(VSPConstants.APERTURE.DEFAULT_ANNULUS_INNER, {
-      range: ANNULUS_INNER_RANGE,
-    });
+    this.annulusInnerRadiusProperty = new NumberProperty(
+      VariableStarPhotometryConstants.APERTURE.DEFAULT_ANNULUS_INNER,
+      {
+        range: ANNULUS_INNER_RANGE,
+      },
+    );
 
-    this.annulusOuterRadiusProperty = new NumberProperty(VSPConstants.APERTURE.DEFAULT_ANNULUS_OUTER, {
-      range: ANNULUS_OUTER_RANGE,
-    });
+    this.annulusOuterRadiusProperty = new NumberProperty(
+      VariableStarPhotometryConstants.APERTURE.DEFAULT_ANNULUS_OUTER,
+      {
+        range: ANNULUS_OUTER_RANGE,
+      },
+    );
 
     this.epochIndexProperty = new NumberProperty(0, {
       numberType: "Integer",
@@ -127,4 +134,4 @@ export class PhotometryModel {
   }
 }
 
-VSPNamespace.register("PhotometryModel", PhotometryModel);
+VariableStarPhotometryNamespace.register("PhotometryModel", PhotometryModel);

@@ -9,16 +9,16 @@
 
 import type { TReadOnlyProperty } from "scenerystack/axon";
 import { Line, Node } from "scenerystack/scenery";
-import VSPColors from "../../VSPColors.js";
-import VSPConstants from "../../VSPConstants.js";
+import VariableStarPhotometryColors from "../../VariableStarPhotometryColors.js";
+import VariableStarPhotometryConstants from "../../VariableStarPhotometryConstants.js";
 
 export class FieldGridNode extends Node {
   public constructor(width: number, height: number, visibleProperty: TReadOnlyProperty<boolean>) {
     super({ pickable: false });
 
-    const spacing = VSPConstants.LAYOUT.GRID_SPACING;
-    const stroke = VSPColors.fieldGridColorProperty;
-    const lineWidth = VSPConstants.LAYOUT.FRAME_LINE_WIDTH;
+    const spacing = VariableStarPhotometryConstants.LAYOUT.GRID_SPACING;
+    const stroke = VariableStarPhotometryColors.fieldGridColorProperty;
+    const lineWidth = VariableStarPhotometryConstants.LAYOUT.FRAME_LINE_WIDTH;
     const lines: Line[] = [];
 
     for (let x = spacing; x < width; x += spacing) {

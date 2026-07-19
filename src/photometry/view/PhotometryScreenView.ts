@@ -26,14 +26,14 @@ import { Checkbox, NumberPicker, Panel } from "scenerystack/sun";
 import { Tandem } from "scenerystack/tandem";
 import { CCDField } from "../../common/model/CCDField.js";
 import { OBSERVATIONS } from "../../common/model/StarFieldData.js";
-import { FLAT_RESET_ALL_BUTTON_OPTIONS } from "../../common/VSPButtonOptions.js";
+import { FLAT_RESET_ALL_BUTTON_OPTIONS } from "../../common/VariableStarPhotometryButtonOptions.js";
 import { ApertureNode } from "../../common/view/ApertureNode.js";
 import { FieldGridNode } from "../../common/view/FieldGridNode.js";
 import { StarFieldNode } from "../../common/view/StarFieldNode.js";
 import { StringManager } from "../../i18n/StringManager.js";
-import type { VSPPreferencesModel } from "../../preferences/VSPPreferencesModel.js";
-import VSPColors from "../../VSPColors.js";
-import VSPConstants from "../../VSPConstants.js";
+import type { VariableStarPhotometryPreferencesModel } from "../../preferences/VariableStarPhotometryPreferencesModel.js";
+import VariableStarPhotometryColors from "../../VariableStarPhotometryColors.js";
+import VariableStarPhotometryConstants from "../../VariableStarPhotometryConstants.js";
 import {
   ANNULUS_INNER_RANGE,
   ANNULUS_OUTER_RANGE,
@@ -41,15 +41,15 @@ import {
   type PhotometryModel,
 } from "../model/PhotometryModel.js";
 
-const FIELD_W = VSPConstants.FIELD.WIDTH;
-const FIELD_H = VSPConstants.FIELD.HEIGHT;
+const FIELD_W = VariableStarPhotometryConstants.FIELD.WIDTH;
+const FIELD_H = VariableStarPhotometryConstants.FIELD.HEIGHT;
 const APERTURE_PREVIEW_SIZE = 170;
 const APERTURE_PREVIEW_FIELD_SIZE = 90;
 const APERTURE_PREVIEW_SCALE = APERTURE_PREVIEW_SIZE / APERTURE_PREVIEW_FIELD_SIZE;
 
-const LABEL_FONT = new PhetFont(VSPConstants.FONT_SIZE.LABEL);
-const HEADER_FONT = new PhetFont({ size: VSPConstants.FONT_SIZE.HEADER, weight: "bold" });
-const MONO_FONT = new PhetFont(VSPConstants.FONT_SIZE.LABEL);
+const LABEL_FONT = new PhetFont(VariableStarPhotometryConstants.FONT_SIZE.LABEL);
+const HEADER_FONT = new PhetFont({ size: VariableStarPhotometryConstants.FONT_SIZE.HEADER, weight: "bold" });
+const MONO_FONT = new PhetFont(VariableStarPhotometryConstants.FONT_SIZE.LABEL);
 
 const FIELD = CCDField.getInstance();
 
@@ -104,7 +104,7 @@ class AperturePreviewNode extends CanvasNode {
     });
 
     // Repaint when the projector/default profile changes the preview background.
-    VSPColors.aperturePreviewBackgroundColorProperty.lazyLink(() => this.invalidatePaint());
+    VariableStarPhotometryColors.aperturePreviewBackgroundColorProperty.lazyLink(() => this.invalidatePaint());
   }
 
   private updateBuffer(): void {
@@ -112,7 +112,7 @@ class AperturePreviewNode extends CanvasNode {
   }
 
   public override paintCanvas(context: CanvasRenderingContext2D): void {
-    context.fillStyle = VSPColors.aperturePreviewBackgroundColorProperty.value.toCSS();
+    context.fillStyle = VariableStarPhotometryColors.aperturePreviewBackgroundColorProperty.value.toCSS();
     context.fillRect(0, 0, APERTURE_PREVIEW_SIZE, APERTURE_PREVIEW_SIZE);
 
     const half = APERTURE_PREVIEW_FIELD_SIZE / 2;
@@ -145,7 +145,11 @@ class AperturePreviewNode extends CanvasNode {
 }
 
 export class PhotometryScreenView extends ScreenView {
-  public constructor(model: PhotometryModel, preferences: VSPPreferencesModel, options?: ScreenViewOptions) {
+  public constructor(
+    model: PhotometryModel,
+    preferences: VariableStarPhotometryPreferencesModel,
+    options?: ScreenViewOptions,
+  ) {
     super(options);
 
     const tandem = options?.tandem instanceof Tandem ? options.tandem : Tandem.OPT_OUT;
@@ -167,7 +171,7 @@ export class PhotometryScreenView extends ScreenView {
     });
     const grid = new FieldGridNode(FIELD_W, FIELD_H, preferences.showGridProperty);
     const frame = new Rectangle(0, 0, FIELD_W, FIELD_H, {
-      stroke: VSPColors.controlPanelStrokeProperty,
+      stroke: VariableStarPhotometryColors.controlPanelStrokeProperty,
       lineWidth: 1,
     });
 
@@ -188,7 +192,7 @@ export class PhotometryScreenView extends ScreenView {
       model.annulusOuterRadiusProperty,
       {
         dragBounds,
-        color: VSPColors.aperturePrimaryColorProperty,
+        color: VariableStarPhotometryColors.aperturePrimaryColorProperty,
         label: "1",
         labelVisibleProperty: model.labelAperturesProperty,
         modelViewTransform: fieldMVT,
@@ -202,7 +206,7 @@ export class PhotometryScreenView extends ScreenView {
       model.annulusOuterRadiusProperty,
       {
         dragBounds,
-        color: VSPColors.apertureSecondaryColorProperty,
+        color: VariableStarPhotometryColors.apertureSecondaryColorProperty,
         label: "2",
         labelVisibleProperty: model.labelAperturesProperty,
         modelViewTransform: fieldMVT,
@@ -217,7 +221,7 @@ export class PhotometryScreenView extends ScreenView {
     // -----------------------------------------------------------------------
     const epochPicker = new NumberPicker(model.epochIndexProperty, model.epochIndexProperty.rangeProperty, {
       font: LABEL_FONT,
-      color: VSPColors.panelTextColorProperty,
+      color: VariableStarPhotometryColors.panelTextColorProperty,
       incrementFunction: (v) => v + 1,
       decrementFunction: (v) => v - 1,
       accessibleName: a11yControls.epochPickerStringProperty,
@@ -235,21 +239,24 @@ export class PhotometryScreenView extends ScreenView {
     // than the default black or panelTextColorProperty (designed for light panels).
     const epochReadout = new Text(
       new PatternStringProperty(strings.epochValueStringProperty, { value: epochDaysProperty }),
-      { font: LABEL_FONT, fill: VSPColors.textColorProperty },
+      { font: LABEL_FONT, fill: VariableStarPhotometryColors.textColorProperty },
     );
 
     const epochRow = new HBox({
       spacing: 8,
       align: "center",
       children: [
-        new Text(strings.observationStringProperty, { font: LABEL_FONT, fill: VSPColors.textColorProperty }),
+        new Text(strings.observationStringProperty, {
+          font: LABEL_FONT,
+          fill: VariableStarPhotometryColors.textColorProperty,
+        }),
         epochPicker,
         epochReadout,
       ],
     });
 
     const numberControlOptions = {
-      titleNodeOptions: { font: LABEL_FONT, fill: VSPColors.textColorProperty },
+      titleNodeOptions: { font: LABEL_FONT, fill: VariableStarPhotometryColors.textColorProperty },
       numberDisplayOptions: { textOptions: { font: LABEL_FONT } },
       sliderOptions: { trackSize: new Dimension2(120, 3) },
       layoutFunction: NumberControl.createLayoutFunction1(),
@@ -276,7 +283,10 @@ export class PhotometryScreenView extends ScreenView {
 
     const labelCheckbox = new Checkbox(
       model.labelAperturesProperty,
-      new Text(strings.labelAperturesStringProperty, { font: LABEL_FONT, fill: VSPColors.textColorProperty }),
+      new Text(strings.labelAperturesStringProperty, {
+        font: LABEL_FONT,
+        fill: VariableStarPhotometryColors.textColorProperty,
+      }),
       { boxWidth: 16, accessibleName: strings.labelAperturesStringProperty },
     );
 
@@ -291,8 +301,8 @@ export class PhotometryScreenView extends ScreenView {
       align: "left",
       children: [fieldContainer, fieldControls],
     });
-    leftColumn.left = VSPConstants.LAYOUT.SCREEN_MARGIN;
-    leftColumn.top = VSPConstants.LAYOUT.SCREEN_MARGIN;
+    leftColumn.left = VariableStarPhotometryConstants.LAYOUT.SCREEN_MARGIN;
+    leftColumn.top = VariableStarPhotometryConstants.LAYOUT.SCREEN_MARGIN;
     this.addChild(leftColumn);
 
     // -----------------------------------------------------------------------
@@ -310,7 +320,7 @@ export class PhotometryScreenView extends ScreenView {
         preferences.invertImagesProperty,
       );
       const previewFrame = new Rectangle(0, 0, APERTURE_PREVIEW_SIZE, APERTURE_PREVIEW_SIZE, {
-        stroke: VSPColors.controlPanelStrokeProperty,
+        stroke: VariableStarPhotometryColors.controlPanelStrokeProperty,
         lineWidth: 1,
       });
       const previewClip = new Node({
@@ -369,12 +379,12 @@ export class PhotometryScreenView extends ScreenView {
       // Pixel hover tooltip (matching Flash's PixelInfo overlay).
       const hoverTooltipText = new Text("", {
         font: new PhetFont({ size: 10, family: "monospace" }),
-        fill: VSPColors.panelTextColorProperty,
+        fill: VariableStarPhotometryColors.panelTextColorProperty,
         pickable: false,
       });
       const hoverTooltipBg = new Rectangle(0, 0, 1, 1, {
-        fill: VSPColors.controlPanelFillProperty,
-        stroke: VSPColors.controlPanelStrokeProperty,
+        fill: VariableStarPhotometryColors.controlPanelFillProperty,
+        stroke: VariableStarPhotometryColors.controlPanelStrokeProperty,
         lineWidth: 0.5,
         cornerRadius: 2,
         pickable: false,
@@ -518,23 +528,23 @@ export class PhotometryScreenView extends ScreenView {
       });
 
       return new Panel(panelContent, {
-        fill: VSPColors.controlPanelFillProperty,
-        stroke: VSPColors.controlPanelStrokeProperty,
-        cornerRadius: VSPConstants.LAYOUT.PANEL_CORNER_RADIUS,
-        xMargin: VSPConstants.LAYOUT.PANEL_X_MARGIN,
-        yMargin: VSPConstants.LAYOUT.PANEL_Y_MARGIN,
+        fill: VariableStarPhotometryColors.controlPanelFillProperty,
+        stroke: VariableStarPhotometryColors.controlPanelStrokeProperty,
+        cornerRadius: VariableStarPhotometryConstants.LAYOUT.PANEL_CORNER_RADIUS,
+        xMargin: VariableStarPhotometryConstants.LAYOUT.PANEL_X_MARGIN,
+        yMargin: VariableStarPhotometryConstants.LAYOUT.PANEL_Y_MARGIN,
       });
     };
 
     const aperture1Info = makeApertureInfoPanel(
       new PatternStringProperty(strings.apertureInfoStringProperty, { number: 1 }),
-      VSPColors.aperturePrimaryColorProperty,
+      VariableStarPhotometryColors.aperturePrimaryColorProperty,
       model.aperture1CenterProperty,
       model.aperture1PhotometryProperty,
     );
     const aperture2Info = makeApertureInfoPanel(
       new PatternStringProperty(strings.apertureInfoStringProperty, { number: 2 }),
-      VSPColors.apertureSecondaryColorProperty,
+      VariableStarPhotometryColors.apertureSecondaryColorProperty,
       model.aperture2CenterProperty,
       model.aperture2PhotometryProperty,
     );
@@ -569,11 +579,11 @@ export class PhotometryScreenView extends ScreenView {
     });
 
     const magnitudePanel = new Panel(magnitudeSection, {
-      fill: VSPColors.controlPanelFillProperty,
-      stroke: VSPColors.controlPanelStrokeProperty,
-      cornerRadius: VSPConstants.LAYOUT.PANEL_CORNER_RADIUS,
-      xMargin: VSPConstants.LAYOUT.PANEL_X_MARGIN,
-      yMargin: VSPConstants.LAYOUT.PANEL_Y_MARGIN,
+      fill: VariableStarPhotometryColors.controlPanelFillProperty,
+      stroke: VariableStarPhotometryColors.controlPanelStrokeProperty,
+      cornerRadius: VariableStarPhotometryConstants.LAYOUT.PANEL_CORNER_RADIUS,
+      xMargin: VariableStarPhotometryConstants.LAYOUT.PANEL_X_MARGIN,
+      yMargin: VariableStarPhotometryConstants.LAYOUT.PANEL_Y_MARGIN,
     });
 
     const rightColumn = new VBox({
@@ -590,8 +600,8 @@ export class PhotometryScreenView extends ScreenView {
     // -----------------------------------------------------------------------
     const resetAllButton = new ResetAllButton({
       listener: () => model.reset(),
-      right: this.layoutBounds.maxX - VSPConstants.LAYOUT.RESET_BUTTON_MARGIN,
-      bottom: this.layoutBounds.maxY - VSPConstants.LAYOUT.RESET_BUTTON_MARGIN,
+      right: this.layoutBounds.maxX - VariableStarPhotometryConstants.LAYOUT.RESET_BUTTON_MARGIN,
+      bottom: this.layoutBounds.maxY - VariableStarPhotometryConstants.LAYOUT.RESET_BUTTON_MARGIN,
       tandem: tandem.createTandem("resetAllButton"),
       ...FLAT_RESET_ALL_BUTTON_OPTIONS,
     });
