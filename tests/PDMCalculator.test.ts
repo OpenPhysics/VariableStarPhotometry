@@ -32,6 +32,22 @@ describe("pdmTheta", () => {
     const { epochs, mags } = syntheticCurve();
     expect(pdmTheta(epochs, mags, 0)).toBe(1);
   });
+
+  it("drives theta near zero for a densely, coherently folded curve", () => {
+    // Regression guard for the interleaved binning: both Nc covers must occupy
+    // disjoint bin blocks. A degenerate second cover (all points collapsing into
+    // one bin) keeps within-bin scatter high and floors theta well above ~0.5
+    // even at the true period; correct binning lets it fall toward 0.
+    const period = 5.0;
+    const epochs: number[] = [];
+    const mags: number[] = [];
+    for (let i = 0; i < 200; i++) {
+      const t = i * 0.137; // dense, incommensurate sampling
+      epochs.push(t);
+      mags.push(10 + 0.5 * Math.sin((2 * Math.PI * t) / period));
+    }
+    expect(pdmTheta(epochs, mags, period)).toBeLessThan(0.3);
+  });
 });
 
 describe("pdmScan + bestPeriod", () => {
