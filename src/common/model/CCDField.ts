@@ -18,6 +18,12 @@ import { FIELD_PARAMS, OBSERVATIONS, STARS } from "./StarFieldData.js";
 
 const W = 380; // field width  (pixels)
 const H = 290; // field height (pixels)
+
+// Cap on cached rendered frames. Each ImageData is W×H×4 ≈ 441 KB; with 109
+// epochs × 2 invert states an unbounded cache could pin ~96 MB for the page
+// lifetime. 48 covers every screen's working set (blink queue, 3 registration
+// epochs, single-epoch photometry/analyzer display) while bounding growth.
+const MAX_CACHED_RENDERS = 48;
 const { noiseMean, noiseSigma, saturationMagnitude, psfRadius, peakValue } = FIELD_PARAMS;
 
 /** Summed raw-count statistics over a circular disc or annular region. */
@@ -117,7 +123,8 @@ function buildNoiseData(numChunks: number, chunkSize: number): Float64Array {
       x2 = 2 * (seed / 2147483647) - 1;
       seed = pmNext(seed);
       fv = x1 * x1 + x2 * x2;
-    } while (fv >= 1);
+      // Reject fv === 0 as well as fv >= 1: fv = 0 would give log(0) → NaN.
+    } while (fv >= 1 || fv === 0);
     fv = Math.sqrt((-2 * Math.log(fv)) / fv);
     data[i] = noiseMean + noiseSigma * x1 * fv;
     data[++i] = noiseMean + noiseSigma * x2 * fv;
@@ -158,7 +165,9 @@ export class CCDField {
   private readonly psfSize: number;
   private readonly gammaLUT: Uint8Array; // normal
   private readonly gammaLUTi: Uint8Array; // inverted
-  private readonly renderCache = new Map<number, ImageData>(); // key = obsIndex (positive = normal, negative-1 = inverted)
+  // key = obsIndex (positive = normal, ~obsIndex = inverted). LRU-bounded to
+  // MAX_CACHED_RENDERS entries; insertion order is used as recency (see render).
+  private readonly renderCache = new Map<number, ImageData>();
 
   // Last-used cache for the raw field data. Avoids rebuilding the same observation's
   // float array when multiple apertures are measured in sequence (e.g., AnalyzerModel
@@ -316,6 +325,9 @@ export class CCDField {
     const cacheKey = invert ? ~obsIndex : obsIndex; // ~x = -(x+1), unique negative
     const cachedImageData = this.renderCache.get(cacheKey);
     if (cachedImageData !== undefined) {
+      // Refresh LRU recency: re-insertion moves the key to the newest position.
+      this.renderCache.delete(cacheKey);
+      this.renderCache.set(cacheKey, cachedImageData);
       return cachedImageData;
     }
 
@@ -338,6 +350,14 @@ export class CCDField {
 
     const imageData = new ImageData(buf, W, H);
     this.renderCache.set(cacheKey, imageData);
+    // Evict the least-recently-used entry (Map preserves insertion order, so the
+    // first key is the oldest) once the cache exceeds its cap.
+    if (this.renderCache.size > MAX_CACHED_RENDERS) {
+      const oldestKey = this.renderCache.keys().next().value;
+      if (oldestKey !== undefined) {
+        this.renderCache.delete(oldestKey);
+      }
+    }
     return imageData;
   }
 

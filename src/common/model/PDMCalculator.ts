@@ -9,9 +9,14 @@
  * NAAP Flash simulator (Nb bins × Nc phase offsets = M total bins):
  *
  *   φ_i  = ((t_i − t₀) / P) mod 1                       (phase of point i)
- *   For each offset k in 0..Nc−1:
- *     bin j = floor(M × ((φ + k/M) mod 1 + k))          (interleaved bin index)
+ *   For each cover k in 0..Nc−1:
+ *     j = k·Nb + floor(Nb × ((φ + k/M) mod 1))          (interleaved bin index)
  *     sum[j] += Δm_i,  count[j] += 1
+ *
+ * The Nc covers each hold Nb bins of width 1/Nb, their phase grids shifted by
+ * k/M, and occupy disjoint blocks [k·Nb, (k+1)·Nb) of the M-length accumulators
+ * so every point contributes to exactly Nc distinct bins (matching the N·Nc − M
+ * degrees-of-freedom term below).
  *   θ = c2 − c1 × Σ_j sum[j]² / count[j]
  *
  * where c1 = (N−1) / ((ΣΔm² − (ΣΔm)²/N) × (N×Nc − M))
@@ -75,16 +80,18 @@ export function pdmTheta(epochs: readonly number[], mags: readonly number[], per
       phase += 1;
     }
 
-    // Each data point contributes to Nc bins (one per interleaved offset).
+    // Each data point contributes to Nc interleaved covers. Cover k holds Nb
+    // bins of width 1/Nb, its phase grid shifted by k/M, and occupies the block
+    // [k·Nb, (k+1)·Nb) of the accumulators — so the two covers never collide.
     for (let k = 0; k < Nc; k++) {
-      let binIndex = Math.floor(M * (((phase + k * (1 / M)) % 1) + k));
-      // Guard against floating-point edge cases.
-      if (binIndex < 0) {
-        binIndex = 0;
+      let local = Math.floor(PDM_NB * ((phase + k * (1 / M)) % 1));
+      // Guard against floating-point edge cases (phase → 1⁻).
+      if (local < 0) {
+        local = 0;
+      } else if (local >= PDM_NB) {
+        local = PDM_NB - 1;
       }
-      if (binIndex >= M) {
-        binIndex = M - 1;
-      }
+      const binIndex = k * PDM_NB + local;
       binSum[binIndex] = (binSum[binIndex] as number) + (mags[i] as number);
       binCount[binIndex] = (binCount[binIndex] as number) + 1;
     }

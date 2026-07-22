@@ -19,7 +19,7 @@ import { DerivedProperty, NumberProperty, Property, StringUnionProperty } from "
 import { Range, type Vector2 } from "scenerystack/dot";
 import type { Tandem } from "scenerystack/tandem";
 import { differentialMagnitude, measureAperture } from "../../common/model/AperturePhotometry.js";
-import { type PdmPoint, pdmScan } from "../../common/model/PDMCalculator.js";
+import { PDM_M, type PdmPoint, pdmScan } from "../../common/model/PDMCalculator.js";
 import { OBSERVATIONS } from "../../common/model/StarFieldData.js";
 import variableStarPhotometryQueryParameters from "../../preferences/variableStarPhotometryQueryParameters.js";
 import VariableStarPhotometryConstants from "../../VariableStarPhotometryConstants.js";
@@ -127,7 +127,9 @@ export class AnalyzerModel {
     this.pdmScanResultsProperty = new DerivedProperty(
       [this.measurementsProperty, this.pdmZoomRangeProperty, this.phaseOffsetProperty],
       (measurements, zoom, t0) => {
-        if (measurements.length < 6) {
+        // pdmTheta needs at least M+1 points to be defined (it returns the
+        // sentinel 1 otherwise); below that a scan would be uniformly flat.
+        if (measurements.length < PDM_M + 1) {
           return [];
         }
         const epochs = measurements.map((m) => m.epoch);

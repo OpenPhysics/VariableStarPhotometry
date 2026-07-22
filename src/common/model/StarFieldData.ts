@@ -109,6 +109,9 @@ export const OBSERVATIONS: readonly Observation[] = [
   { epoch: 5.768, noiseSeed: 1700291428 },
   { epoch: 5.8125, noiseSeed: 1225051256 },
   { epoch: 5.8735, noiseSeed: 422685015 },
+  // NB: 5.9858 precedes 5.9564 — epochs are NOT strictly monotonic here. This
+  // mirrors settings.xml verbatim; PDM is order-independent so results are
+  // unaffected. Do not "sort" this list — keep source parity.
   { epoch: 5.9858, noiseSeed: 947825811 },
   { epoch: 5.9564, noiseSeed: 1130423571 },
   { epoch: 7.7788, noiseSeed: 378344826 },
