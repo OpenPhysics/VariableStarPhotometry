@@ -391,6 +391,51 @@ export class BlinkComparatorScreenView extends ScreenView {
 
     const queueRows = new VBox({ spacing: 0, align: "left" });
 
+    const makeQueueRow = (queueIndex: number): Node => {
+      const obsIndex = model.blinkQueue[queueIndex];
+      const isSelected = queueIndex === model.queuePositionProperty.value && obsIndex !== undefined;
+      const rowBackground = new Rectangle(0, 0, TABLE_WIDTH, TABLE_ROW_HEIGHT, {
+        fill: isSelected
+          ? VariableStarPhotometryColors.selectionFillProperty
+          : VariableStarPhotometryColors.tableRowFillProperty,
+        stroke: VariableStarPhotometryColors.dividerColorProperty,
+        lineWidth: 1,
+      });
+      const children: Node[] = [rowBackground];
+      if (obsIndex !== undefined) {
+        const epochProp = makeEpochDaysProperty(obsIndex);
+        queueRowProps.push(epochProp);
+        children.push(
+          new Circle(4, {
+            fill: isSelected ? VariableStarPhotometryColors.queueMarkerColorProperty : null,
+            left: 12,
+            centerY: TABLE_ROW_HEIGHT / 2,
+          }),
+          new Text(epochProp, {
+            font: LABEL_FONT,
+            left: 28,
+            centerY: TABLE_ROW_HEIGHT / 2,
+          }),
+        );
+      }
+
+      const row = new Node({ cursor: obsIndex === undefined ? "default" : "pointer", children });
+      if (obsIndex !== undefined) {
+        const observation = OBSERVATIONS[obsIndex];
+        const rowName = new PatternStringProperty(a11yControls.queuedObservationPatternStringProperty, {
+          epoch: observation !== undefined ? toFixed(observation.epoch, 4) : "",
+        });
+        queueRowProps.push(rowName);
+        row.tagName = "button";
+        row.accessibleName = rowName;
+        const selectQueueRow = () => {
+          model.queuePositionProperty.value = queueIndex;
+        };
+        row.addInputListener({ down: selectQueueRow, click: selectQueueRow });
+      }
+      return row;
+    };
+
     const rebuildQueueList = () => {
       for (const child of queueRows.children.slice()) {
         child.dispose();
@@ -401,48 +446,7 @@ export class BlinkComparatorScreenView extends ScreenView {
       queueRowProps.length = 0;
       const rows: Node[] = [];
       for (let i = 0; i < QUEUE_LIST_VISIBLE_ROWS; i++) {
-        const obsIndex = model.blinkQueue[i];
-        const isSelected = i === model.queuePositionProperty.value && obsIndex !== undefined;
-        const rowBackground = new Rectangle(0, 0, TABLE_WIDTH, TABLE_ROW_HEIGHT, {
-          fill: isSelected
-            ? VariableStarPhotometryColors.selectionFillProperty
-            : VariableStarPhotometryColors.tableRowFillProperty,
-          stroke: VariableStarPhotometryColors.dividerColorProperty,
-          lineWidth: 1,
-        });
-        const children: Node[] = [rowBackground];
-        if (obsIndex !== undefined) {
-          const epochProp = makeEpochDaysProperty(obsIndex);
-          queueRowProps.push(epochProp);
-          children.push(
-            new Circle(4, {
-              fill: isSelected ? VariableStarPhotometryColors.queueMarkerColorProperty : null,
-              left: 12,
-              centerY: TABLE_ROW_HEIGHT / 2,
-            }),
-            new Text(epochProp, {
-              font: LABEL_FONT,
-              left: 28,
-              centerY: TABLE_ROW_HEIGHT / 2,
-            }),
-          );
-        }
-
-        const row = new Node({ cursor: obsIndex === undefined ? "default" : "pointer", children });
-        if (obsIndex !== undefined) {
-          const observation = OBSERVATIONS[obsIndex];
-          const rowName = new PatternStringProperty(a11yControls.queuedObservationPatternStringProperty, {
-            epoch: observation !== undefined ? toFixed(observation.epoch, 4) : "",
-          });
-          queueRowProps.push(rowName);
-          row.tagName = "button";
-          row.accessibleName = rowName;
-          const selectQueueRow = () => {
-            model.queuePositionProperty.value = i;
-          };
-          row.addInputListener({ down: selectQueueRow, click: selectQueueRow });
-        }
-        rows.push(row);
+        rows.push(makeQueueRow(i));
       }
       queueRows.children = rows;
     };
