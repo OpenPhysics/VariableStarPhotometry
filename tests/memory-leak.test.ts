@@ -33,7 +33,7 @@ async function forceGC(earlyExitRef?: WeakRef<object>): Promise<void> {
 
 /** Dispose all reactive state owned by a PhotometryModel instance. Idempotent. */
 function disposePhotometryModel(model: PhotometryModel): void {
-  const disposeIfNeeded = (property: { isDisposed: boolean; dispose(): void }): void => {
+  const disposeIfNeeded = (property: { isDisposed?: boolean; dispose(): void }): void => {
     if (!property.isDisposed) {
       property.dispose();
     }
