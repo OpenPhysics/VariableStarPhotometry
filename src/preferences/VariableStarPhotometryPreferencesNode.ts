@@ -13,7 +13,7 @@ export class VariableStarPhotometryPreferencesNode extends VBox {
 
     const header = new Text(prefStrings.titleStringProperty, {
       font: new PhetFont({ size: 18, weight: "bold" }),
-      fill: VariableStarPhotometryColors.textColorProperty,
+      fill: VariableStarPhotometryColors.controlSurfaceTextColorProperty,
     });
 
     const makeCheckbox = (
@@ -25,11 +25,11 @@ export class VariableStarPhotometryPreferencesNode extends VBox {
         property,
         new Text(labelProperty, {
           font: new PhetFont(14),
-          fill: VariableStarPhotometryColors.textColorProperty,
+          fill: VariableStarPhotometryColors.controlSurfaceTextColorProperty,
         }),
         {
-          checkboxColor: VariableStarPhotometryColors.textColorProperty,
-          checkboxColorBackground: VariableStarPhotometryColors.panelBackgroundColorProperty,
+          checkboxColor: VariableStarPhotometryColors.controlSurfaceTextColorProperty,
+          checkboxColorBackground: VariableStarPhotometryColors.controlSurfaceColorProperty,
           spacing: 8,
           ...(tandem && { tandem: tandem.createTandem(tandemName) }),
         },

@@ -68,6 +68,24 @@ const VariableStarPhotometryColors = {
     projector: new Color("#f5f5f5"),
   }),
 
+  // ── Light control surfaces ───────────────────────────────────────────────────
+  // White chrome (combo boxes, flat push buttons, editable input fields, the joist
+  // Preferences dialog content) stays light in both profiles; its text stays dark.
+  // The Preferences dialog is always white, so preferences content must use these
+  // (not textColorProperty, which is near-white in default mode).
+
+  /** Fill of light control surfaces: combo-box button/list, editable input fields, preferences content. */
+  controlSurfaceColorProperty: new ProfileColorProperty(VariableStarPhotometryNamespace, "controlSurface", {
+    default: WHITE,
+    projector: WHITE,
+  }),
+
+  /** Text on light control surfaces: combo items, flat-button labels, field values, preferences content. */
+  controlSurfaceTextColorProperty: new ProfileColorProperty(VariableStarPhotometryNamespace, "controlSurfaceText", {
+    default: PANEL_TEXT,
+    projector: BLACK,
+  }),
+
   /** Fill for a table header row. */
   tableHeaderFillProperty: new ProfileColorProperty(VariableStarPhotometryNamespace, "tableHeaderFill", {
     default: new Color("#eeeeee"),
