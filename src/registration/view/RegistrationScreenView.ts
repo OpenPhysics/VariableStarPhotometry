@@ -343,8 +343,8 @@ export class RegistrationScreenView extends ScreenView {
         ? makeTableControlNode(
             new Checkbox(shownProp, new Text("", { font: LABEL_FONT }), {
               boxWidth: 16,
-              checkboxColor: VariableStarPhotometryColors.textColorProperty,
-              checkboxColorBackground: VariableStarPhotometryColors.panelBackgroundColorProperty,
+              checkboxColor: VariableStarPhotometryColors.controlSurfaceTextColorProperty,
+              checkboxColorBackground: VariableStarPhotometryColors.controlSurfaceColorProperty,
               accessibleName: controlName(a11yControls.shownPatternStringProperty),
             }),
             shownColumnX,
@@ -501,13 +501,13 @@ export class RegistrationScreenView extends ScreenView {
       model.topFieldTransparentProperty,
       new Text(strings.makeTopTransparentStringProperty, {
         font: LABEL_FONT,
-        fill: VariableStarPhotometryColors.textColorProperty,
+        fill: VariableStarPhotometryColors.panelTextColorProperty,
       }),
       {
         boxWidth: 16,
         accessibleName: strings.makeTopTransparentStringProperty,
-        checkboxColor: VariableStarPhotometryColors.textColorProperty,
-        checkboxColorBackground: VariableStarPhotometryColors.panelBackgroundColorProperty,
+        checkboxColor: VariableStarPhotometryColors.controlSurfaceTextColorProperty,
+        checkboxColorBackground: VariableStarPhotometryColors.controlSurfaceColorProperty,
       },
     );
 
@@ -515,13 +515,13 @@ export class RegistrationScreenView extends ScreenView {
       model.invertColorsProperty,
       new Text(strings.invertColorsStringProperty, {
         font: LABEL_FONT,
-        fill: VariableStarPhotometryColors.textColorProperty,
+        fill: VariableStarPhotometryColors.panelTextColorProperty,
       }),
       {
         boxWidth: 16,
         accessibleName: strings.invertColorsStringProperty,
-        checkboxColor: VariableStarPhotometryColors.textColorProperty,
-        checkboxColorBackground: VariableStarPhotometryColors.panelBackgroundColorProperty,
+        checkboxColor: VariableStarPhotometryColors.controlSurfaceTextColorProperty,
+        checkboxColorBackground: VariableStarPhotometryColors.controlSurfaceColorProperty,
       },
     );
 

@@ -291,7 +291,7 @@ export class PhotometryScreenView extends ScreenView {
         boxWidth: 16,
         accessibleName: strings.labelAperturesStringProperty,
         checkboxColor: VariableStarPhotometryColors.textColorProperty,
-        checkboxColorBackground: VariableStarPhotometryColors.panelBackgroundColorProperty,
+        checkboxColorBackground: VariableStarPhotometryColors.backgroundColorProperty,
       },
     );
 

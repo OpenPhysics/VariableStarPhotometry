@@ -207,13 +207,13 @@ export class BlinkComparatorScreenView extends ScreenView {
       model.showCrosshairProperty,
       new Text(strings.showCrosshairsStringProperty, {
         font: LABEL_FONT,
-        fill: VariableStarPhotometryColors.textColorProperty,
+        fill: VariableStarPhotometryColors.panelTextColorProperty,
       }),
       {
         boxWidth: 16,
         accessibleName: strings.showCrosshairsStringProperty,
-        checkboxColor: VariableStarPhotometryColors.textColorProperty,
-        checkboxColorBackground: VariableStarPhotometryColors.panelBackgroundColorProperty,
+        checkboxColor: VariableStarPhotometryColors.controlSurfaceTextColorProperty,
+        checkboxColorBackground: VariableStarPhotometryColors.controlSurfaceColorProperty,
       },
     );
 

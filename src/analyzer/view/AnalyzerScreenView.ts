@@ -273,7 +273,7 @@ export class AnalyzerScreenView extends ScreenView {
         boxWidth: 14,
         accessibleName: strings.showCrosshairsStringProperty,
         checkboxColor: VariableStarPhotometryColors.textColorProperty,
-        checkboxColorBackground: VariableStarPhotometryColors.panelBackgroundColorProperty,
+        checkboxColorBackground: VariableStarPhotometryColors.backgroundColorProperty,
       },
     );
 
@@ -621,7 +621,7 @@ export class AnalyzerScreenView extends ScreenView {
         boxWidth: 16,
         accessibleName: strings.showDifferenceToolStringProperty,
         checkboxColor: VariableStarPhotometryColors.textColorProperty,
-        checkboxColorBackground: VariableStarPhotometryColors.panelBackgroundColorProperty,
+        checkboxColorBackground: VariableStarPhotometryColors.backgroundColorProperty,
       },
     );
 
