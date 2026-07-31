@@ -287,7 +287,12 @@ export class PhotometryScreenView extends ScreenView {
         font: LABEL_FONT,
         fill: VariableStarPhotometryColors.textColorProperty,
       }),
-      { boxWidth: 16, accessibleName: strings.labelAperturesStringProperty },
+      {
+        boxWidth: 16,
+        accessibleName: strings.labelAperturesStringProperty,
+        checkboxColor: VariableStarPhotometryColors.textColorProperty,
+        checkboxColorBackground: VariableStarPhotometryColors.panelBackgroundColorProperty,
+      },
     );
 
     const fieldControls = new VBox({

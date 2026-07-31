@@ -269,7 +269,12 @@ export class AnalyzerScreenView extends ScreenView {
         font: SMALL_FONT,
         fill: VariableStarPhotometryColors.textColorProperty,
       }),
-      { boxWidth: 14, accessibleName: strings.showCrosshairsStringProperty },
+      {
+        boxWidth: 14,
+        accessibleName: strings.showCrosshairsStringProperty,
+        checkboxColor: VariableStarPhotometryColors.textColorProperty,
+        checkboxColorBackground: VariableStarPhotometryColors.panelBackgroundColorProperty,
+      },
     );
 
     const leftColumn = new VBox({
@@ -612,7 +617,12 @@ export class AnalyzerScreenView extends ScreenView {
         font: LABEL_FONT,
         fill: VariableStarPhotometryColors.textColorProperty,
       }),
-      { boxWidth: 16, accessibleName: strings.showDifferenceToolStringProperty },
+      {
+        boxWidth: 16,
+        accessibleName: strings.showDifferenceToolStringProperty,
+        checkboxColor: VariableStarPhotometryColors.textColorProperty,
+        checkboxColorBackground: VariableStarPhotometryColors.panelBackgroundColorProperty,
+      },
     );
 
     // Assemble observations panel (title, [y-label | chart], x-label, radios).

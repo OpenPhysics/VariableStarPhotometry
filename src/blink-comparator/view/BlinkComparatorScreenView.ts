@@ -205,8 +205,16 @@ export class BlinkComparatorScreenView extends ScreenView {
 
     const crosshairCheckbox = new Checkbox(
       model.showCrosshairProperty,
-      new Text(strings.showCrosshairsStringProperty, { font: LABEL_FONT }),
-      { boxWidth: 16, accessibleName: strings.showCrosshairsStringProperty },
+      new Text(strings.showCrosshairsStringProperty, {
+        font: LABEL_FONT,
+        fill: VariableStarPhotometryColors.textColorProperty,
+      }),
+      {
+        boxWidth: 16,
+        accessibleName: strings.showCrosshairsStringProperty,
+        checkboxColor: VariableStarPhotometryColors.textColorProperty,
+        checkboxColorBackground: VariableStarPhotometryColors.panelBackgroundColorProperty,
+      },
     );
 
     const fieldFooter = new HBox({
