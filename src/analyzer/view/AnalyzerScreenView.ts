@@ -28,13 +28,12 @@ import {
 } from "scenerystack/bamboo";
 import { Dimension2, Range, toFixed, Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
-import { Orientation } from "scenerystack/phet-core";
+import { type EmptySelfOptions, Orientation, optionize } from "scenerystack/phet-core";
 import { ModelViewTransform2 } from "scenerystack/phetcommon";
 import type { SceneryEvent } from "scenerystack/scenery";
 import { Circle, DragListener, HBox, Line, Node, Rectangle, Text, VBox } from "scenerystack/scenery";
 import { NumberControl, PhetFont, ResetAllButton } from "scenerystack/scenery-phet";
-import type { ScreenViewOptions } from "scenerystack/sim";
-import { ScreenView } from "scenerystack/sim";
+import { ScreenView, type ScreenViewOptions } from "scenerystack/sim";
 import { AquaRadioButtonGroup, Checkbox, TextPushButton } from "scenerystack/sun";
 import { Tandem } from "scenerystack/tandem";
 import { bestPeriod } from "../../common/model/PDMCalculator.js";
@@ -75,12 +74,15 @@ function decimalsFor(spacing: number): number {
   return spacing >= 1 ? 0 : Math.ceil(-Math.log10(spacing));
 }
 
+export type AnalyzerScreenViewOptions = ScreenViewOptions;
+
 export class AnalyzerScreenView extends ScreenView {
   public constructor(
     model: AnalyzerModel,
     preferences: VariableStarPhotometryPreferencesModel,
-    options?: ScreenViewOptions,
+    providedOptions?: AnalyzerScreenViewOptions,
   ) {
+    const options = optionize<AnalyzerScreenViewOptions, EmptySelfOptions, ScreenViewOptions>()({}, providedOptions);
     super(options);
 
     const tandem = options?.tandem instanceof Tandem ? options.tandem : Tandem.OPT_OUT;

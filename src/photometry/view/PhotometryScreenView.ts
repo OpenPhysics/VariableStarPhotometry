@@ -16,12 +16,12 @@
 import { DerivedProperty, Multilink, PatternStringProperty, type TReadOnlyProperty } from "scenerystack/axon";
 import { Bounds2, Dimension2, toFixed, type Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
+import { type EmptySelfOptions, optionize } from "scenerystack/phet-core";
 import { ModelViewTransform2 } from "scenerystack/phetcommon";
 import type { SceneryEvent } from "scenerystack/scenery";
 import { CanvasNode, Circle, HBox, Node, Rectangle, RichText, type TColor, Text, VBox } from "scenerystack/scenery";
 import { NumberControl, PhetFont, ResetAllButton } from "scenerystack/scenery-phet";
-import type { ScreenViewOptions } from "scenerystack/sim";
-import { ScreenView } from "scenerystack/sim";
+import { ScreenView, type ScreenViewOptions } from "scenerystack/sim";
 import { Checkbox, NumberPicker, Panel } from "scenerystack/sun";
 import { Tandem } from "scenerystack/tandem";
 import { CCDField } from "../../common/model/CCDField.js";
@@ -144,15 +144,18 @@ class AperturePreviewNode extends CanvasNode {
   }
 }
 
+export type PhotometryScreenViewOptions = ScreenViewOptions;
+
 export class PhotometryScreenView extends ScreenView {
   public constructor(
     model: PhotometryModel,
     preferences: VariableStarPhotometryPreferencesModel,
-    options?: ScreenViewOptions,
+    providedOptions?: PhotometryScreenViewOptions,
   ) {
+    const options = optionize<PhotometryScreenViewOptions, EmptySelfOptions, ScreenViewOptions>()({}, providedOptions);
     super(options);
 
-    const tandem = options?.tandem instanceof Tandem ? options.tandem : Tandem.OPT_OUT;
+    const tandem = options.tandem instanceof Tandem ? options.tandem : Tandem.OPT_OUT;
     const strings = StringManager.getInstance().getPhotometryViewStrings();
     const unitStrings = StringManager.getInstance().getUnitStrings();
     const a11yControls = StringManager.getInstance().getPhotometryA11yStrings().controls;

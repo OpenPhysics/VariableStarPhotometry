@@ -22,11 +22,11 @@ import {
 } from "scenerystack/axon";
 import { toFixed } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
+import { type EmptySelfOptions, optionize } from "scenerystack/phet-core";
 import type { SceneryEvent } from "scenerystack/scenery";
 import { Circle, HBox, KeyboardListener, Line, Node, Rectangle, Text, VBox } from "scenerystack/scenery";
 import { PhetFont, ResetAllButton } from "scenerystack/scenery-phet";
-import type { ScreenViewOptions } from "scenerystack/sim";
-import { ScreenView } from "scenerystack/sim";
+import { ScreenView, type ScreenViewOptions } from "scenerystack/sim";
 import { Checkbox, HSlider, Panel, RectangularPushButton, TextPushButton } from "scenerystack/sun";
 import { Tandem } from "scenerystack/tandem";
 import { OBSERVATIONS } from "../../common/model/StarFieldData.js";
@@ -67,14 +67,20 @@ function makeTableHeader(width: number, epochLabelProperty: TReadOnlyProperty<st
   });
 }
 
+export type BlinkComparatorScreenViewOptions = ScreenViewOptions;
+
 export class BlinkComparatorScreenView extends ScreenView {
   private readonly model: BlinkComparatorModel;
 
   public constructor(
     model: BlinkComparatorModel,
     preferences: VariableStarPhotometryPreferencesModel,
-    options?: ScreenViewOptions,
+    providedOptions?: BlinkComparatorScreenViewOptions,
   ) {
+    const options = optionize<BlinkComparatorScreenViewOptions, EmptySelfOptions, ScreenViewOptions>()(
+      {},
+      providedOptions,
+    );
     super(options);
 
     this.model = model;

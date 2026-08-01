@@ -28,11 +28,11 @@ import {
   type TReadOnlyProperty,
 } from "scenerystack/axon";
 import { Shape } from "scenerystack/kite";
+import { type EmptySelfOptions, optionize } from "scenerystack/phet-core";
 import type { SceneryEvent, TColor } from "scenerystack/scenery";
 import { DragListener, KeyboardListener, Node, Rectangle, Text, VBox } from "scenerystack/scenery";
 import { PhetFont, ResetAllButton } from "scenerystack/scenery-phet";
-import type { ScreenViewOptions } from "scenerystack/sim";
-import { ScreenView } from "scenerystack/sim";
+import { ScreenView, type ScreenViewOptions } from "scenerystack/sim";
 import { AquaRadioButton, Checkbox, NumberPicker, Panel, TextPushButton } from "scenerystack/sun";
 import { Tandem } from "scenerystack/tandem";
 import {
@@ -59,8 +59,14 @@ const CONTROL_TABLE_W = 286;
 const CONTROL_ROW_H = 34;
 const CONTROL_HEADER_H = 24;
 
+export type RegistrationScreenViewOptions = ScreenViewOptions;
+
 export class RegistrationScreenView extends ScreenView {
-  public constructor(model: RegistrationModel, options?: ScreenViewOptions) {
+  public constructor(model: RegistrationModel, providedOptions?: RegistrationScreenViewOptions) {
+    const options = optionize<RegistrationScreenViewOptions, EmptySelfOptions, ScreenViewOptions>()(
+      {},
+      providedOptions,
+    );
     super(options);
 
     const tandem = options?.tandem instanceof Tandem ? options.tandem : Tandem.OPT_OUT;
