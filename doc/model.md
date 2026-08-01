@@ -132,6 +132,6 @@ Students can zoom in/out around a period, undo zoom history, and fold the curve 
 
 ## References
 
-- NAAP *Variable Star Photometry* lab under `NAAP/astroUNL/naap/`.
+- NAAP *Variable Star Photometry* lab under `../Baseline/Astronomy/astroUNL/naap/`.
 - Stellingwerf (1978) — PDM concept (implementation follows NAAP Flash interleaved variant).
 - Original Flash simulators ported in this repository.
