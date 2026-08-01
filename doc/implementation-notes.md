@@ -5,8 +5,7 @@ Developer-facing notes on the architecture. Educator-facing workflow and physics
 
 ## Architecture Overview
 
-Four independent screens; no `VSPSimulationContext` or cross-screen state (planned in historical
-`PORTING_PLAN.md` but not built).
+Four independent screens; no `VSPSimulationContext` or cross-screen state.
 
 ```
 src/main.ts                          Sim, 4 screens, VariableStarPhotometryPreferencesModel

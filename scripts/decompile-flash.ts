@@ -3,8 +3,7 @@
  *
  * Extract readable ActionScript (and optionally assets) from the original NAAP
  * Flash sources under `../Baseline/Astronomy/flash-animations/` (sibling Baseline repo), so the ported Variable Star Photometry sim can be
- * checked against the real implementation. See PORTING_PLAN.md → "Flash simulator
- * inventory".
+ * checked against the real implementation.
  *
  * The `.fla` files are old binary (OLE compound) projects that no current tool
  * reads directly — but every one ships a sibling compiled `.swf`, and SWF → AS
