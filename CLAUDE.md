@@ -77,5 +77,5 @@ npm run lint && npm run check && npm run build && npm test
 ## Development notes
 
 - **`VariableStarPhotometryConstants.ts`** uses nested frozen `as const` groups (`FIELD`, `APERTURE`, `TIME`, `LAYOUT`, `PDM`) instead of a flat namespace — intentional for five distinct concerns; still no magic numbers in model/view code.
-- **`npm run decompile`** extracts NAAP Flash ActionScript via JPEXS FFDec into gitignored `NAAP/decompiled/` — read-only reference.
+- **`npm run decompile`** extracts NAAP Flash ActionScript via JPEXS FFDec from `../Baseline/Astronomy/flash-animations` into gitignored `NAAP/decompiled/`.
 - After `npm run build`, the sim is installable offline via Workbox (`dist/manifest.webmanifest`).
