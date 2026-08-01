@@ -151,7 +151,8 @@
         "shownPattern": "Show star field {{number}}",
         "onTopPattern": "Put star field {{number}} on top",
         "xOffsetPattern": "Star field {{number}} horizontal offset",
-        "yOffsetPattern": "Star field {{number}} vertical offset"
+        "yOffsetPattern": "Star field {{number}} vertical offset",
+        "workArea": "Work area"
       }
     },
     "blinkComparator": {
@@ -195,7 +196,8 @@
       "currentDetailsWithDataPattern": "The light curve has {{count}} measurements. The trial period is {{period}} days.",
       "currentDetailsNoDataPattern": "No light curve yet. Select a variable star and a comparison star in the star field.",
       "controls": {
-        "lightCurveMode": "Light curve mode"
+        "lightCurveMode": "Light curve mode",
+        "deltaBarPattern": "Delta bar {{number}}"
       }
     }
   },

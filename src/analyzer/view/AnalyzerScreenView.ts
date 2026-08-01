@@ -31,7 +31,7 @@ import { Shape } from "scenerystack/kite";
 import { type EmptySelfOptions, Orientation, optionize } from "scenerystack/phet-core";
 import { ModelViewTransform2 } from "scenerystack/phetcommon";
 import type { SceneryEvent } from "scenerystack/scenery";
-import { Circle, DragListener, HBox, Line, Node, Rectangle, Text, VBox } from "scenerystack/scenery";
+import { Circle, DragListener, HBox, Line, Node, Rectangle, RichDragListener, Text, VBox } from "scenerystack/scenery";
 import { NumberControl, PhetFont, ResetAllButton } from "scenerystack/scenery-phet";
 import { ScreenView, type ScreenViewOptions } from "scenerystack/sim";
 import { AquaRadioButtonGroup, Checkbox, TextPushButton } from "scenerystack/sun";
@@ -403,7 +403,13 @@ export class AnalyzerScreenView extends ScreenView {
     };
 
     const makeDeltaBarHitTarget = (which: 1 | 2): Rectangle => {
-      const hit = new Rectangle(0, 0, OBS_W, 12, { fill: "transparent", cursor: "ns-resize" });
+      const hit = new Rectangle(0, 0, OBS_W, 12, {
+        fill: "transparent",
+        cursor: "ns-resize",
+        tagName: "div",
+        focusable: true,
+        accessibleName: new PatternStringProperty(a11yControls.deltaBarPatternStringProperty, { number: which }),
+      });
       const setBarFromEvent = (event: SceneryEvent) => {
         const local = hit.globalToLocalPoint(event.pointer.point);
         const y = Math.max(0, Math.min(OBS_H, hit.y + local.y));
@@ -415,9 +421,28 @@ export class AnalyzerScreenView extends ScreenView {
         updateDeltaOverlayAndHits();
       };
       hit.addInputListener(
-        new DragListener({
-          start: (event) => setBarFromEvent(event),
-          drag: (event) => setBarFromEvent(event),
+        new RichDragListener({
+          dragListenerOptions: {
+            start: (event) => setBarFromEvent(event),
+            drag: (event) => setBarFromEvent(event),
+          },
+          keyboardDragListenerOptions: {
+            keyboardDragDirection: "upDown",
+            dragSpeed: 80,
+            shiftDragSpeed: 30,
+            drag: (_event, listener) => {
+              const y =
+                which === 1
+                  ? Math.max(0, Math.min(OBS_H, deltaBar1Y + listener.modelDelta.y))
+                  : Math.max(0, Math.min(OBS_H, deltaBar2Y + listener.modelDelta.y));
+              if (which === 1) {
+                deltaBar1Y = y;
+              } else {
+                deltaBar2Y = y;
+              }
+              updateDeltaOverlayAndHits();
+            },
+          },
         }),
       );
       return hit;
@@ -736,6 +761,9 @@ export class AnalyzerScreenView extends ScreenView {
       const local = pdmHit.globalToLocalPoint(event.pointer.point);
       return clampPdmViewX(local.x);
     };
+    // Pointer rubber-band zoom / click-to-set period. Keyboard period control is
+    // via the period NumberPicker elsewhere; a RichDragListener would not map
+    // sensibly onto drag-to-zoom-range selection.
     pdmHit.addInputListener(
       new DragListener({
         start: (event) => {

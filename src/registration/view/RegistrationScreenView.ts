@@ -30,7 +30,7 @@ import {
 import { Shape } from "scenerystack/kite";
 import { type EmptySelfOptions, optionize } from "scenerystack/phet-core";
 import type { SceneryEvent, TColor } from "scenerystack/scenery";
-import { DragListener, KeyboardListener, Node, Rectangle, Text, VBox } from "scenerystack/scenery";
+import { KeyboardListener, Node, Rectangle, RichDragListener, Text, VBox } from "scenerystack/scenery";
 import { PhetFont, ResetAllButton } from "scenerystack/scenery-phet";
 import { ScreenView, type ScreenViewOptions } from "scenerystack/sim";
 import { AquaRadioButton, Checkbox, NumberPicker, Panel, TextPushButton } from "scenerystack/sun";
@@ -52,6 +52,10 @@ const FIELD_H = VariableStarPhotometryConstants.FIELD.HEIGHT;
 const LABEL_FONT = new PhetFont(VariableStarPhotometryConstants.FONT_SIZE.LABEL);
 const SMALL_FONT = new PhetFont(VariableStarPhotometryConstants.FONT_SIZE.SMALL);
 const HEADER_FONT = new PhetFont({ size: VariableStarPhotometryConstants.FONT_SIZE.HEADER, weight: "bold" });
+
+/** Field-pixel nudge per arrow-key press in the work area; Shift is the fine step. */
+const NUDGE_STEP_PX = 1;
+const NUDGE_FINE_STEP_PX = 0.25;
 
 const WORK_PANEL_MARGIN = 12;
 const WORK_PANEL_TITLE_HEIGHT = 26;
@@ -243,37 +247,38 @@ export class RegistrationScreenView extends ScreenView {
       );
     };
 
+    dragHitArea.focusable = true;
+    dragHitArea.tagName = "div";
+    dragHitArea.accessibleName = a11yControls.workAreaStringProperty;
     dragHitArea.addInputListener(
-      new DragListener({
-        start: startDrag,
-        drag: dragField,
-        end: () => {
-          draggedFieldIndex = null;
+      new RichDragListener({
+        dragListenerOptions: {
+          start: startDrag,
+          drag: dragField,
+          end: () => {
+            draggedFieldIndex = null;
+          },
+        },
+        keyboardDragListenerOptions: {
+          dragDelta: NUDGE_STEP_PX,
+          shiftDragDelta: NUDGE_FINE_STEP_PX,
+          // Route through the model so which-field-is-on-top stays model logic.
+          drag: (_event, listener) => {
+            model.nudgeOnTopField(listener.modelDelta.x, listener.modelDelta.y);
+          },
         },
       }),
     );
 
     // -----------------------------------------------------------------------
-    // Arrow-key / J nudge — global (fires anywhere in scene)
+    // J switches the top field. The arrow-key nudge is scoped to the focused
+    // work area above rather than bound globally, so arrows still reach the
+    // sliders and other controls when they have focus.
     // -----------------------------------------------------------------------
     KeyboardListener.createGlobal(this, {
-      keys: ["arrowLeft", "arrowRight", "arrowUp", "arrowDown", "j"] as const,
-      fire: (_event, keysPressed) => {
-        if (keysPressed === "arrowLeft") {
-          model.nudgeOnTopField(-1, 0);
-        }
-        if (keysPressed === "arrowRight") {
-          model.nudgeOnTopField(1, 0);
-        }
-        if (keysPressed === "arrowUp") {
-          model.nudgeOnTopField(0, -1);
-        }
-        if (keysPressed === "arrowDown") {
-          model.nudgeOnTopField(0, 1);
-        }
-        if (keysPressed === "j") {
-          model.switchOnTopField();
-        }
+      keys: ["j"] as const,
+      fire: () => {
+        model.switchOnTopField();
       },
     });
 

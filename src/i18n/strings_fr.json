@@ -151,7 +151,8 @@
         "shownPattern": "Afficher le champ d'étoiles {{number}}",
         "onTopPattern": "Placer le champ d'étoiles {{number}} au-dessus",
         "xOffsetPattern": "Décalage horizontal du champ d'étoiles {{number}}",
-        "yOffsetPattern": "Décalage vertical du champ d'étoiles {{number}}"
+        "yOffsetPattern": "Décalage vertical du champ d'étoiles {{number}}",
+        "workArea": "Zone de travail"
       }
     },
     "blinkComparator": {
@@ -195,7 +196,8 @@
       "currentDetailsWithDataPattern": "La courbe de lumière compte {{count}} mesures. La période d'essai est de {{period}} jours.",
       "currentDetailsNoDataPattern": "Pas encore de courbe de lumière. Sélectionnez une étoile variable et une étoile de comparaison dans le champ d'étoiles.",
       "controls": {
-        "lightCurveMode": "Mode de courbe de lumière"
+        "lightCurveMode": "Mode de courbe de lumière",
+        "deltaBarPattern": "Barre delta {{number}}"
       }
     }
   },

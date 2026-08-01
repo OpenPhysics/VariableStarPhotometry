@@ -151,7 +151,8 @@
         "shownPattern": "Mostrar el campo estelar {{number}}",
         "onTopPattern": "Poner el campo estelar {{number}} encima",
         "xOffsetPattern": "Desplazamiento horizontal del campo estelar {{number}}",
-        "yOffsetPattern": "Desplazamiento vertical del campo estelar {{number}}"
+        "yOffsetPattern": "Desplazamiento vertical del campo estelar {{number}}",
+        "workArea": "Área de trabajo"
       }
     },
     "blinkComparator": {
@@ -195,7 +196,8 @@
       "currentDetailsWithDataPattern": "La curva de luz tiene {{count}} mediciones. El período de prueba es {{period}} días.",
       "currentDetailsNoDataPattern": "Todavía no hay curva de luz. Selecciona una estrella variable y una de comparación en el campo estelar.",
       "controls": {
-        "lightCurveMode": "Modo de curva de luz"
+        "lightCurveMode": "Modo de curva de luz",
+        "deltaBarPattern": "Barra delta {{number}}"
       }
     }
   },
