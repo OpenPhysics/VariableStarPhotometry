@@ -113,6 +113,8 @@ export default defineConfig(({ mode }) => {
     base: "./",
     build: {
       target: "es2024",
+      // SceneryStack bundles exceed Vite's default 500 kB chunk warning.
+      chunkSizeWarningLimit: 5000,
       ...(single && {
         assetsInlineLimit: 100_000_000,
         cssCodeSplit: false,
