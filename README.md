@@ -1,5 +1,7 @@
 # Variable Star Photometry
 
+[![CI](https://github.com/OpenPhysics/VariableStarPhotometry/actions/workflows/ci.yml/badge.svg)](https://github.com/OpenPhysics/VariableStarPhotometry/actions/workflows/ci.yml)
+
 An interactive multi-screen simulation for studying variable stars through CCD photometry,
 built with [SceneryStack](https://scenerystack.org/), Vite 8, TypeScript 7, and Biome 2.
 A SceneryStack port of the [NAAP Variable Star Photometry Lab](https://astro.unl.edu/naap/vsp/vsp.html).
