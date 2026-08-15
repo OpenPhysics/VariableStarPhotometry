@@ -34,13 +34,9 @@ for (const { size, file } of pngTargets) {
 }
 
 const icoBuffers = await Promise.all(
-  [16, 32, 48].map((size) => sharp(svg, { density }).resize(size, size).png().toBuffer()),
+  [16, 32, 48, 64].map((size) => sharp(svg, { density }).resize(size, size).png().toBuffer()),
 );
-
-const icoBuffer = await pngToIco(icoBuffers);
-writeFileSync(resolve(publicDir, "favicon.ico"), icoBuffer);
-
-console.log("Icons generated.");
+writeFileSync(resolve(publicDir, "favicon.ico"), await pngToIco(icoBuffers));
 
 /** Branded placeholder screenshots for the Web App Manifest `screenshots` member. */
 async function writeScreenshot(width: number, height: number, file: string): Promise<void> {
