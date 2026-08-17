@@ -16,16 +16,12 @@ const securityHeaders: Record<string, string> = {
   "Content-Security-Policy": [
     "default-src 'self'",
     // TODO(scenerystack): drop 'unsafe-eval' when SceneryStack no longer needs
-
     // Function/eval for query-parameter parsing — reopen a CSP audit then.
-
     // 'unsafe-eval' is required for SceneryStack query parameter parsing
     "script-src 'self' 'unsafe-eval'",
     "worker-src blob: 'self'",
     // TODO(scenerystack): drop 'unsafe-inline' when SceneryStack stops setting
-
     // element.style / cssText for theming (same CSP revisit as unsafe-eval).
-
     // Inline styles are set via element.style / cssText throughout the UI layer
     "style-src 'self' 'unsafe-inline'",
     // data: for icons
@@ -63,6 +59,9 @@ function assetSourceToText(source: string | Uint8Array): string {
 /**
  * Return `html` with the tag that references `fileName` replaced by an inline
  * `<script>`/`<style>`, or `null` when this asset is not referenced.
+ *
+ * The replacement is a function (never a string) so `$` sequences in the JS/CSS
+ * are not interpreted as `String.prototype.replace` special patterns.
  */
 function inlineAsset(html: string, fileName: string, item: Rollup.OutputChunk | Rollup.OutputAsset): string | null {
   const ref = escapeRegExp(fileName);
@@ -72,6 +71,7 @@ function inlineAsset(html: string, fileName: string, item: Rollup.OutputChunk | 
     if (!scriptTag.test(html)) {
       return null;
     }
+    // Escape `</script>` so an inlined occurrence cannot close the tag early.
     const code = item.code.replace(/<\/script>/g, "<\\/script>");
     return html.replace(scriptTag, () => `<script type="module">${code}</script>`);
   }
@@ -89,8 +89,13 @@ function inlineAsset(html: string, fileName: string, item: Rollup.OutputChunk | 
 }
 
 /**
- * Dependency-free single-file plugin. Splices every JS chunk and CSS asset that
- * `index.html` references directly into the HTML as inline tags.
+ * Dependency-free single-file plugin. After the bundle is generated, splice every
+ * JS chunk and CSS asset that `index.html` references directly into the HTML as
+ * inline tags, drop those now-orphaned files, and strip external icon links so the
+ * result has no outbound references — `dist/index.html` is the entire build.
+ *
+ * Safe because the production bundle is self-contained: no web workers, no .wasm,
+ * no `import.meta.url`, no runtime fetches of local files.
  */
 function inlineSingleFile(): Plugin {
   return {
@@ -116,6 +121,7 @@ function inlineSingleFile(): Plugin {
           }
         }
 
+        // Drop external favicon/touch-icon links — public/ is not emitted in single mode.
         htmlAsset.source = html.replace(/\s*<link[^>]*\brel="(?:icon|apple-touch-icon)"[^>]*>/g, "");
       }
     },
@@ -124,19 +130,26 @@ function inlineSingleFile(): Plugin {
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
+  // `vite build --mode single` produces a single self-contained dist/index.html.
   const single = mode === "single";
 
   return {
+    // So the build can be served from an arbitrary path
     base: "./",
     build: {
+      // Requires Vite 8+ / esbuild ≥0.24. Run `npm ci` if build errors on ES2024.
       target: "es2024",
       // SceneryStack bundles exceed Vite's default 500 kB chunk warning.
       chunkSizeWarningLimit: 5000,
       ...(single && {
+        // Inline every imported asset as a base64 data URI instead of emitting files.
         assetsInlineLimit: INLINE_LIMIT_BYTES,
+        // Emit one CSS file (no per-chunk split) so there is a single tag to inline.
         cssCodeSplit: false,
+        // Skip copying public/ (favicon, icons) — nothing external should remain.
         copyPublicDir: false,
         rollupOptions: {
+          // Collapse dynamic imports into the single entry chunk.
           output: { inlineDynamicImports: true },
         },
       }),
