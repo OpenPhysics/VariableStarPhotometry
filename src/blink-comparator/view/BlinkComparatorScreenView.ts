@@ -218,8 +218,8 @@ export class BlinkComparatorScreenView extends ScreenView {
       {
         boxWidth: 16,
         accessibleName: strings.showCrosshairsStringProperty,
-        checkboxColor: VariableStarPhotometryColors.controlSurfaceTextColorProperty,
-        checkboxColorBackground: VariableStarPhotometryColors.controlSurfaceColorProperty,
+        checkboxColor: VariableStarPhotometryColors.textColorProperty,
+        checkboxColorBackground: VariableStarPhotometryColors.panelBackgroundColorProperty,
       },
     );
 

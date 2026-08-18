@@ -354,8 +354,8 @@ export class RegistrationScreenView extends ScreenView {
         ? makeTableControlNode(
             new Checkbox(shownProp, new Text("", { font: LABEL_FONT }), {
               boxWidth: 16,
-              checkboxColor: VariableStarPhotometryColors.controlSurfaceTextColorProperty,
-              checkboxColorBackground: VariableStarPhotometryColors.controlSurfaceColorProperty,
+              checkboxColor: VariableStarPhotometryColors.textColorProperty,
+              checkboxColorBackground: VariableStarPhotometryColors.panelBackgroundColorProperty,
               accessibleName: controlName(a11yControls.shownPatternStringProperty),
             }),
             shownColumnX,
@@ -517,8 +517,8 @@ export class RegistrationScreenView extends ScreenView {
       {
         boxWidth: 16,
         accessibleName: strings.makeTopTransparentStringProperty,
-        checkboxColor: VariableStarPhotometryColors.controlSurfaceTextColorProperty,
-        checkboxColorBackground: VariableStarPhotometryColors.controlSurfaceColorProperty,
+        checkboxColor: VariableStarPhotometryColors.textColorProperty,
+        checkboxColorBackground: VariableStarPhotometryColors.panelBackgroundColorProperty,
       },
     );
 
@@ -531,8 +531,8 @@ export class RegistrationScreenView extends ScreenView {
       {
         boxWidth: 16,
         accessibleName: strings.invertColorsStringProperty,
-        checkboxColor: VariableStarPhotometryColors.controlSurfaceTextColorProperty,
-        checkboxColorBackground: VariableStarPhotometryColors.controlSurfaceColorProperty,
+        checkboxColor: VariableStarPhotometryColors.textColorProperty,
+        checkboxColorBackground: VariableStarPhotometryColors.panelBackgroundColorProperty,
       },
     );
 
