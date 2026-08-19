@@ -45,6 +45,18 @@ const ANALYZER_SKY_OUTER = VariableStarPhotometryConstants.APERTURE.DEFAULT_ANNU
 /** Initial (full) PDM period-scan window, in days. */
 const FULL_PDM_RANGE = new Range(0.2, 10);
 
+/** Narrowest PDM window — below this, bamboo tick spacing underflows. */
+const MIN_PDM_SPAN = 0.05;
+
+const clampPdmRange = (min: number, max: number): Range | null => {
+  const lo = Math.max(PERIOD_RANGE.min, Math.min(min, max));
+  const hi = Math.min(PERIOD_RANGE.max, Math.max(min, max));
+  if (hi - lo < MIN_PDM_SPAN) {
+    return null;
+  }
+  return new Range(lo, hi);
+};
+
 /** Number of trial periods evaluated per scan (resolution adapts to zoom). */
 const PDM_SCAN_STEPS = VariableStarPhotometryConstants.PDM.SCAN_STEPS;
 
@@ -172,8 +184,8 @@ export class AnalyzerModel {
     const current = this.pdmZoomRangeProperty.value;
     const half = (current.max - current.min) / 4;
     const center = this.trialPeriodProperty.value;
-    const next = new Range(Math.max(PERIOD_RANGE.min, center - half), Math.min(PERIOD_RANGE.max, center + half));
-    if (next.max > next.min) {
+    const next = clampPdmRange(center - half, center + half);
+    if (next) {
       this.pdmZoomHistory.push(current);
       this.pdmZoomRangeProperty.value = next;
     }
@@ -184,18 +196,17 @@ export class AnalyzerModel {
     const current = this.pdmZoomRangeProperty.value;
     const half = current.max - current.min;
     const center = this.trialPeriodProperty.value;
-    const next = new Range(Math.max(PERIOD_RANGE.min, center - half), Math.min(PERIOD_RANGE.max, center + half));
+    const next = clampPdmRange(center - half, center + half) ?? FULL_PDM_RANGE.copy();
     this.pdmZoomHistory.push(current);
     this.pdmZoomRangeProperty.value = next;
   }
 
   /** Push the current window and zoom to an explicitly selected period range. */
   public zoomToPeriodRange(minPeriod: number, maxPeriod: number): void {
-    const min = Math.max(PERIOD_RANGE.min, Math.min(minPeriod, maxPeriod));
-    const max = Math.min(PERIOD_RANGE.max, Math.max(minPeriod, maxPeriod));
-    if (max > min) {
+    const next = clampPdmRange(minPeriod, maxPeriod);
+    if (next) {
       this.pdmZoomHistory.push(this.pdmZoomRangeProperty.value);
-      this.pdmZoomRangeProperty.value = new Range(min, max);
+      this.pdmZoomRangeProperty.value = next;
     }
   }
 

@@ -48,7 +48,7 @@ import type { VariableStarPhotometryPreferencesModel } from "../../preferences/V
 import VariableStarPhotometryColors from "../../VariableStarPhotometryColors.js";
 import VariableStarPhotometryConstants from "../../VariableStarPhotometryConstants.js";
 import { type AnalyzerModel, type LightCurveMode, PERIOD_RANGE, PHASE_OFFSET_RANGE } from "../model/AnalyzerModel.js";
-import { applyChartRescale } from "./chartRescale.js";
+import { applyChartRescale, tickSpacingForSpan } from "./chartRescale.js";
 
 const FIELD_W = VariableStarPhotometryConstants.FIELD.WIDTH;
 const FIELD_H = VariableStarPhotometryConstants.FIELD.HEIGHT;
@@ -57,18 +57,6 @@ const LABEL_FONT = new PhetFont(VariableStarPhotometryConstants.FONT_SIZE.LABEL)
 const HEADER_FONT = new PhetFont({ size: VariableStarPhotometryConstants.FONT_SIZE.HEADER, weight: "bold" });
 const TICK_FONT = new PhetFont(VariableStarPhotometryConstants.FONT_SIZE.TICK);
 const SMALL_FONT = new PhetFont(VariableStarPhotometryConstants.FONT_SIZE.SMALL);
-
-/** Pick a round axis spacing that yields roughly `target` ticks across `span`. */
-function niceSpacing(span: number, target = 5): number {
-  if (span <= 0) {
-    return 1;
-  }
-  const raw = span / target;
-  const mag = 10 ** Math.floor(Math.log10(raw));
-  const norm = raw / mag;
-  const nice = norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10;
-  return nice * mag;
-}
 
 /** Number of decimals to show for a tick spacing. */
 function decimalsFor(spacing: number): number {
@@ -477,21 +465,35 @@ export class AnalyzerScreenView extends ScreenView {
       const mode = model.lightCurveModeProperty.value;
 
       if (measurements.length === 0 || mode !== "time" || !Number.isFinite(period) || period <= 0) {
+        const previous = periodMultipleLayer.getChildren();
         periodMultipleLayer.children = [];
+        for (const child of previous) {
+          if (!child.isDisposed) {
+            child.dispose();
+          }
+        }
         return;
       }
 
       const lines: Line[] = [];
       const firstMultiple = Math.ceil((OBS_TIME_RANGE.min - offset) / period);
       const lastMultiple = Math.floor((OBS_TIME_RANGE.max - offset) / period);
-      for (let multiple = firstMultiple; multiple <= lastMultiple; multiple++) {
+      const multipleCount = lastMultiple - firstMultiple + 1;
+      const step = multipleCount > 40 ? Math.ceil(multipleCount / 40) : 1;
+      for (let multiple = firstMultiple; multiple <= lastMultiple; multiple += step) {
         const epoch = offset + multiple * period;
         const x = obsTransform.modelToViewX(epoch);
         lines.push(
           new Line(x, 0, x, OBS_H, { stroke: VariableStarPhotometryColors.periodMultipleColorProperty, lineWidth: 1 }),
         );
       }
+      const previous = periodMultipleLayer.getChildren();
       periodMultipleLayer.children = lines;
+      for (const child of previous) {
+        if (!child.isDisposed) {
+          child.dispose();
+        }
+      }
     };
 
     const obsChart = new Node({
@@ -532,7 +534,7 @@ export class AnalyzerScreenView extends ScreenView {
       }
       const pad = Math.max(0.05, (yMax - yMin) * 0.1);
       const newYRange = new Range(yMin - pad, yMax + pad);
-      const ySpacing = niceSpacing(newYRange.getLength());
+      const ySpacing = tickSpacingForSpan(newYRange.getLength());
       const yd = decimalsFor(ySpacing);
       applyChartRescale(
         obsTransform.modelYRange.getLength(),
@@ -769,7 +771,7 @@ export class AnalyzerScreenView extends ScreenView {
     const setPeriodFromViewX = (viewX: number) => {
       const zoom = model.pdmZoomRangeProperty.value;
       const period = pdmTransform.viewToModelX(viewX);
-      model.trialPeriodProperty.value = Math.max(zoom.min, Math.min(zoom.max, period));
+      model.trialPeriodProperty.value = PERIOD_RANGE.constrainValue(Math.max(zoom.min, Math.min(zoom.max, period)));
     };
     const updatePdmZoomSelection = () => {
       const left = Math.min(pdmDragStartX, pdmDragCurrentX);
@@ -828,7 +830,7 @@ export class AnalyzerScreenView extends ScreenView {
     const updatePdmAxes = () => {
       const zoom = model.pdmZoomRangeProperty.value;
       const newSpan = zoom.getLength();
-      const spacing = niceSpacing(newSpan);
+      const spacing = tickSpacingForSpan(newSpan);
       const xd = decimalsFor(spacing);
       applyChartRescale(
         pdmTransform.modelXRange.getLength(),
