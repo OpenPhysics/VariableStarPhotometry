@@ -48,6 +48,7 @@ import type { VariableStarPhotometryPreferencesModel } from "../../preferences/V
 import VariableStarPhotometryColors from "../../VariableStarPhotometryColors.js";
 import VariableStarPhotometryConstants from "../../VariableStarPhotometryConstants.js";
 import { type AnalyzerModel, type LightCurveMode, PERIOD_RANGE, PHASE_OFFSET_RANGE } from "../model/AnalyzerModel.js";
+import { applyChartRescale } from "./chartRescale.js";
 
 const FIELD_W = VariableStarPhotometryConstants.FIELD.WIDTH;
 const FIELD_H = VariableStarPhotometryConstants.FIELD.HEIGHT;
@@ -530,31 +531,50 @@ export class AnalyzerScreenView extends ScreenView {
         yMax = Math.max(yMax, m.magnitude);
       }
       const pad = Math.max(0.05, (yMax - yMin) * 0.1);
-      obsTransform.setModelYRange(new Range(yMin - pad, yMax + pad));
-      const ySpacing = niceSpacing(yMax - yMin + 2 * pad);
+      const newYRange = new Range(yMin - pad, yMax + pad);
+      const ySpacing = niceSpacing(newYRange.getLength());
       const yd = decimalsFor(ySpacing);
-      obsGridY.setSpacing(ySpacing);
-      obsTickY.setSpacing(ySpacing);
-      obsLabelY.setSpacing(ySpacing);
+      applyChartRescale(
+        obsTransform.modelYRange.getLength(),
+        newYRange.getLength(),
+        () => obsTransform.setModelYRange(newYRange),
+        () => {
+          obsGridY.setSpacing(ySpacing);
+          obsTickY.setSpacing(ySpacing);
+          obsLabelY.setSpacing(ySpacing);
+        },
+      );
       obsLabelY.setCreateLabel(
         (v: number) =>
           new Text(toFixed(v, yd), { font: TICK_FONT, fill: VariableStarPhotometryColors.textColorProperty }),
       );
 
       if (mode === "time") {
-        obsTransform.setModelXRange(OBS_TIME_RANGE.copy());
-        obsGridX.setSpacing(5);
-        obsTickX.setSpacing(5);
-        obsLabelX.setSpacing(5);
+        applyChartRescale(
+          obsTransform.modelXRange.getLength(),
+          OBS_TIME_RANGE.getLength(),
+          () => obsTransform.setModelXRange(OBS_TIME_RANGE.copy()),
+          () => {
+            obsGridX.setSpacing(5);
+            obsTickX.setSpacing(5);
+            obsLabelX.setSpacing(5);
+          },
+        );
         obsLabelX.setCreateLabel(
           (v: number) =>
             new Text(toFixed(v, 0), { font: TICK_FONT, fill: VariableStarPhotometryColors.textColorProperty }),
         );
       } else {
-        obsTransform.setModelXRange(new Range(0, 1));
-        obsGridX.setSpacing(0.25);
-        obsTickX.setSpacing(0.25);
-        obsLabelX.setSpacing(0.25);
+        applyChartRescale(
+          obsTransform.modelXRange.getLength(),
+          1,
+          () => obsTransform.setModelXRange(new Range(0, 1)),
+          () => {
+            obsGridX.setSpacing(0.25);
+            obsTickX.setSpacing(0.25);
+            obsLabelX.setSpacing(0.25);
+          },
+        );
         obsLabelX.setCreateLabel(
           (v: number) =>
             new Text(toFixed(v, 2), { font: TICK_FONT, fill: VariableStarPhotometryColors.textColorProperty }),
@@ -807,12 +827,19 @@ export class AnalyzerScreenView extends ScreenView {
 
     const updatePdmAxes = () => {
       const zoom = model.pdmZoomRangeProperty.value;
-      pdmTransform.setModelXRange(zoom.copy());
-      const spacing = niceSpacing(zoom.max - zoom.min);
+      const newSpan = zoom.getLength();
+      const spacing = niceSpacing(newSpan);
       const xd = decimalsFor(spacing);
-      pdmGridX.setSpacing(spacing);
-      pdmTickX.setSpacing(spacing);
-      pdmLabelX.setSpacing(spacing);
+      applyChartRescale(
+        pdmTransform.modelXRange.getLength(),
+        newSpan,
+        () => pdmTransform.setModelXRange(zoom.copy()),
+        () => {
+          pdmGridX.setSpacing(spacing);
+          pdmTickX.setSpacing(spacing);
+          pdmLabelX.setSpacing(spacing);
+        },
+      );
       pdmLabelX.setCreateLabel(
         (v: number) =>
           new Text(toFixed(v, xd), { font: TICK_FONT, fill: VariableStarPhotometryColors.textColorProperty }),
